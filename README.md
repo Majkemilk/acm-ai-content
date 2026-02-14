@@ -67,6 +67,18 @@ python scripts/generate_sitemap.py
 
 A minimal `robots.txt` for the static site lives at **`public/robots.txt`**. It allows all crawlers (`Allow: /`) and references the sitemap with a path-only URL: **`/sitemap.xml`**.
 
+## Static render (Markdown → HTML)
+
+Render production content to HTML so sitemap URLs resolve:
+
+```bash
+python scripts/render_site.py
+```
+
+- **Inputs:** `content/articles/*.md`, `content/hubs/*.md`
+- **Outputs:** `public/articles/{slug}/index.html`, `public/hubs/{slug}/index.html`; also updates `public/index.html` with a link to the production hub and up to 5 newest production articles.
+- **Production-only:** Only articles in the production category (from config) are rendered; the article list on the homepage uses `content_index.get_production_articles()`. The hub rendered is the one matching `production_category`.
+
 ## Cloudflare Pages (A1 deploy)
 
 For an **A1 deploy** (publish only the static output):
