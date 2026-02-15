@@ -14,6 +14,7 @@ CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 OUT_PATH = PROJECT_ROOT / "public" / "sitemap.xml"
 
+BASE_URL = "https://flowtaro.com"
 SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 
 
@@ -43,11 +44,12 @@ def _lastmod_for_article(meta: dict, path: Path) -> str | None:
 
 
 def _write_sitemap_xml(urls: list[tuple[str, str | None]]) -> str:
-    """Build sitemap XML string. urls = [(path, lastmod or None), ...]."""
+    """Build sitemap XML string. urls = [(path, lastmod or None), ...]. loc = absolute URL."""
     root = ET.Element("urlset", xmlns=SITEMAP_NS)
     for loc_path, lastmod in urls:
         url_el = ET.SubElement(root, "url")
-        ET.SubElement(url_el, "loc").text = loc_path
+        path = loc_path if loc_path.startswith("/") else "/" + loc_path
+        ET.SubElement(url_el, "loc").text = BASE_URL + path
         if lastmod:
             ET.SubElement(url_el, "lastmod").text = lastmod
     ET.indent(root, space="  ")
