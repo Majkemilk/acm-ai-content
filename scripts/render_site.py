@@ -9,6 +9,7 @@ import math
 import re
 import shutil
 from datetime import date, datetime
+from html.parser import HTMLParser
 from pathlib import Path
 
 from content_index import get_production_articles, load_config
@@ -18,12 +19,153 @@ CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 HUBS_DIR = PROJECT_ROOT / "content" / "hubs"
 PUBLIC_DIR = PROJECT_ROOT / "public"
+AFFILIATE_TOOLS_PATH = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
 INDEX_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "index.html"
 HUB_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "hub.html"
+ARTICLE_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "article.html"
 
 INLINE_LINK = re.compile(r"\[([^\]]*)\]\(([^)]*)\)")
 # Internal article link: [text](/articles/slug/) or [text](/articles/slug) or [text](/articles/slug#anchor)
 INTERNAL_ARTICLE_LINK = re.compile(r"\[([^\]]*)\]\((/articles/[^)]*)\)")
+
+# Tags inside which we do not replace tool names with links
+TOOL_LINK_SKIP_TAGS = frozenset(("a", "h1", "h2", "h3", "h4", "h5", "h6", "code", "pre"))
+
+
+def _parse_quoted_yaml_value(val: str) -> str:
+    """Unquote a YAML value if quoted."""
+    val = val.strip()
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        return val[1:-1].replace('\\"', '"')
+    return val
+
+
+def _load_affiliate_tools(path: Path) -> list[tuple[str, str]]:
+    """
+    Load content/affiliate_tools.yaml and return list of (name, url).
+    url is affiliate_link; empty string if missing or empty. Stdlib only.
+    """
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8")
+    lines = [line for line in text.splitlines() if line.strip() and not line.strip().startswith("#")]
+    text = "\n".join(lines)
+    if "tools:" not in text:
+        return []
+    start = text.index("tools:") + 6
+    rest = text[start:].strip()
+    if not rest.startswith("-"):
+        return []
+    items: list[tuple[str, str]] = []
+    current_name = ""
+    current_url = ""
+    for line in rest.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            if current_name:
+                items.append((current_name, current_url or ""))
+            current_name = ""
+            current_url = ""
+            part = stripped[2:].strip()
+            kv = re.match(r"^([a-zA-Z0-9_]+)\s*:\s*(.*)$", part)
+            if kv:
+                k, v = kv.group(1), _parse_quoted_yaml_value(kv.group(2))
+                if k == "name":
+                    current_name = v
+                elif k == "affiliate_link":
+                    current_url = v
+            continue
+        kv = re.match(r"^([a-zA-Z0-9_]+)\s*:\s*(.*)$", stripped)
+        if kv:
+            k, v = kv.group(1), _parse_quoted_yaml_value(kv.group(2))
+            if k == "name":
+                current_name = v
+            elif k == "affiliate_link":
+                current_url = v
+    if current_name:
+        items.append((current_name, current_url or ""))
+    return items
+
+
+def _replace_tool_names_in_text(text: str, tool_list: list[tuple[str, str]]) -> str:
+    """
+    Replace tool names in plain text with <a href="url">matched</a>.
+    Word boundaries, case-insensitive. Longer names first to avoid partial matches.
+    """
+    if not text or not tool_list:
+        return text
+    # Sort by name length descending so e.g. "Pictory" is tried before "Otter" if they could overlap
+    sorted_tools = sorted([t for t in tool_list if t[1]], key=lambda x: -len(x[0]))
+    if not sorted_tools:
+        return text
+    result = []
+    remaining = text
+    while remaining:
+        best_start: int | None = None
+        best_end: int | None = None
+        best_url = ""
+        best_matched = ""
+        for name, url in sorted_tools:
+            m = re.search(r"\b" + re.escape(name) + r"\b", remaining, re.IGNORECASE)
+            if m and (best_start is None or m.start() < best_start):
+                best_start, best_end = m.start(), m.end()
+                best_url = url
+                best_matched = remaining[m.start() : m.end()]
+        if best_start is None:
+            result.append(remaining)
+            break
+        result.append(remaining[:best_start])
+        result.append(f'<a href="{_escape(best_url)}">{_escape(best_matched)}</a>')
+        remaining = remaining[best_end:]
+    return "".join(result)
+
+
+class _ToolLinkReplacer(HTMLParser):
+    """HTMLParser that replaces tool names with links in text nodes, skipping links/headings/code/pre."""
+
+    def __init__(self, tool_list: list[tuple[str, str]]) -> None:
+        super().__init__()
+        self.tool_list = tool_list
+        self.output: list[str] = []
+        self.tag_stack: list[str] = []
+
+    def _in_skip_tag(self) -> bool:
+        return bool(self.tag_stack and self.tag_stack[-1] in TOOL_LINK_SKIP_TAGS)
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.tag_stack.append(tag)
+        attrs_str = "".join(f' {k}="{_escape(v)}"' if v else f" {k}" for k, v in attrs)
+        self.output.append(f"<{tag}{attrs_str}>")
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.tag_stack and self.tag_stack[-1] == tag:
+            self.tag_stack.pop()
+        self.output.append(f"</{tag}>")
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_str = "".join(f' {k}="{_escape(v)}"' if v else f" {k}" for k, v in attrs)
+        self.output.append(f"<{tag}{attrs_str}>")
+
+    def handle_data(self, data: str) -> None:
+        if self._in_skip_tag():
+            self.output.append(data)
+        else:
+            self.output.append(_replace_tool_names_in_text(data, self.tool_list))
+
+    def get_result(self) -> str:
+        return "".join(self.output)
+
+
+def replace_tool_names_with_links(html: str, tool_list: list[tuple[str, str]]) -> str:
+    """Replace tool names in article HTML with links; skip inside a, h1–h6, code, pre."""
+    if not tool_list:
+        return html
+    parser = _ToolLinkReplacer(tool_list)
+    try:
+        parser.feed(html)
+        return parser.get_result()
+    except Exception:
+        return html
 
 
 def _parse_md_file(path: Path) -> tuple[dict, str]:
@@ -114,8 +256,8 @@ def _updated_date_iso(meta: dict, path: Path) -> str:
 
 
 def _extract_lead(meta: dict, body_html: str) -> str:
-    """1–2 sentences: excerpt/summary from meta, else first <p> from body, strip tags, trim ~220 chars."""
-    explicit = (meta.get("excerpt") or meta.get("summary") or "").strip()
+    """1–2 sentences: lead/excerpt/summary from meta, else first <p> from body, strip tags, trim ~220 chars."""
+    explicit = (meta.get("lead") or meta.get("excerpt") or meta.get("summary") or "").strip()
     if explicit:
         out = _escape(explicit)
         return out[:220].rsplit(" ", 1)[0] if len(out) > 220 else out
@@ -130,12 +272,14 @@ def _extract_lead(meta: dict, body_html: str) -> str:
     return out[:220].rsplit(" ", 1)[0] if len(out) > 220 else out
 
 
-def _article_meta_block(updated_iso: str, reading_min: int, category: str | None, lead: str) -> str:
-    """HTML for meta block under H1 (articles only)."""
+def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str) -> str:
+    """HTML for meta block under H1 (articles only). Category is linked to hub."""
     parts = [f'<span>Updated: {_escape(updated_iso)}</span>', "<span> · </span>", f"<span>Reading time: {reading_min} min</span>"]
-    if category:
+    if category_slug:
+        slug_esc = _escape(category_slug)
+        display = category_slug.replace("-", " ").title()
         parts.append("<span> · </span>")
-        parts.append(f"<span>Category: {_escape(category)}</span>")
+        parts.append(f'<span>Category: <a href="/hubs/{slug_esc}/" class="text-[#17266B] hover:text-[#0f1a4a] hover:underline">{_escape(display)}</a></span>')
     meta_html = '<p class="page-meta">\n  ' + "\n  ".join(parts) + "\n</p>"
     if lead:
         return meta_html + f'\n<p class="page-lead">{lead}</p>'
@@ -371,11 +515,27 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     title = (meta.get("title") or slug).strip()
     updated_iso = _updated_date_iso(meta, path)
     body_html = _md_to_html(body, existing_slugs)
+    tool_list = _load_affiliate_tools(AFFILIATE_TOOLS_PATH)
+    body_html = replace_tool_names_with_links(body_html, tool_list)
     words = _word_count_md(body)
     reading_min = _reading_time_min(words)
     html_path = out_dir / "articles" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
-    html_path.write_text(_wrap_page(title, body_html, updated_iso), encoding="utf-8")
+
+    category_slug = (meta.get("category") or "").strip() or None
+    lead = _extract_lead(meta, body_html)
+    meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead)
+    full_body_html = meta_html + body_html
+    article_body_html = f"<div class=\"article-body\">{full_body_html}</div>"
+    article_content = article_body_html
+
+    if ARTICLE_TEMPLATE_PATH.exists():
+        content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
+        content = content.replace("{{TITLE}}", _escape(title), 1)
+        content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
+    else:
+        content = _wrap_page(title, body_html, updated_iso)
+    html_path.write_text(content, encoding="utf-8")
     print(f"  {html_path.relative_to(out_dir)}")
 
 
@@ -463,13 +623,21 @@ def _render_hub(
         title = body.lstrip().split("\n", 1)[0].replace("# ", "").strip()
     if not title:
         title = slug
-    intro_md, sections = _parse_hub_body(body)
-    intro_html = _md_to_html(intro_md, existing_slugs) if intro_md else ""
-    slug_to_meta = {}
-    for art_meta, art_path in articles:
-        s = art_meta.get("slug") or art_path.stem
-        slug_to_meta[s] = {**art_meta, "last_updated": _updated_date_iso(art_meta, art_path)}
-    dynamic_content = _build_hub_content(title, intro_html, sections, slug_to_meta)
+    # Hub body may be prebuilt HTML (from generate_hubs.py) or Markdown lists
+    if body.strip().startswith("<"):
+        home_link = (
+            '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">'
+            '<a href="/" class="text-[rgb(23,38,107)] hover:underline">Home</a></h2>\n'
+        )
+        dynamic_content = home_link + body
+    else:
+        intro_md, sections = _parse_hub_body(body)
+        intro_html = _md_to_html(intro_md, existing_slugs) if intro_md else ""
+        slug_to_meta = {}
+        for art_meta, art_path in articles:
+            s = art_meta.get("slug") or art_path.stem
+            slug_to_meta[s] = {**art_meta, "last_updated": _updated_date_iso(art_meta, art_path)}
+        dynamic_content = _build_hub_content(title, intro_html, sections, slug_to_meta)
     html_path = out_dir / "hubs" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
     if HUB_TEMPLATE_PATH.exists():

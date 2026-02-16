@@ -1,52 +1,238 @@
-# AI Marketing Automation Tools & Workflows
-
-This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below are organized by type so you can start with what fits your goal. Use the **Start here** links for the newest material, or browse by section.
-
+---
+title: "AI Marketing Automation Tools & Workflows"
 ---
 
-## Start here
-
-- [How to Repurpose Webinars into Blog Posts Using AI](/articles/2026-02-15-repurpose-webinars-into-blog-posts-using-ai/)
-- [How to Turn Podcasts into Written Content Using AI](/articles/2026-02-15-turn-podcasts-into-written-content-using-ai/)
-- [How to Turn Blog Posts into Social Media Posts with AI](/articles/2026-02-15-turn-blog-posts-into-social-media-posts-with-ai/)
-- [How to Repurpose YouTube Videos into Blog Articles with AI](/articles/2026-02-15-repurpose-youtube-videos-into-blog-articles-with-ai/)
-- [How to use AI to analyze customer feedback and improve products with Pictory](/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-pictory/)
-
----
-
-## Guides
-
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-15-ai-content-repurposing-workflow/)
-- [AI Marketing Tools Overview](/articles/2026-02-15-ai-marketing-tools/)
-- [How to Choose an SEO Tool](/articles/2026-02-15-choose-seo-tool/)
-- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
-- [Guide to implement AI chatbots to enhance customer engagement with Pictory](/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/)
-- [Guide to personalize email marketing campaigns using AI insights with Descript](/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/)
-- [Guide to personalize email marketing campaigns using AI insights with Otter](/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/)
-- [Guide to personalize email marketing campaigns using AI insights with Pictory](/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-pictory/)
-
-## How-to
-
-- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
-- [How to automate social media posting schedules with AI with Otter](/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-otter/)
-- [How to automate social media posting schedules with AI with Pictory](/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-pictory/)
-- [How to integrate AI tools for better lead scoring in sales with Descript](/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-descript/)
-- [How to integrate AI tools for better lead scoring in sales with Otter](/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-otter/)
-- [How to integrate AI tools for better lead scoring in sales with Pictory](/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-pictory/)
-- [How to turn podcasts into written content with Descript](/articles/2026-02-15-how-to-turn-podcasts-into-written-content-with-descript/)
-- [How to use AI to analyze customer feedback and improve products with Descript](/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-descript/)
-- [How to use AI to analyze customer feedback and improve products with Otter](/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-otter/)
-- [How to use AI to analyze customer feedback and improve products with Pictory](/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-pictory/)
-- [How to Repurpose Webinars into Blog Posts Using AI](/articles/2026-02-15-repurpose-webinars-into-blog-posts-using-ai/)
-- [How to Repurpose YouTube Videos into Blog Articles with AI](/articles/2026-02-15-repurpose-youtube-videos-into-blog-articles-with-ai/)
-- [How to Turn Blog Posts into Social Media Posts with AI](/articles/2026-02-15-turn-blog-posts-into-social-media-posts-with-ai/)
-- [How to Turn Podcasts into Written Content Using AI](/articles/2026-02-15-turn-podcasts-into-written-content-using-ai/)
-
-## Comparisons
-
-- [SEO Tools Compared](/articles/2026-02-15-seo-tools-comparison/)
-
-## Best
-
-- [Best AI Tools for Content Repurposing](/articles/2026-02-15-best-ai-tools-for-content-repurposing/)
+<h1>AI Marketing Automation Tools &amp; Workflows</h1>
+<p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below are organized by type so you can start with what fits your goal. Use the <strong>Start here</strong> links for the newest material, or browse by section.</p>
+<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Start here</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-16-use-ai-for-competitor-analysis/" class="text-gray-900 hover:text-[#17266B]">How to Use AI for Competitor Analysis</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-16</p>
+            <a href="/articles/2026-02-16-use-ai-for-competitor-analysis/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-repurpose-webinars-into-blog-posts-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to Repurpose Webinars into Blog Posts Using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-16</p>
+            <a href="/articles/2026-02-15-repurpose-webinars-into-blog-posts-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-turn-podcasts-into-written-content-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to Turn Podcasts into Written Content Using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-turn-podcasts-into-written-content-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-turn-blog-posts-into-social-media-posts-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Turn Blog Posts into Social Media Posts with AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-turn-blog-posts-into-social-media-posts-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-repurpose-youtube-videos-into-blog-articles-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Repurpose YouTube Videos into Blog Articles with AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-repurpose-youtube-videos-into-blog-articles-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+</div>
+<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-ai-content-repurposing-workflow/" class="text-gray-900 hover:text-[#17266B]">AI Content Repurposing Workflow for Small Business</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-ai-content-repurposing-workflow/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-ai-marketing-tools/" class="text-gray-900 hover:text-[#17266B]">AI Marketing Tools Overview</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-14</p>
+            <a href="/articles/2026-02-15-ai-marketing-tools/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-choose-seo-tool/" class="text-gray-900 hover:text-[#17266B]">How to Choose an SEO Tool</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2025-02-14</p>
+            <a href="/articles/2026-02-15-choose-seo-tool/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/" class="text-gray-900 hover:text-[#17266B]">Guide to implement AI chatbots to enhance customer engagement with Descript</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/" class="text-gray-900 hover:text-[#17266B]">Guide to implement AI chatbots to enhance customer engagement with Otter</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/" class="text-gray-900 hover:text-[#17266B]">Guide to implement AI chatbots to enhance customer engagement with Pictory</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights with Descript</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights with Otter</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-pictory/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights with Pictory</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-pictory/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-16-use-ai-for-competitor-analysis/" class="text-gray-900 hover:text-[#17266B]">How to Use AI for Competitor Analysis</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-16</p>
+            <a href="/articles/2026-02-16-use-ai-for-competitor-analysis/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+</div>
+<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">How-to</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-descript/" class="text-gray-900 hover:text-[#17266B]">How to automate social media posting schedules with AI with Descript</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-otter/" class="text-gray-900 hover:text-[#17266B]">How to automate social media posting schedules with AI with Otter</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-otter/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-pictory/" class="text-gray-900 hover:text-[#17266B]">How to automate social media posting schedules with AI with Pictory</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-pictory/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-descript/" class="text-gray-900 hover:text-[#17266B]">How to integrate AI tools for better lead scoring in sales with Descript</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-otter/" class="text-gray-900 hover:text-[#17266B]">How to integrate AI tools for better lead scoring in sales with Otter</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-otter/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-pictory/" class="text-gray-900 hover:text-[#17266B]">How to integrate AI tools for better lead scoring in sales with Pictory</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales-with-pictory/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-turn-podcasts-into-written-content-with-descript/" class="text-gray-900 hover:text-[#17266B]">How to turn podcasts into written content with Descript</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-turn-podcasts-into-written-content-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-descript/" class="text-gray-900 hover:text-[#17266B]">How to use AI to analyze customer feedback and improve products with Descript</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-otter/" class="text-gray-900 hover:text-[#17266B]">How to use AI to analyze customer feedback and improve products with Otter</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-otter/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-pictory/" class="text-gray-900 hover:text-[#17266B]">How to use AI to analyze customer feedback and improve products with Pictory</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-how-to-use-ai-to-analyze-customer-feedback-and-improve-products-with-pictory/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-repurpose-webinars-into-blog-posts-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to Repurpose Webinars into Blog Posts Using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-16</p>
+            <a href="/articles/2026-02-15-repurpose-webinars-into-blog-posts-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-repurpose-youtube-videos-into-blog-articles-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Repurpose YouTube Videos into Blog Articles with AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-repurpose-youtube-videos-into-blog-articles-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-turn-blog-posts-into-social-media-posts-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Turn Blog Posts into Social Media Posts with AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-turn-blog-posts-into-social-media-posts-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-turn-podcasts-into-written-content-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to Turn Podcasts into Written Content Using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-turn-podcasts-into-written-content-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+</div>
+<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Comparisons</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-seo-tools-comparison/" class="text-gray-900 hover:text-[#17266B]">SEO Tools Compared</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-14</p>
+            <a href="/articles/2026-02-15-seo-tools-comparison/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+</div>
+<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Best</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-15-best-ai-tools-for-content-repurposing/" class="text-gray-900 hover:text-[#17266B]">Best AI Tools for Content Repurposing</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-15</p>
+            <a href="/articles/2026-02-15-best-ai-tools-for-content-repurposing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+</div>

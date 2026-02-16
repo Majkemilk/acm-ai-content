@@ -2,10 +2,10 @@
 tools:
   - name: "Descript"
     category: "video/audio"
-    affiliate_link: "https://descript.com/ref"
+    affiliate_link: "https://descript.com/"
   - name: "Pictory"
     category: "video"
-    affiliate_link: "https://pictory.ai/ref"
+    affiliate_link: "https://pictory.ai/"
   - name: "Otter"
     category: "transcription"
-    affiliate_link: "https://otter.ai/ref"
+    affiliate_link: "https://otter.ai/"
