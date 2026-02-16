@@ -79,6 +79,17 @@ python scripts/render_site.py
 - **Outputs:** `public/articles/{slug}/index.html`, `public/hubs/{slug}/index.html`; also updates `public/index.html` with a link to the production hub and up to 5 newest production articles.
 - **Production-only:** Only articles in the production category (from config) are rendered; the article list on the homepage uses `content_index.get_production_articles()`. The hub rendered is the one matching `production_category`.
 
+## Fill articles (AI)
+
+Optional step: replace bracket placeholders `[...]` in draft articles with AI-generated prose (OpenAI Responses API). Fill is section-aware: the model follows per-section rules (e.g. Introduction, What you need to know first, Step-by-step workflow, FAQ) based on the nearest preceding heading. Leaves `{{...}}` and structure unchanged. Use `--style docs|concise|detailed` to tune instruction verbosity (default: docs).
+
+```bash
+python scripts/fill_articles.py          # dry-run (default)
+python scripts/fill_articles.py --write  # apply changes (creates .bak per file)
+```
+
+Requires `OPENAI_API_KEY`. Optional: `OPENAI_BASE_URL`. Flags: `--model`, `--limit N`, `--since YYYY-MM-DD`, `--slug_contains TEXT`, `--force` (refill if already filled). Preflight QA runs by default when using `--write`; disable with `--no-qa`, or use `--qa` in dry-run to report pass/fail and `--qa_strict` for stricter checks.
+
 ## Cloudflare Pages (A1 deploy)
 
 For an **A1 deploy** (publish only the static output):

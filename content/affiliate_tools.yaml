@@ -1,0 +1,11 @@
+# List of AI tools with affiliate programs
+tools:
+  - name: "Descript"
+    category: "video/audio"
+    affiliate_link: "https://descript.com/ref"
+  - name: "Pictory"
+    category: "video"
+    affiliate_link: "https://pictory.ai/ref"
+  - name: "Otter"
+    category: "transcription"
+    affiliate_link: "https://otter.ai/ref"

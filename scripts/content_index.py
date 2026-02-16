@@ -108,6 +108,8 @@ def get_production_articles(
         meta = _parse_frontmatter(path)
         if not meta:
             continue
+        if (meta.get("status") or "").strip().lower() == "blocked":
+            continue
         cat = (meta.get("category") or meta.get("category_slug") or "").strip()
         if cat != production:
             continue

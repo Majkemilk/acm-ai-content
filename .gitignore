@@ -1,2 +1,10 @@
 __pycache__/
 .DS_Store
+
+public/
+*.bak
+*_backup_*/
+logs/
+screen*.png
+*.pyc
+*.log

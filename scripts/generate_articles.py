@@ -9,8 +9,10 @@ Fills {{INTERNAL_LINKS}} from existing articles (same category/tool/content_type
 import argparse
 import json
 import re
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+
+from content_index import get_production_articles
 
 # Pattern: markdown link using our internal URL convention (already has links)
 INTERNAL_LINK_PATTERN = re.compile(r"\]\s*\(\s*/articles/[^)]+\)")
@@ -33,8 +35,20 @@ DEFAULT_CONTENT_TYPE = "guide"
 # Paths (relative to project root)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QUEUE_PATH = PROJECT_ROOT / "content" / "queue.yaml"
-TEMPLATE_PATH = PROJECT_ROOT / "templates" / "article-template.md"
+CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
+TEMPLATES_DIR = PROJECT_ROOT / "templates"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
+
+
+def get_template_path(content_type: str) -> Path:
+    """Return path to type-specific template: templates/{content_type}.md. Raises if missing."""
+    normalized = normalize_content_type(content_type)
+    path = TEMPLATES_DIR / f"{normalized}.md"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Template not found for content_type '{content_type}' (resolved: '{normalized}'): {path}"
+        )
+    return path
 
 # Template variable names (template uses {{VAR}}, queue uses snake_case)
 TEMPLATE_VARS = [
@@ -292,15 +306,12 @@ def backfill_internal_links_in_file(
         return "unchanged"
     start, end = section_range
     section = body[start:end]
-    if INTERNAL_LINK_PATTERN.search(section):
-        return "skipped"
-    if "{{INTERNAL_LINKS}}" not in section:
-        return "unchanged"
     meta = parse_article_frontmatter(path)
     if not meta:
         return "unchanged"
     slug = meta.get("slug") or path.stem
-    existing = load_existing_articles(articles_dir, exclude_slug=slug)
+    production_pairs = get_production_articles(articles_dir, CONFIG_PATH)
+    existing = [m for m, p in production_pairs if (m.get("slug") or p.stem) != slug]
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
     primary_tool = (meta.get("primary_tool") or "").strip()
     content_type = (meta.get("content_type") or "").strip()
@@ -308,12 +319,16 @@ def backfill_internal_links_in_file(
         existing, current_category=category, current_primary_tool=primary_tool, current_content_type=content_type
     )
     new_bullets = format_internal_links_bullets(links)
-    if "- {{INTERNAL_LINKS}}" in section:
-        section_new = section.replace("- {{INTERNAL_LINKS}}", new_bullets)
+    if "{{INTERNAL_LINKS}}" in section:
+        if "- {{INTERNAL_LINKS}}" in section:
+            section_new = section.replace("- {{INTERNAL_LINKS}}", new_bullets)
+        else:
+            section_new = section.replace("{{INTERNAL_LINKS}}", new_bullets)
     else:
-        section_new = section.replace("{{INTERNAL_LINKS}}", new_bullets)
+        # Replace existing list with production-only links (fix broken links)
+        section_new = "## Internal links\n\n" + new_bullets + "\n"
     if section_new == section:
-        return "unchanged"
+        return "skipped" if INTERNAL_LINK_PATTERN.search(section) else "unchanged"
     body_new = body[:start] + section_new + body[end:]
     front_end = content.find("\n---", 3) + 4
     new_content = content[:front_end] + body_new
@@ -432,6 +447,11 @@ def main() -> None:
 
     if args.backfill:
         run_backfill(articles_dir)
+        try:
+            (PROJECT_ROOT / "logs").mkdir(parents=True, exist_ok=True)
+            (PROJECT_ROOT / "logs" / "last_run_generate_articles.txt").write_text(datetime.now().isoformat(), encoding="utf-8")
+        except OSError:
+            pass
         return
 
     today = date.today().isoformat()
@@ -443,11 +463,6 @@ def main() -> None:
         print("Queue is empty.")
         return
 
-    if not TEMPLATE_PATH.exists():
-        print(f"Template not found: {TEMPLATE_PATH}")
-        return
-    template = TEMPLATE_PATH.read_text(encoding="utf-8")
-
     todo_indices = [i for i, it in enumerate(items) if it.get("status") == "todo"]
     if not todo_indices:
         print("No queue items with status: todo.")
@@ -455,14 +470,22 @@ def main() -> None:
 
     for i in todo_indices:
         item = items[i]
+        content_type = normalize_content_type((item.get("content_type") or "").strip())
+        try:
+            template_path = get_template_path(content_type)
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            return
+        template = template_path.read_text(encoding="utf-8")
+
         slug = slug_from_keyword(item.get("primary_keyword") or "")
         filename = f"{today}-{slug}.md"
         out_slug = filename.removesuffix(".md")
         out_path = articles_dir / filename
 
-        existing = load_existing_articles(articles_dir, exclude_slug=out_slug)
+        production_pairs = get_production_articles(articles_dir, CONFIG_PATH)
+        existing = [m for m, p in production_pairs if (m.get("slug") or p.stem) != out_slug]
         category = normalize_category((item.get("category_slug") or item.get("category") or "").strip())
-        content_type = normalize_content_type((item.get("content_type") or "").strip())
         primary_tool = (item.get("primary_tool") or "").strip()
         links = select_internal_links(
             existing, current_category=category, current_primary_tool=primary_tool, current_content_type=content_type
@@ -478,6 +501,12 @@ def main() -> None:
 
     save_queue(QUEUE_PATH, items)
     print("Queue updated: todo -> generated.")
+
+    try:
+        (PROJECT_ROOT / "logs").mkdir(parents=True, exist_ok=True)
+        (PROJECT_ROOT / "logs" / "last_run_generate_articles.txt").write_text(datetime.now().isoformat(), encoding="utf-8")
+    except OSError:
+        pass
 
 
 if __name__ == "__main__":

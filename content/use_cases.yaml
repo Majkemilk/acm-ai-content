@@ -1,0 +1,21 @@
+# List of business problems / use cases for content generation
+# Each item should have:
+# - problem: string (description of the problem, e.g., "turn podcasts into written content")
+# - suggested_content_type: string (one of: how-to, guide, best, comparison)
+# - category_slug: string (e.g., "ai-marketing-automation")
+use_cases:
+  - problem: automate social media posting schedules with AI
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+  - problem: personalize email marketing campaigns using AI insights
+    suggested_content_type: guide
+    category_slug: ai-marketing-automation
+  - problem: use AI to analyze customer feedback and improve products
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+  - problem: implement AI chatbots to enhance customer engagement
+    suggested_content_type: guide
+    category_slug: ai-marketing-automation
+  - problem: integrate AI tools for better lead scoring in sales
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation

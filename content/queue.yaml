@@ -19,3 +19,174 @@
   category: seo
   status: generated
   last_updated: 2026-02-14
+- title: AI Content Repurposing Workflow for Small Business
+  primary_keyword: ai content repurposing workflow
+  content_type: guide
+  category: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: Pictory
+  status: generated
+- title: How to Turn Blog Posts into Social Media Posts with AI
+  primary_keyword: turn blog posts into social media posts with ai
+  content_type: how-to
+  category: ai-marketing-automation
+  primary_tool: Jasper
+  secondary_tool: Copy.ai
+  status: generated
+- title: Best AI Tools for Content Repurposing
+  primary_keyword: best ai tools for content repurposing
+  content_type: best
+  category: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: Opus Clip
+  status: generated
+- title: How to Repurpose YouTube Videos into Blog Articles with AI
+  primary_keyword: repurpose youtube videos into blog articles with ai
+  content_type: how-to
+  category: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: Pictory
+  status: generated
+- title: How to Turn Podcasts into Written Content Using AI
+  primary_keyword: turn podcasts into written content using ai
+  content_type: how-to
+  category: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: Otter
+  status: generated
+- title: How to Repurpose Webinars into Blog Posts Using AI
+  primary_keyword: repurpose webinars into blog posts using ai
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: Pictory
+  status: generated
+  last_updated: 2026-02-16
+- title: How to turn podcasts into written content with Descript
+  primary_keyword: how to turn podcasts into written content with descript
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to automate social media posting schedules with AI with Descript
+  primary_keyword: how to automate social media posting schedules with ai with descript
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to automate social media posting schedules with AI with Pictory
+  primary_keyword: how to automate social media posting schedules with ai with pictory
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Pictory
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to automate social media posting schedules with AI with Otter
+  primary_keyword: how to automate social media posting schedules with ai with otter
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Otter
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: Guide to personalize email marketing campaigns using AI insights with Descript
+  primary_keyword: guide to personalize email marketing campaigns using ai insights with descript
+  content_type: guide
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: Guide to personalize email marketing campaigns using AI insights with Pictory
+  primary_keyword: guide to personalize email marketing campaigns using ai insights with pictory
+  content_type: guide
+  category_slug: ai-marketing-automation
+  primary_tool: Pictory
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: Guide to personalize email marketing campaigns using AI insights with Otter
+  primary_keyword: guide to personalize email marketing campaigns using ai insights with otter
+  content_type: guide
+  category_slug: ai-marketing-automation
+  primary_tool: Otter
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to use AI to analyze customer feedback and improve products with Descript
+  primary_keyword: how to use ai to analyze customer feedback and improve products with descript
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to use AI to analyze customer feedback and improve products with Pictory
+  primary_keyword: how to use ai to analyze customer feedback and improve products with pictory
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Pictory
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to use AI to analyze customer feedback and improve products with Otter
+  primary_keyword: how to use ai to analyze customer feedback and improve products with otter
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Otter
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: Guide to implement AI chatbots to enhance customer engagement with Descript
+  primary_keyword: guide to implement ai chatbots to enhance customer engagement with descript
+  content_type: guide
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: Guide to implement AI chatbots to enhance customer engagement with Pictory
+  primary_keyword: guide to implement ai chatbots to enhance customer engagement with pictory
+  content_type: guide
+  category_slug: ai-marketing-automation
+  primary_tool: Pictory
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: Guide to implement AI chatbots to enhance customer engagement with Otter
+  primary_keyword: guide to implement ai chatbots to enhance customer engagement with otter
+  content_type: guide
+  category_slug: ai-marketing-automation
+  primary_tool: Otter
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to integrate AI tools for better lead scoring in sales with Descript
+  primary_keyword: how to integrate ai tools for better lead scoring in sales with descript
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Descript
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to integrate AI tools for better lead scoring in sales with Pictory
+  primary_keyword: how to integrate ai tools for better lead scoring in sales with pictory
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Pictory
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
+- title: How to integrate AI tools for better lead scoring in sales with Otter
+  primary_keyword: how to integrate ai tools for better lead scoring in sales with otter
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  primary_tool: Otter
+  secondary_tool: 
+  status: generated
+  last_updated: 2026-02-15
