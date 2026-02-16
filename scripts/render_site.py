@@ -19,6 +19,7 @@ ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 HUBS_DIR = PROJECT_ROOT / "content" / "hubs"
 PUBLIC_DIR = PROJECT_ROOT / "public"
 INDEX_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "index.html"
+HUB_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "hub.html"
 
 INLINE_LINK = re.compile(r"\[([^\]]*)\]\(([^)]*)\)")
 # Internal article link: [text](/articles/slug/) or [text](/articles/slug) or [text](/articles/slug#anchor)
@@ -316,7 +317,20 @@ def _md_to_html(body: str, existing_slugs: set[str] | None = None) -> str:
     close_ol()
     if in_pre:
         out.append("</code></pre>")
-    return "\n".join(out)
+    body_html = "\n".join(out)
+    # Replace affiliate disclosure paragraph with styled div
+    disclosure_div = (
+        '<div class="mt-8 p-4 bg-gray-100 border-l-4 border-[rgb(23,38,107)] text-gray-700 text-sm">\n'
+        "    Some links on this page are affiliate links. If you make a purchase through these links, "
+        "we may earn a commission at no extra cost to you.\n"
+        "</div>"
+    )
+    body_html = body_html.replace(
+        "<p>" + _escape(AFFILIATE_DISCLOSURE_TEXT) + "</p>",
+        disclosure_div,
+        1,
+    )
+    return body_html
 
 
 def _footer_html() -> str:
@@ -339,6 +353,7 @@ def _wrap_page(title: str, body_html: str, last_updated: str | None = None) -> s
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{_escape(title)}</title>
     <link rel="stylesheet" href="/assets/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
     <div class="container">
@@ -356,9 +371,6 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     title = (meta.get("title") or slug).strip()
     updated_iso = _updated_date_iso(meta, path)
     body_html = _md_to_html(body, existing_slugs)
-    # Style the affiliate disclosure paragraph
-    disclosure_para = "<p>" + _escape(AFFILIATE_DISCLOSURE_TEXT) + "</p>"
-    body_html = body_html.replace(disclosure_para, '<p class="affiliate-disclosure">' + _escape(AFFILIATE_DISCLOSURE_TEXT) + "</p>", 1)
     words = _word_count_md(body)
     reading_min = _reading_time_min(words)
     html_path = out_dir / "articles" / slug / "index.html"
@@ -367,7 +379,83 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     print(f"  {html_path.relative_to(out_dir)}")
 
 
-def _render_hub(path: Path, out_dir: Path, existing_slugs: set[str] | None = None) -> None:
+def _parse_hub_body(body: str) -> tuple[str, list[tuple[str, list[tuple[str, str]]]]]:
+    """Return (intro_md, sections) where sections is list of (section_title, list of (link_text, slug))."""
+    # Split by \n## so first block is intro (may include # Title and paragraphs)
+    parts = re.split(r"\n## ", body.strip(), maxsplit=0)
+    intro_md = (parts[0].strip() if parts else "").lstrip()
+    # Drop leading # from first line if present so intro doesn't duplicate hub title
+    if intro_md.startswith("# "):
+        intro_md = re.sub(r"^#\s+[^\n]+\n?", "", intro_md, count=1)
+    intro_md = intro_md.strip()
+    sections: list[tuple[str, list[tuple[str, str]]]] = []
+    for block in parts[1:]:
+        lines = block.split("\n")
+        if not lines:
+            continue
+        section_title = lines[0].strip()
+        links: list[tuple[str, str]] = []
+        for line in lines[1:]:
+            line = line.strip()
+            if not line.startswith("- "):
+                continue
+            m = INTERNAL_ARTICLE_LINK.search(line)
+            if m:
+                link_text, url = m.group(1).strip(), m.group(2)
+                slug = url.replace("/articles/", "").split("#")[0].strip("/")
+                links.append((link_text, slug))
+        sections.append((section_title, links))
+    return intro_md, sections
+
+
+def _build_hub_content(
+    hub_title: str,
+    intro_html: str,
+    sections: list[tuple[str, list[tuple[str, str]]]],
+    slug_to_meta: dict[str, dict],
+) -> str:
+    """Build HTML for hub DYNAMIC_CONTENT: link home, title, intro, then per-section h2 + card grid."""
+    out_parts: list[str] = []
+    out_parts.append(
+        '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">'
+        '<a href="/" class="text-[rgb(23,38,107)] hover:underline">Home</a></h2>\n'
+    )
+    out_parts.append(f'<h1 class="text-2xl font-bold mb-6 text-[#17266B] text-center">{_escape(hub_title)}</h1>\n')
+    if intro_html.strip():
+        out_parts.append(f'<div class="mb-8 text-gray-700">\n{intro_html.strip()}\n</div>\n')
+    for section_title, links in sections:
+        out_parts.append(
+            f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">{_escape(section_title)}</h2>\n'
+        )
+        if links:
+            out_parts.append('<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">\n')
+            for link_text, slug in links:
+                meta = slug_to_meta.get(slug) or {}
+                title_esc = _escape(link_text)
+                date_esc = _escape(meta.get("last_updated") or meta.get("updated") or "")
+                slug_esc = _escape(slug)
+                out_parts.append(
+                    f'''        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/{slug_esc}/" class="text-gray-900 hover:text-[#17266B]">{title_esc}</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">{date_esc}</p>
+            <a href="/articles/{slug_esc}/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+'''
+                )
+            out_parts.append("</div>\n")
+        else:
+            out_parts.append('<p class="text-gray-600">No articles in this section.</p>\n')
+    return "".join(out_parts)
+
+
+def _render_hub(
+    path: Path,
+    out_dir: Path,
+    articles: list[tuple[dict, Path]],
+    existing_slugs: set[str] | None = None,
+) -> None:
     meta, body = _parse_md_file(path)
     slug = meta.get("slug") or path.stem
     title = (meta.get("title") or "").strip()
@@ -375,24 +463,62 @@ def _render_hub(path: Path, out_dir: Path, existing_slugs: set[str] | None = Non
         title = body.lstrip().split("\n", 1)[0].replace("# ", "").strip()
     if not title:
         title = slug
-    body_html = _md_to_html(body, existing_slugs)
+    intro_md, sections = _parse_hub_body(body)
+    intro_html = _md_to_html(intro_md, existing_slugs) if intro_md else ""
+    slug_to_meta = {}
+    for art_meta, art_path in articles:
+        s = art_meta.get("slug") or art_path.stem
+        slug_to_meta[s] = {**art_meta, "last_updated": _updated_date_iso(art_meta, art_path)}
+    dynamic_content = _build_hub_content(title, intro_html, sections, slug_to_meta)
     html_path = out_dir / "hubs" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
-    html_path.write_text(_wrap_page(title, body_html), encoding="utf-8")
+    if HUB_TEMPLATE_PATH.exists():
+        content = HUB_TEMPLATE_PATH.read_text(encoding="utf-8")
+        content = content.replace("HUB_TITLE_PLACEHOLDER", _escape(title), 1)
+        content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
+    else:
+        content = (
+            "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
+            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+            f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n"
+            "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
+            "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
+            "  <div class=\"container\">\n"
+            + dynamic_content
+            + "\n  </div>\n"
+            "  <footer class=\"site-footer text-center\"><div class=\"site-footer-inner\">"
+            "<p>&copy; 2026 Flowtaro. <a href=\"/privacy.html\">Privacy Policy</a></p></div></footer>\n"
+            "</body>\n</html>\n"
+        )
+    html_path.write_text(content, encoding="utf-8")
     print(f"  {html_path.relative_to(out_dir)}")
 
 
 def _update_index(out_dir: Path, production_category: str, articles: list[tuple[dict, Path]]) -> None:
     index_path = out_dir / "index.html"
-    sorted_articles = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:5]
-    articles_html = "".join(
-        f'      <li><a href="/articles/{a[0].get("slug", a[1].stem)}/">{_escape((a[0].get("title") or a[1].stem).strip())}</a></li>\n'
-        for a in sorted_articles
-    )
-    indent = "    "
-    newest_block = indent + "<p>Newest articles:</p>\n" + indent + "<ul>\n" + articles_html + indent + "</ul>\n" if articles_html else ""
-    hub_link = f'{indent}<p><a href="/hubs/{_escape(production_category)}/">AI Marketing Automation hub</a></p>\n'
-    dynamic_content = hub_link + (newest_block if newest_block else "")
+    newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:5]
+    hub_link = f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"><a href="/hubs/{_escape(production_category)}/" class="text-[rgb(23,38,107)] hover:underline">All articles</a></h2>\n'
+    articles_html = ""
+    if newest:
+        articles_html = '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Newest articles</h2>\n'
+        articles_html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">\n'
+        for meta, path in newest:
+            slug = meta.get("slug") or path.stem
+            title_esc = _escape((meta.get("title") or slug).strip())
+            date_esc = _escape(meta.get("last_updated") or _updated_date_iso(meta, path))
+            slug_esc = _escape(slug)
+            articles_html += f'''        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/{slug_esc}/" class="text-gray-900 hover:text-[#17266B]">{title_esc}</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">{date_esc}</p>
+            <a href="/articles/{slug_esc}/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+'''
+        articles_html += '</div>\n'
+    else:
+        articles_html = '<p class="text-gray-600">No articles yet.</p>\n'
+    dynamic_content = hub_link + articles_html
 
     if INDEX_TEMPLATE_PATH.exists():
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
@@ -441,18 +567,19 @@ def _write_privacy_page(out_dir: Path) -> None:
 
 
 def _ensure_images(out_dir: Path) -> None:
-    """Ensure project images/ exists; copy avatar to public/images/ if present."""
+    """Ensure project images/ exists; copy avatar and logo to public/images/ if present."""
     images_root = PROJECT_ROOT / "images"
     images_root.mkdir(parents=True, exist_ok=True)
-    src = images_root / "avatar.jpg"
     dst_dir = out_dir / "images"
-    dst = dst_dir / "avatar.jpg"
-    if src.exists():
-        dst_dir.mkdir(parents=True, exist_ok=True)
-        try:
-            shutil.copy2(src, dst)
-        except OSError:
-            pass
+    for name in ("avatar.jpg", "logo.webp"):
+        src = images_root / name
+        dst = dst_dir / name
+        if src.exists():
+            dst_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                shutil.copy2(src, dst)
+            except OSError:
+                pass
 
 
 def main() -> None:
@@ -470,7 +597,7 @@ def main() -> None:
     print("Rendering production hub...")
     hub_path = HUBS_DIR / f"{production_category}.md"
     if hub_path.exists():
-        _render_hub(hub_path, public, existing_slugs)
+        _render_hub(hub_path, public, articles, existing_slugs)
     else:
         print(f"  (no {hub_path.name})")
 

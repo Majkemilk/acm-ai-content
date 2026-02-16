@@ -5,24 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flowtaro</title>
   <link rel="stylesheet" href="/assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <div class="container">
-    <header class="site-header">
-      <h1>Flowtaro</h1>
-      <p class="mission">AI-powered workflows and tool comparisons for business teams.</p>
-    </header>
+  <header class="site-header">
+    <div class="header-inner"></div>
+  </header>
 
-    <section class="about">
-      <img src="/images/avatar.jpg" alt="Flowtaro team" class="avatar">
-      <p>Flowtaro is an independent review and educational platform dedicated to helping businesses choose the right AI tools. We provide in-depth comparisons, how‑to guides, and practical insights – all based on real‑world testing and research.</p>
-    </section>
+  <section class="bg-white py-10 text-center">
+    <div class="max-w-4xl mx-auto">
+      <img src="/images/logo.webp" alt="Flowtaro" class="w-28 h-auto mx-auto block">
+    </div>
+  </section>
 
+  <section class="bg-gradient-to-r from-[rgb(23,38,107)] to-[rgb(168,176,222)] text-white py-20 px-4 text-center">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 mt-10">AI workflows, simplified</h1>
+      <p class="text-xl mb-8 max-w-2xl mx-auto">Independent reviews, comparisons, and guides to help you choose the best AI tools for your business.</p>
+      <a href="#articles" class="inline-block bg-white text-[rgb(23,38,107)] px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition">Explore articles</a>
+    </div>
+  </section>
+
+  <section class="about my-12 max-w-4xl mx-auto px-4">
+    <p class="text-gray-700 text-lg">Flowtaro is an independent review and educational platform dedicated to helping people choose the right AI tools. We provide in-depth comparisons, how‑to guides, and practical insights – all based on real‑world testing and research.</p>
+  </section>
+
+  <div class="container" id="articles">
     <!-- DYNAMIC_CONTENT -->
-
-    <footer>
-      <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="/privacy.html">Privacy Policy</a></p>
-    </footer>
   </div>
+
+  <footer class="site-footer text-center">
+    <div class="site-footer-inner">
+      <p>&copy; 2026 Flowtaro. <a href="/privacy.html">Privacy Policy</a></p>
+    </div>
+  </footer>
 </body>
 </html>
