@@ -6,6 +6,7 @@ Renders production articles and production hub; updates public/index.html.
 
 import html
 import math
+import random
 import re
 import shutil
 from datetime import date, datetime
@@ -272,17 +273,72 @@ def _extract_lead(meta: dict, body_html: str) -> str:
     return out[:220].rsplit(" ", 1)[0] if len(out) > 220 else out
 
 
+def enhance_article(html: str) -> str:
+    """
+    Wraps special sections (Decision rules, Tradeoffs, Failure modes,
+    SOP checklist, Template 1, Template 2) with styled divs.
+    """
+    decision_sections = [
+        "Decision rules:",
+        "Tradeoffs:",
+        "Failure modes:",
+        "SOP checklist:",
+    ]
+    template_sections = [
+        "Template 1:",
+        "Template 2:",
+    ]
+
+    def wrap_section(match: re.Match[str], section_class: str) -> str:
+        header = match.group(1)
+        content = match.group(2)
+        return f'<div class="{section_class}">{header}{content}</div>'
+
+    decision_class = "bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6"
+    for sec in decision_sections:
+        pattern = rf"(<h3[^>]*>{re.escape(sec)}</h3>)(.*?)(?=<h[23]|\Z)"
+        html = re.sub(
+            pattern,
+            lambda m, c=decision_class: wrap_section(m, c),
+            html,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+
+    template_class = "bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow mb-4"
+    for sec in template_sections:
+        pattern = rf"(<h3[^>]*>{re.escape(sec)}</h3>)(.*?)(?=<h[23]|\Z)"
+        html = re.sub(
+            pattern,
+            lambda m, c=template_class: wrap_section(m, c),
+            html,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+
+    return html
+
+
 def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str) -> str:
-    """HTML for meta block under H1 (articles only). Category is linked to hub."""
-    parts = [f'<span>Updated: {_escape(updated_iso)}</span>', "<span> · </span>", f"<span>Reading time: {reading_min} min</span>"]
+    """HTML for meta block under H1 (articles only). Styled badge row with category, date, reading time."""
+    parts: list[str] = []
     if category_slug:
         slug_esc = _escape(category_slug)
         display = category_slug.replace("-", " ").title()
-        parts.append("<span> · </span>")
-        parts.append(f'<span>Category: <a href="/hubs/{slug_esc}/" class="text-[#17266B] hover:text-[#0f1a4a] hover:underline">{_escape(display)}</a></span>')
-    meta_html = '<p class="page-meta">\n  ' + "\n  ".join(parts) + "\n</p>"
+        display_esc = _escape(display)
+        parts.append(
+            f'<span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded">'
+            f'<a href="/hubs/{slug_esc}/" class="hover:underline">{display_esc}</a></span>'
+        )
+        parts.append("<span>&bull;</span>")
+    parts.append(f"<span>Updated: {_escape(updated_iso)}</span>")
+    parts.append("<span>&bull;</span>")
+    parts.append(f"<span>{_escape(str(reading_min))} min read</span>")
+    meta_html = (
+        '<div class="flex flex-wrap items-center gap-3 text-sm font-medium text-gray-500 mb-6">\n  '
+        + "\n  ".join(parts)
+        + "\n</div>"
+    )
     if lead:
-        return meta_html + f'\n<p class="page-lead">{lead}</p>'
+        return meta_html + f'\n<p class="text-xl text-gray-600 leading-relaxed border-l-4 border-indigo-500 pl-4 italic mb-8">{lead}</p>'
     return meta_html
 
 
@@ -487,6 +543,7 @@ def _footer_html() -> str:
 
 
 def _wrap_page(title: str, body_html: str, last_updated: str | None = None) -> str:
+    """Fallback page for articles when ARTICLE_TEMPLATE_PATH is missing. Uses relative path to CSS from articles/slug/."""
     meta = ""
     if last_updated:
         meta = f'<div class="meta">Last updated: {_escape(last_updated)}</div>\n'
@@ -496,11 +553,11 @@ def _wrap_page(title: str, body_html: str, last_updated: str | None = None) -> s
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{_escape(title)}</title>
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="stylesheet" href="../../assets/styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="flowtaro-container">
         {meta}
         {body_html}
         {_footer_html()}
@@ -509,29 +566,106 @@ def _wrap_page(title: str, body_html: str, last_updated: str | None = None) -> s
 </html>"""
 
 
+def _parse_html_article(path: Path) -> tuple[dict, str] | None:
+    """Read .html article file: parse frontmatter from first <!-- ... -->, return (meta, body_html)."""
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    m = re.match(r"\s*<!--\s*(.*?)\s*-->", content, re.DOTALL)
+    if not m:
+        return None
+    end = m.end()
+    block = m.group(1).strip()
+    meta: dict[str, str] = {}
+    for line in block.split("\n"):
+        m2 = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", line.strip())
+        if m2:
+            key, raw = m2.group(1), m2.group(2).strip()
+            if raw.startswith('"') and raw.endswith('"'):
+                raw = raw[1:-1].replace('\\"', '"')
+            elif raw.startswith("'") and raw.endswith("'"):
+                raw = raw[1:-1]
+            meta[key] = raw
+    meta.setdefault("slug", path.stem)
+    body_html = content[end:].lstrip()
+    return (meta, body_html)
+
+
+def _word_count_html(html: str) -> int:
+    """Approximate word count from HTML: strip tags, then split on whitespace."""
+    text = re.sub(r"<[^>]+>", " ", html)
+    return len(text.split())
+
+
 def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None = None) -> None:
-    meta, body = _parse_md_file(path)
-    slug = meta.get("slug") or path.stem
-    title = (meta.get("title") or slug).strip()
-    updated_iso = _updated_date_iso(meta, path)
-    body_html = _md_to_html(body, existing_slugs)
-    tool_list = _load_affiliate_tools(AFFILIATE_TOOLS_PATH)
-    body_html = replace_tool_names_with_links(body_html, tool_list)
-    words = _word_count_md(body)
-    reading_min = _reading_time_min(words)
+    is_html = path.suffix.lower() == ".html"
+    if is_html:
+        parsed = _parse_html_article(path)
+        if not parsed:
+            print(f"  Skip {path.name}: invalid HTML frontmatter")
+            return
+        meta, body_html = parsed
+        slug = meta.get("slug") or path.stem
+        title = (meta.get("title") or slug).strip()
+        updated_iso = (meta.get("last_updated") or meta.get("updated") or "").strip()[:10] or _updated_date_iso(meta, path)
+        words = _word_count_html(body_html)
+        reading_min = _reading_time_min(words)
+    else:
+        meta, body = _parse_md_file(path)
+        slug = meta.get("slug") or path.stem
+        title = (meta.get("title") or slug).strip()
+        updated_iso = _updated_date_iso(meta, path)
+        body_html = _md_to_html(body, existing_slugs)
+        body_html = enhance_article(body_html)
+        tool_list = _load_affiliate_tools(AFFILIATE_TOOLS_PATH)
+        body_html = replace_tool_names_with_links(body_html, tool_list)
+        words = _word_count_md(body)
+        reading_min = _reading_time_min(words)
+
     html_path = out_dir / "articles" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
 
-    category_slug = (meta.get("category") or "").strip() or None
+    category_slug = (meta.get("category") or meta.get("category_slug") or "").strip() or None
     lead = _extract_lead(meta, body_html)
+    # Prepend meta block (category badge, date, reading time, lead) for all article types (MD and HTML)
     meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead)
     full_body_html = meta_html + body_html
-    article_body_html = f"<div class=\"article-body\">{full_body_html}</div>"
+
+    # Generate "Read Next" section
+    read_next_html = ""
+    try:
+        all_articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+        other_articles = [a for a in all_articles if (a[0].get("slug") or a[1].stem) != slug]
+        selected = random.sample(other_articles, min(3, len(other_articles)))
+        if selected:
+            read_next_html = '<section class="bg-gray-50 p-6 rounded-lg mt-8">'
+            read_next_html += '<h3 class="font-bold text-gray-900 mb-3">Read Next:</h3>'
+            read_next_html += '<ul class="space-y-2">'
+            for art_meta, art_path in selected:
+                art_title = _escape(art_meta.get("title") or "Untitled")
+                article_slug = _escape(art_meta.get("slug") or art_path.stem)
+                read_next_html += f'<li><a href="/articles/{article_slug}/" class="text-indigo-600 hover:text-indigo-800 hover:underline transition-colors">{art_title}</a></li>'
+            read_next_html += "</ul></section>"
+    except Exception as e:
+        print(f"Warning: Could not generate Read Next section: {e}")
+
+    full_body_html += read_next_html
+
+    # Affiliate disclosure (yellow box, below Read Next, above footer)
+    disclosure_html = """
+<div class="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded-r">
+    <strong>Disclosure:</strong> Some links on this page are affiliate links. If you make a purchase through these links, we may earn a commission at no extra cost to you.
+</div>"""
+    full_body_html += disclosure_html
+
+    article_body_html = f"<article class=\"article-body\">{full_body_html}</article>"
     article_content = article_body_html
 
     if ARTICLE_TEMPLATE_PATH.exists():
         content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("{{TITLE}}", _escape(title), 1)
+        content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
     else:
         content = _wrap_page(title, body_html, updated_iso)
@@ -643,15 +777,16 @@ def _render_hub(
     if HUB_TEMPLATE_PATH.exists():
         content = HUB_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("HUB_TITLE_PLACEHOLDER", _escape(title), 1)
+        content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n"
+            f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"../../assets/styles.css\">\n"
             "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
             "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
-            "  <div class=\"container\">\n"
+            "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n  </div>\n"
             "  <footer class=\"site-footer text-center\"><div class=\"site-footer-inner\">"
@@ -690,6 +825,7 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
 
     if INDEX_TEMPLATE_PATH.exists():
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
+        content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
     else:
         # Fallback: build full page with static footer (no template file)
@@ -697,8 +833,8 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n</head>\n<body>\n"
-            "  <div class=\"container\">\n"
+            "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n</head>\n<body>\n"
+            "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n"
             + footer
@@ -717,14 +853,15 @@ def _write_privacy_page(out_dir: Path) -> None:
 """
     if INDEX_TEMPLATE_PATH.exists():
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
+        content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", privacy_placeholder.strip(), 1)
         content = content.replace("<title>Flowtaro</title>", "<title>Privacy Policy - Flowtaro</title>", 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n</head>\n<body>\n"
-            "  <div class=\"container\">\n"
+            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n</head>\n<body>\n"
+            "  <div class=\"flowtaro-container\">\n"
             + privacy_placeholder
             + "\n  <footer>\n    <p><a href=\"/robots.txt\">robots.txt</a> · <a href=\"/sitemap.xml\">sitemap.xml</a> · <a href=\"/privacy.html\">Privacy Policy</a></p>\n  </footer>\n"
             "  </div>\n</body>\n</html>\n"

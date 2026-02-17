@@ -89,6 +89,26 @@ def _parse_frontmatter(path: Path) -> dict | None:
     return data
 
 
+def _parse_html_frontmatter_from_comment(content: str) -> dict | None:
+    """Parse frontmatter from the first HTML comment (<!-- key: value ... -->). Returns dict or None."""
+    m = re.match(r"\s*<!--\s*(.*?)\s*-->", content, re.DOTALL)
+    if not m:
+        return None
+    block = m.group(1).strip()
+    data: dict[str, str] = {}
+    for line in block.split("\n"):
+        m2 = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", line.strip())
+        if not m2:
+            continue
+        key, raw = m2.group(1), m2.group(2).strip()
+        if raw.startswith('"') and raw.endswith('"'):
+            raw = raw[1:-1].replace('\\"', '"')
+        elif raw.startswith("'") and raw.endswith("'"):
+            raw = raw[1:-1]
+        data[key] = raw
+    return data if data else None
+
+
 def get_production_articles(
     articles_dir: Path | None = None,
     config_path: Path | None = None,
@@ -103,11 +123,30 @@ def get_production_articles(
     dir_path = articles_dir or ARTICLES_DIR
     if not dir_path.exists():
         return []
-    out: list[tuple[dict, Path]] = []
-    for path in sorted(dir_path.glob("*.md")):
-        meta = _parse_frontmatter(path)
-        if not meta:
+    # Collect paths: prefer .html over .md for same stem
+    by_stem: dict[str, Path] = {}
+    for path in dir_path.iterdir():
+        if not path.is_file():
             continue
+        if path.suffix == ".md":
+            by_stem.setdefault(path.stem, path)
+        elif path.suffix == ".html":
+            by_stem[path.stem] = path  # overwrite so .html wins
+    out: list[tuple[dict, Path]] = []
+    for path in sorted(by_stem.values(), key=lambda p: p.name):
+        if path.suffix == ".html":
+            try:
+                content = path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            meta = _parse_html_frontmatter_from_comment(content)
+            if not meta:
+                continue
+            meta.setdefault("slug", path.stem)
+        else:
+            meta = _parse_frontmatter(path)
+            if not meta:
+                continue
         if (meta.get("status") or "").strip().lower() == "blocked":
             continue
         cat = (meta.get("category") or meta.get("category_slug") or "").strip()

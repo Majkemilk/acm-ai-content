@@ -18,7 +18,7 @@ _PROJECT_ROOT = _SCRIPTS_DIR.parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from content_index import get_production_articles, load_config  # noqa: E402
+from content_index import get_production_articles, load_config, _parse_html_frontmatter_from_comment  # noqa: E402
 
 ARTICLES_DIR = _PROJECT_ROOT / "content" / "articles"
 QUEUE_PATH = _PROJECT_ROOT / "content" / "queue.yaml"
@@ -107,8 +107,19 @@ def _load_cost_data() -> dict:
         return {}
 
 
+def _article_paths_one_per_stem(articles_dir: Path) -> list[Path]:
+    """Return one path per article stem; prefer .html over .md when both exist."""
+    by_stem: dict[str, Path] = {}
+    for ext in ("*.md", "*.html"):
+        for path in articles_dir.glob(ext):
+            stem = path.stem
+            if stem not in by_stem or path.suffix == ".html":
+                by_stem[stem] = path
+    return sorted(by_stem.values(), key=lambda p: p.name)
+
+
 def collect_article_stats(articles_dir: Path, config: dict) -> dict:
-    """Return counts: total, by status, production count, by content_type."""
+    """Return counts: total, by status, production count, by content_type. Counts .md and .html, one per stem."""
     production_cat = (config.get("production_category") or "ai-marketing-automation").strip()
     total = 0
     by_status = {}
@@ -116,13 +127,16 @@ def collect_article_stats(articles_dir: Path, config: dict) -> dict:
     by_content_type = {}
     if not articles_dir.exists():
         return {"total": 0, "by_status": {}, "production": 0, "by_content_type": {}}
-    for path in articles_dir.glob("*.md"):
+    for path in _article_paths_one_per_stem(articles_dir):
         total += 1
         try:
             content = path.read_text(encoding="utf-8")
         except OSError:
             continue
-        meta = _parse_frontmatter_from_content(content)
+        if path.suffix == ".html":
+            meta = _parse_html_frontmatter_from_comment(content) or {}
+        else:
+            meta = _parse_frontmatter_from_content(content)
         status = (meta.get("status") or "draft").strip().lower()
         by_status[status] = by_status.get(status, 0) + 1
         cat = (meta.get("category") or meta.get("category_slug") or "").strip()
@@ -218,7 +232,7 @@ def run_dashboard(summary_only: bool, days: int, use_color: bool) -> None:
     print("=" * 60)
 
     print("\n--- Article statistics ---")
-    print(f"  Total .md files:     {art['total']}")
+    print(f"  Total articles:      {art['total']} (.md + .html, one per stem)")
     print(f"  Production (live):   {art['production']}")
     print("  By status:")
     for s, c in sorted(art["by_status"].items()):
