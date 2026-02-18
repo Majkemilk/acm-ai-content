@@ -22,6 +22,13 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-18-jasper-vs-copyai-for-content-creation/" class="text-gray-900 hover:text-[#17266B]">Comparison: Jasper vs Copy.ai for Content Creation</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
+            <a href="/articles/2026-02-18-jasper-vs-copyai-for-content-creation/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/2026-02-18-best-ai-tools-for-content-repurposing/" class="text-gray-900 hover:text-[#17266B]">Best AI Tools for Content Repurposing</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
@@ -33,13 +40,6 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
             <a href="/articles/2026-02-18-ai-content-repurposing-workflow/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-18-use-ai-for-sentiment-analysis-in-marketing/" class="text-gray-900 hover:text-[#17266B]">How to Use AI for Sentiment Analysis in Marketing</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-17</p>
-            <a href="/articles/2026-02-18-use-ai-for-sentiment-analysis-in-marketing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
@@ -218,6 +218,13 @@ title: "AI Marketing Automation Tools & Workflows"
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Comparisons</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-18-jasper-vs-copyai-for-content-creation/" class="text-gray-900 hover:text-[#17266B]">Comparison: Jasper vs Copy.ai for Content Creation</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
+            <a href="/articles/2026-02-18-jasper-vs-copyai-for-content-creation/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/2026-02-18-seo-tools-comparison/" class="text-gray-900 hover:text-[#17266B]">SEO Tools Compared</a>
