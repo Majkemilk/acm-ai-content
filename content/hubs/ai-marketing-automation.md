@@ -29,17 +29,17 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-18-best-ai-tools-for-social-media-management/" class="text-gray-900 hover:text-[#17266B]">Best AI Tools for Social Media Management in 2026</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
+            <a href="/articles/2026-02-18-best-ai-tools-for-social-media-management/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/2026-02-18-best-ai-tools-for-content-repurposing/" class="text-gray-900 hover:text-[#17266B]">Best AI Tools for Content Repurposing</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
             <a href="/articles/2026-02-18-best-ai-tools-for-content-repurposing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-18-ai-content-repurposing-workflow/" class="text-gray-900 hover:text-[#17266B]">AI Content Repurposing Workflow for Small Business</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
-            <a href="/articles/2026-02-18-ai-content-repurposing-workflow/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
@@ -241,5 +241,12 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
             <a href="/articles/2026-02-18-best-ai-tools-for-content-repurposing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-18-best-ai-tools-for-social-media-management/" class="text-gray-900 hover:text-[#17266B]">Best AI Tools for Social Media Management in 2026</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
+            <a href="/articles/2026-02-18-best-ai-tools-for-social-media-management/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>

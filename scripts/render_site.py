@@ -554,6 +554,7 @@ def _wrap_page(title: str, body_html: str, last_updated: str | None = None) -> s
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{_escape(title)}</title>
     <link rel="stylesheet" href="../../assets/styles.css">
+    <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}.article-body{max-width:70ch;margin-left:auto;margin-right:auto;line-height:1.7;color:#1e293b;padding:0 1rem}</style>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -796,6 +797,7 @@ def _render_hub(
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"../../assets/styles.css\">\n"
+            "  <style>body{font-family:-apple-system,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n"
             "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
             "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
             "  <div class=\"flowtaro-container\">\n"
@@ -845,7 +847,7 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n</head>\n<body>\n"
+            "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n</head>\n<body>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n"
@@ -872,7 +874,7 @@ def _write_privacy_page(out_dir: Path) -> None:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n</head>\n<body>\n"
+            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n</head>\n<body>\n"
             "  <div class=\"flowtaro-container\">\n"
             + privacy_placeholder
             + "\n  <footer>\n    <p><a href=\"/robots.txt\">robots.txt</a> · <a href=\"/sitemap.xml\">sitemap.xml</a> · <a href=\"/privacy.html\">Privacy Policy</a></p>\n  </footer>\n"
