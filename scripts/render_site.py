@@ -387,9 +387,9 @@ def _md_to_html(body: str, existing_slugs: set[str] | None = None) -> str:
         body,
         flags=re.MULTILINE,
     )
-    # Usuń znane sekcje, które powinny być puste (Tools mentioned, CTA, Pre-publish checklist).
-    # Disclosure is kept so {{AFFILIATE_DISCLOSURE}} (replaced above) is shown.
-    for section in ["Tools mentioned", "CTA", "Pre-publish checklist"]:
+    # Usuń znane sekcje (Tools mentioned, CTA, Pre-publish checklist, Disclosure).
+    # Disclosure is added by the script in a yellow box at the end of the page; do not keep it in the body.
+    for section in ["Tools mentioned", "CTA", "Pre-publish checklist", "Disclosure"]:
         pattern = r"^#{1,3}\s*" + re.escape(section) + r"\s*\n.*?(?=^#{1,3}|\Z)"
         body = re.sub(pattern, "", body, flags=re.DOTALL | re.MULTILINE)
     # Usuń puste sekcje (nagłówek + zawartość, jeśli po usunięciu placeholderów nie ma treści)
@@ -598,6 +598,15 @@ def _word_count_html(html: str) -> int:
     return len(text.split())
 
 
+def _strip_disclosure_from_html(body: str) -> str:
+    """Remove any Disclosure heading and its content from article body. The script adds the disclosure in a yellow box at the end."""
+    return re.sub(
+        r"(?si)\s*<h[23](?:\s[^>]*)?>\s*Disclosure\s*</h[23]>.*?(?=<h[1-6](?:\s|>)|\Z)",
+        "",
+        body,
+    )
+
+
 def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None = None) -> None:
     is_html = path.suffix.lower() == ".html"
     if is_html:
@@ -622,6 +631,9 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
         body_html = replace_tool_names_with_links(body_html, tool_list)
         words = _word_count_md(body)
         reading_min = _reading_time_min(words)
+
+    # Remove any Disclosure section from body; the script adds it in a yellow box at the end.
+    body_html = _strip_disclosure_from_html(body_html)
 
     html_path = out_dir / "articles" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)

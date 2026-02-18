@@ -67,6 +67,7 @@ BRACKET_PLACEHOLDER = re.compile(r"\[[^\]]+\](?!\s*\()")
 MUSTACHE_REGEX = re.compile(r"\{\{[^}]+\}\}")
 
 # Forbidden claim patterns (case-insensitive)
+# Patterns that trigger QA failure. Prompt instructions must forbid these so the model avoids them (see LENGTH AND CONTENT RULES in HTML prompt and OUTPUT CONTRACT D in markdown prompt).
 FORBIDDEN_PATTERNS = [
     (re.compile(r"\b#\s*1\b", re.I), "#1"),
     (re.compile(r"\bnumber\s*one\b", re.I), "number one"),
@@ -142,6 +143,7 @@ def sanitize_filled_body(text: str) -> tuple[str, list[str]]:
     best_count = 0
     guarantee_count = 0
     out_lines: list[str] = []
+    dollar_count = 0
     for line in text.split("\n"):
         if line.lstrip().startswith("#"):
             out_lines.append(line)
@@ -154,6 +156,8 @@ def sanitize_filled_body(text: str) -> tuple[str, list[str]]:
         guarantee_count += n
         line, n = re.subn(r"\bguaranteed\b", "assured", line, flags=re.IGNORECASE)
         guarantee_count += n
+        line, n = re.subn(r"\$\d+(?:\.\d+)?", "cost", line)
+        dollar_count += n
         out_lines.append(line)
     if pricing_count:
         notes.append(f"replaced pricing->cost ({pricing_count}x)")
@@ -161,6 +165,8 @@ def sanitize_filled_body(text: str) -> tuple[str, list[str]]:
         notes.append(f"replaced 'the best'->'a strong option' ({best_count}x)")
     if guarantee_count:
         notes.append(f"replaced guarantee(d)->assure(d) ({guarantee_count}x)")
+    if dollar_count:
+        notes.append(f"replaced $ amount->cost ({dollar_count}x)")
     return ("\n".join(out_lines), notes)
 
 
@@ -407,10 +413,33 @@ REQUIRED SECTIONS (include every one, in a logical order; use H2 for main sectio
 - Template 1: (a ready-to-use template with real example content; use the template card style below)
 - Template 2: (a second template with different real example content; use the template card style)
 - Step-by-step workflow (numbered steps for the main process)
+- Optionally (within Step-by-step workflow): "Try it yourself: Build your own AI prompt" — include only if the topic lends itself to a practical exercise; see "OPTIONAL SECTION" below.
 - When NOT to use this (when to avoid this approach)
 - FAQ (at least 2–3 questions and answers)
 - Internal links (1–2 sentences suggesting related reads; you may use placeholder URLs like # or /blog/ for now)
+- List of AI tools mentioned in this article (place near the end, e.g. after FAQ or after Internal links; see "SECTION: List of AI tools" below)
 - Optionally: Case study (a few paragraphs illustrating a real-world scenario: specific data, challenges, and outcomes; see example below)
+
+OPTIONAL SECTION: "Try it yourself: Build your own AI prompt"
+If the topic lends itself to a practical exercise, include a dedicated subsection (H3) titled "Try it yourself: Build your own AI prompt" inside the Step-by-step workflow section. When you include this subsection, you MUST follow these rules without exception:
+
+1) Workflow explanation (required at the start): The first paragraph of this subsection MUST explicitly state the suggested workflow as: Human → Prompt #1 (to a general AI) → Prompt #2 (for the specific tool, e.g., Descript) → Use in the tool. Do not omit or shorten this; the reader must see this exact workflow at the beginning.
+
+2) Structure of the example Prompt #1 (mandatory): The copy-paste-ready example of Prompt #1 MUST be structured with all of the following labeled parts. Each part must be clearly present and substantive (not one-line placeholders):
+- Role — define the role of a specialist or team best suited to accomplish the goal (e.g., "You are a marketing analyst with experience in…").
+- Goal — what the user wants to achieve (the outcome).
+- Task — mandatory: a concrete request that must always begin with the phrase "Please create a prompt that will [Goal]" for the specific tool and use case (e.g. "Please create a prompt that will analyze competitor video tone for use in Descript.").
+- Uncertainty Flagging — an explicit instruction that if the AI is unsure about any element, it must state so and ask for clarification before proceeding.
+- Permission to ask clarifying questions — an explicit instruction that if context is insufficient, the AI may (and should) ask the user for more details.
+
+Do not merge or abbreviate these into a single short paragraph. The meta-prompt must be detailed enough that the reader gets a complete, usable template. Use the actual tool name from the article (e.g., Descript, Pictory, Otter). Put the meta-prompt inside <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">...</pre>. Emphasize that this approach makes the user the architect of the workflow, not just a passive consumer.
+
+SECTION: "List of AI tools mentioned in this article"
+Include a section titled "List of AI tools mentioned in this article" near the end of the article (e.g. after FAQ or after Internal links; choose a consistent, logical position). This section gives readers a quick reference and supports affiliate links.
+- Placement: Near the end, after FAQ or after Internal links. Do not place after the disclosure (the template adds disclosure automatically).
+- Content: A bulleted list. For each tool that is both (a) in the tool list above and (b) relevant to the article (actually discussed or clearly pertinent), add one bullet containing: the tool name as a link using the exact URL from the tool list above, then a short one-sentence description.
+- Description rules: The one-sentence description must be factual and state what the tool does and its key differentiator (e.g. "video editing and transcription", "AI-powered transcription with speaker identification", "AI content generation for blogs"). Be concise and specific; avoid vague phrases like "powerful tool" or "comprehensive solution". If you cannot provide a reliable, factual description for a tool, omit that tool from the list.
+- Format: Use H2 for the section title. Use <ul class="list-disc list-inside space-y-2 text-gray-700"> for the list. Each item: <a href="URL">Tool Name</a> — description sentence. Include only tools from the tool list above; do not invent tools. The AI decides which tools to include based on article relevance. If the tool list is empty, omit this section.
 
 IMPORTANT — LENGTH: The article MUST be at least 700 words. For comprehensive guides, aim for 900+ words. To achieve this:
 - Expand "Template 1" and "Template 2" with rich, detailed examples (multiple lines or bullets each; real company names, metrics, and scenarios).
@@ -418,7 +447,8 @@ IMPORTANT — LENGTH: The article MUST be at least 700 words. For comprehensive 
 Example case study tone: "A small e-commerce company, ShopSmart, used Descript to analyze competitor social media videos. They discovered that competitors were heavily using influencer marketing, which led them to pivot their strategy. Within three months, their engagement increased by 40%."
 
 LENGTH AND CONTENT RULES:
-- NEVER use square-bracket placeholders (e.g. [Insert Name], [Insert URL], [Your company]). Every template field, example, and sentence must be filled with concrete, realistic content. Use real-looking example names, numbers, and short phrases.
+- NEVER use square-bracket placeholders (e.g. [Name], [Date], [Customer Name], [Your Company], [Insert URL]). Every template field, example, and sentence must be filled with concrete, realistic content. Use real-looking example names, dates, product names — never leave or introduce any [bracket] token. QA will reject the article if any remain.
+- FORBIDDEN PHRASES (QA will reject the article if present): Do not use "unlimited", "limit to", "limited to", or "up to [number]" (e.g. "up to 5"). Do not use $ or any currency amount (e.g. $99). Use neutral wording instead (e.g. "many", "as needed", "several", "a set of steps", "cost").
 
 STYLE (Tailwind CSS utility classes):
 - Main section headings: <h2 class="text-3xl font-bold mt-8 mb-4">. Subsection: <h3 class="text-xl font-semibold mt-6 mb-3">.
@@ -450,7 +480,7 @@ Output ONLY the HTML fragment that goes inside the article (no wrapper tags, no 
         user += f"Category: {category}\n"
     if content_type:
         user += f"Content type: {content_type}\n"
-    user += "\nGenerate the complete article body in HTML with Tailwind classes. Include all required sections, at least 700 words (expand templates and add a case study if helpful), and no square-bracket placeholders."
+    user += "\nGenerate the complete article body in HTML with Tailwind classes. Include all required sections (including 'List of AI tools mentioned in this article' near the end), at least 700 words (expand templates and add a case study if helpful), and no square-bracket placeholders."
     return instructions, user
 
 
@@ -576,6 +606,7 @@ def build_prompt(meta: dict, body: str, style: str = "docs") -> tuple[str, str]:
     }.get(style, "Use a documentation-like tone: clear, actionable, B2B/SOHO, English.")
 
     instructions = f"""You are a documentation writer. Your task is to replace ONLY bracket placeholders [instruction or hint] in the given markdown article skeleton with real prose. Return the full markdown body (no frontmatter). Do not change any {{{{MUSTACHE}}}} placeholders (e.g. {{{{TOOLS_MENTIONED}}}}, {{{{CTA_BLOCK}}}}, {{{{AFFILIATE_DISCLOSURE}}}}, {{{{INTERNAL_LINKS}}}}, {{{{PRIMARY_TOOL}}}}). Leave them exactly as-is.
+CRITICAL — No [bracket] tokens in output: Your response must not contain any text of the form [Anything] (e.g. [Name], [Date], [Customer Name], [Your Company], [Product]). Replace every such placeholder with a concrete example value. If you leave or introduce any [bracket] token, the QA check will reject the article.
 
 Heading freeze: Do not add, remove, rename, or reformat any headings (#, ##, ###, ####). Do not introduce new headings of any level. Only replace bracket placeholders with plain text or lists under existing headings.
 
@@ -611,7 +642,7 @@ The required headings are:
 Do not omit any of these sections. Each section must contain at least 3-5 bullet points (or detailed content) relevant to the article topic.
 Failure to include all these headings will result in rejection.
 
-IMPORTANT: In the "Template 1" and "Template 2" sections, you MUST generate concrete, realistic examples relevant to the article topic. Do NOT use placeholder text in square brackets like [Insert title] or [Key Point 1]. Instead, fill them with actual example content (e.g., a specific title, real bullet points, actionable steps). The templates should be immediately usable by the reader as examples.
+IMPORTANT: In the "Template 1" and "Template 2" sections, you MUST generate concrete, realistic examples relevant to the article topic. Never leave or introduce any [bracket] token in the entire output. Forbidden examples: [Name], [Date], [Month], [Customer Name], [Your Company], [Product], [Insert title], [Key Point 1], [user's email], [Personalized ...], or any [Anything]. Replace every such placeholder with a concrete value (real example names, dates, product names, email examples). The QA check will reject the article if any [bracket] text remains. The templates should be immediately usable by the reader as examples.
 
 Section Rules (each section must include at least one of: constraint, tradeoff, failure mode, decision rule):
 
@@ -648,7 +679,7 @@ B) Formatting: Under "Decision rules:" at least 6 bullet lines starting with "If
 
 C) Persona: In Introduction include exactly one sentence stating the persona (one of: Solo creator, Agency, Small business marketing lead, SaaS founder). Include 2 constraints for that persona (time, approvals, volume, compliance).
 
-D) Do not use the word "pricing". Do not use "the best" or "#1".
+D) Do not use the word "pricing". Do not use "the best" or "#1". Do not use "unlimited", "limit to", "limited to", or "up to [number]" (e.g. "up to 5"). Do not use $ or any currency amount (e.g. $99, $10/mo); the QA check will reject the article. Use neutral wording (e.g. "many", "as needed", "several", "cost") instead.
 
 E) If you cannot comply with the OUTPUT CONTRACT, regenerate until you can. Do not omit the markers.
 
