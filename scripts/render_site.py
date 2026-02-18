@@ -553,7 +553,7 @@ def _wrap_page(title: str, body_html: str, last_updated: str | None = None) -> s
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{_escape(title)}</title>
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="stylesheet" href="../../assets/styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -677,7 +677,7 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     if ARTICLE_TEMPLATE_PATH.exists():
         content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("{{TITLE}}", _escape(title), 1)
-        content = content.replace("{{STYLESHEET_HREF}}", "/assets/styles.css", 1)
+        content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
     else:
         content = _wrap_page(title, body_html, updated_iso)
@@ -789,13 +789,13 @@ def _render_hub(
     if HUB_TEMPLATE_PATH.exists():
         content = HUB_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("HUB_TITLE_PLACEHOLDER", _escape(title), 1)
-        content = content.replace("{{STYLESHEET_HREF}}", "/assets/styles.css", 1)
+        content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n"
+            f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"../../assets/styles.css\">\n"
             "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
             "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
             "  <div class=\"flowtaro-container\">\n"
@@ -837,7 +837,7 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
 
     if INDEX_TEMPLATE_PATH.exists():
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
-        content = content.replace("{{STYLESHEET_HREF}}", "/assets/styles.css", 1)
+        content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
     else:
         # Fallback: build full page with static footer (no template file)
@@ -845,7 +845,7 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n</head>\n<body>\n"
+            "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n</head>\n<body>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n"
@@ -865,14 +865,14 @@ def _write_privacy_page(out_dir: Path) -> None:
 """
     if INDEX_TEMPLATE_PATH.exists():
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
-        content = content.replace("{{STYLESHEET_HREF}}", "/assets/styles.css", 1)
+        content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", privacy_placeholder.strip(), 1)
         content = content.replace("<title>Flowtaro</title>", "<title>Privacy Policy - Flowtaro</title>", 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"/assets/styles.css\">\n</head>\n<body>\n"
+            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n</head>\n<body>\n"
             "  <div class=\"flowtaro-container\">\n"
             + privacy_placeholder
             + "\n  <footer>\n    <p><a href=\"/robots.txt\">robots.txt</a> · <a href=\"/sitemap.xml\">sitemap.xml</a> · <a href=\"/privacy.html\">Privacy Policy</a></p>\n  </footer>\n"
