@@ -24,6 +24,14 @@ AFFILIATE_TOOLS_PATH = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
 INDEX_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "index.html"
 HUB_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "hub.html"
 ARTICLE_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "article.html"
+PRIVACY_MD_PATH = PROJECT_ROOT / "Privacy Policy.md"
+PRIVACY_DOCX_PATH = PROJECT_ROOT / "privacy.docx"
+
+try:
+    from docx import Document as DocxDocument
+    _DOCX_AVAILABLE = True
+except ImportError:
+    _DOCX_AVAILABLE = False
 
 INLINE_LINK = re.compile(r"\[([^\]]*)\]\(([^)]*)\)")
 # Internal article link: [text](/articles/slug/) or [text](/articles/slug) or [text](/articles/slug#anchor)
@@ -533,9 +541,32 @@ def _md_to_html(body: str, existing_slugs: set[str] | None = None) -> str:
     return body_html
 
 
+def _docx_to_html(path: Path) -> str:
+    """Convert .docx paragraphs to HTML (h1/h2/h3/p). Requires python-docx."""
+    if not _DOCX_AVAILABLE:
+        return ""
+    doc = DocxDocument(path)
+    out: list[str] = []
+    for para in doc.paragraphs:
+        text = para.text.strip()
+        if not text:
+            continue
+        text = _escape(text)
+        style = (para.style and para.style.name) or ""
+        if style in ("Heading 1", "Title"):
+            out.append(f"<h1>{text}</h1>")
+        elif style == "Heading 2":
+            out.append(f"<h2>{text}</h2>")
+        elif style == "Heading 3":
+            out.append(f"<h3>{text}</h3>")
+        else:
+            out.append(f"<p>{text}</p>")
+    return "\n".join(out)
+
+
 def _footer_html() -> str:
     return (
-        '<footer>\n'
+        '<footer class="text-center">\n'
         '    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · '
         '<a href="/privacy.html">Privacy Policy</a></p>\n'
         '</footer>'
@@ -843,7 +874,7 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
     else:
         # Fallback: build full page with static footer (no template file)
-        footer = '  <footer>\n    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="/privacy.html">Privacy Policy</a></p>\n  </footer>\n'
+        footer = '  <footer class="text-center">\n    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="/privacy.html">Privacy Policy</a></p>\n  </footer>\n'
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
@@ -860,25 +891,37 @@ def _update_index(out_dir: Path, production_category: str, articles: list[tuple[
 
 
 def _write_privacy_page(out_dir: Path) -> None:
-    """Generate public/privacy.html from index template with placeholder content."""
-    privacy_placeholder = """
-    <h1>Privacy Policy</h1>
-    <p>This page will be updated with our privacy policy. Please check back soon.</p>
-"""
-    if INDEX_TEMPLATE_PATH.exists():
-        content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
+    """Generate public/privacy.html from privacy.docx or Privacy Policy.md (or placeholder if both missing)."""
+    privacy_body: str
+    if PRIVACY_DOCX_PATH.exists() and _DOCX_AVAILABLE:
+        privacy_html = _docx_to_html(PRIVACY_DOCX_PATH)
+        privacy_html = re.sub(r"__([^_]+)__", r"<strong>\1</strong>", privacy_html)
+        privacy_body = f'<div class="article-body">\n{privacy_html}\n</div>'
+    else:
+        if PRIVACY_DOCX_PATH.exists() and not _DOCX_AVAILABLE:
+            print("  (privacy.docx found but python-docx not installed; run: pip install python-docx)")
+        if PRIVACY_MD_PATH.exists():
+            body = PRIVACY_MD_PATH.read_text(encoding="utf-8")
+            privacy_html = _md_to_html(body, None)
+            privacy_html = re.sub(r"__([^_]+)__", r"<strong>\1</strong>", privacy_html)
+            privacy_body = f'<div class="article-body">\n{privacy_html}\n</div>'
+        else:
+            privacy_body = '<div class="article-body"><h1>Privacy Policy</h1><p>This page will be updated with our privacy policy. Please check back soon.</p></div>'
+    if ARTICLE_TEMPLATE_PATH.exists():
+        content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
+        content = content.replace("{{TITLE}}", "Privacy Policy", 1)
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
-        content = content.replace("<!-- DYNAMIC_CONTENT -->", privacy_placeholder.strip(), 1)
-        content = content.replace("<title>Flowtaro</title>", "<title>Privacy Policy - Flowtaro</title>", 1)
+        content = content.replace("<!-- ARTICLE_CONTENT -->", privacy_body, 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n</head>\n<body>\n"
-            "  <div class=\"flowtaro-container\">\n"
-            + privacy_placeholder
-            + "\n  <footer>\n    <p><a href=\"/robots.txt\">robots.txt</a> · <a href=\"/sitemap.xml\">sitemap.xml</a> · <a href=\"/privacy.html\">Privacy Policy</a></p>\n  </footer>\n"
-            "  </div>\n</body>\n</html>\n"
+            "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}.article-body{max-width:70ch;margin-left:auto;margin-right:auto;line-height:1.7;color:#1e293b;padding:0 1rem}</style>\n</head>\n<body>\n"
+            "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
+            "  <div class=\"bg-white py-10 text-center\"><div class=\"max-w-4xl mx-auto\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div></div>\n"
+            "  <div class=\"flowtaro-container\">\n" + privacy_body + "\n  </div>\n"
+            "  <footer class=\"site-footer text-center\"><p>&copy; 2026 Flowtaro. <a href=\"/privacy.html\">Privacy Policy</a></p></footer>\n"
+            "</body>\n</html>\n"
         )
     privacy_path = out_dir / "privacy.html"
     privacy_path.write_text(content, encoding="utf-8")
