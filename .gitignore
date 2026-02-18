@@ -1,7 +1,12 @@
 __pycache__/
 .DS_Store
 
-public/
+# Ignore generated public output except assets needed for deployment (e.g. styles.css)
+public/*
+!public/assets/
+public/assets/*
+!public/assets/styles.css
+
 *.bak
 *_backup_*/
 logs/
