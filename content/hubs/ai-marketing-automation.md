@@ -15,13 +15,6 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-18-turn-blog-posts-into-social-media-posts-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Turn Blog Posts into Social Media Posts with AI</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
-            <a href="/articles/2026-02-18-turn-blog-posts-into-social-media-posts-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/2026-02-18-repurpose-youtube-videos-into-blog-articles-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Repurpose YouTube Videos into Blog Articles with AI</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
@@ -40,6 +33,13 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
             <a href="/articles/2026-02-18-ai-content-repurposing-workflow/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-18-use-ai-for-sentiment-analysis-in-marketing/" class="text-gray-900 hover:text-[#17266B]">How to Use AI for Sentiment Analysis in Marketing</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-17</p>
+            <a href="/articles/2026-02-18-use-ai-for-sentiment-analysis-in-marketing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
@@ -207,13 +207,6 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
             <a href="/articles/2026-02-18-repurpose-youtube-videos-into-blog-articles-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-18-turn-blog-posts-into-social-media-posts-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to Turn Blog Posts into Social Media Posts with AI</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-18</p>
-            <a href="/articles/2026-02-18-turn-blog-posts-into-social-media-posts-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
