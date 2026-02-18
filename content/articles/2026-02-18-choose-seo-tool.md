@@ -97,11 +97,7 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
-- [Guide to implement AI chatbots to enhance customer engagement with Pictory](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/)
+{{INTERNAL_LINKS}}
 
 ---
 

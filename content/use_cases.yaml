@@ -19,3 +19,30 @@ use_cases:
   - problem: integrate AI tools for better lead scoring in sales
     suggested_content_type: how-to
     category_slug: ai-marketing-automation
+  - problem: leverage AI to optimize ad spending and campaign performance
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+  - problem: automate customer segmentation for targeted marketing with AI
+    suggested_content_type: guide
+    category_slug: ai-marketing-automation
+  - problem: use AI to create dynamic landing pages that adapt to user behavior
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+  - problem: enhance A/B testing strategies using AI-driven insights
+    suggested_content_type: guide
+    category_slug: ai-marketing-automation
+  - problem: utilize AI for predictive analytics in customer purchasing behavior
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+  - problem: generate personalized content suggestions using AI algorithms
+    suggested_content_type: guide
+    category_slug: ai-marketing-automation
+  - problem: automate the lead nurturing process through AI-driven workflows
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+  - problem: implement AI to measure and enhance customer lifetime value effectively
+    suggested_content_type: guide
+    category_slug: ai-marketing-automation
+  - problem: create visual content strategies using AI image generation tools
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation

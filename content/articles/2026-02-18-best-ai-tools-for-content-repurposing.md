@@ -1,19 +1,19 @@
 ---
-title: "How to turn podcasts into written content with Descript"
-content_type: "how-to"
+title: "Best AI Tools for Content Repurposing"
+content_type: "best"
 category: "ai-marketing-automation"
-primary_keyword: "how to turn podcasts into written content with descript"
+primary_keyword: "best ai tools for content repurposing"
 primary_tool: "Descript"
-secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-15"
+secondary_tool: "Opus Clip"
+last_updated: "2026-02-18"
 status: "draft"
 ---
-# How to turn podcasts into written content with Descript
+# Best AI Tools for Content Repurposing
 
-**Content type:** how-to
+**Content type:** best
 **Category:** ai-marketing-automation
-**Primary keyword:** how to turn podcasts into written content with descript
-**Last updated:** 2026-02-15
+**Primary keyword:** best ai tools for content repurposing
+**Last updated:** 2026-02-18
 
 ---
 
@@ -23,7 +23,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of Descript (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of Descript (and Opus Clip, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -41,37 +41,6 @@ Before publishing, verify the following:
 ### Decision rules:
 
 ### Tradeoffs:
-
-### Failure modes:
-
-### SOP checklist:
-
-### Template 1:
-
-### Template 2:
-
----
-
-## Step-by-step workflow (practical)
-
-1.
-2.
-3.
-4.
-5.
-6.
-7.
-
-**Inputs / Outputs**
-
-- Inputs:
-- Outputs:
-
-**Common pitfalls**
-
--
--
--
 
 ---
 
@@ -99,10 +68,7 @@ Before publishing, verify the following:
 
 - [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [How to Repurpose Webinars into Blog Posts Using AI](/articles/2026-02-18-repurpose-webinars-into-blog-posts-using-ai/)
-- [How to Repurpose YouTube Videos into Blog Articles with AI](/articles/2026-02-18-repurpose-youtube-videos-into-blog-articles-with-ai/)
-- [How to automate social media posting schedules with AI with Otter](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-otter/)
+- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
 
 ---
 

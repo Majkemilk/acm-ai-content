@@ -33,3 +33,33 @@ tools:
   - name: "Perplexity AI"
     category: "ai-search-chat"
     affiliate_link: "https://perplexity.com/"
+  - name: "Opus Clip"
+    category: "video"
+    affiliate_link: "https://www.opus.pro/?via=d9d7c5"
+- name: "Synthesia"
+  category: "video"
+  affiliate_link: "https://www.synthesia.io/"
+
+- name: "Make"
+  category: "automation"
+  affiliate_link: "https://www.make.com/"
+
+- name: "VEED"
+  category: "video"
+  affiliate_link: "https://www.veed.io/"
+
+- name: "Murf AI"
+  category: "audio"
+  affiliate_link: "https://murf.ai/"
+
+- name: "Jasper"
+  category: "writing"
+  affiliate_link: "https://www.jasper.ai/"
+
+- name: "Hostinger"
+  category: "hosting"
+  affiliate_link: "https://www.hostinger.com/"
+
+- name: "Canva"
+  category: "design"
+  affiliate_link: "https://www.canva.com/"

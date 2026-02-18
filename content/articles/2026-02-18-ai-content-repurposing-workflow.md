@@ -1,19 +1,19 @@
 ---
-title: "How to integrate AI tools for better lead scoring in sales with Otter"
-content_type: "how-to"
+title: "AI Content Repurposing Workflow for Small Business"
+content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "how to integrate ai tools for better lead scoring in sales with otter"
-primary_tool: "Otter"
-secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-15"
+primary_keyword: "ai content repurposing workflow"
+primary_tool: "Descript"
+secondary_tool: "Pictory"
+last_updated: "2026-02-18"
 status: "draft"
 ---
-# How to integrate AI tools for better lead scoring in sales with Otter
+# AI Content Repurposing Workflow for Small Business
 
-**Content type:** how-to
+**Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** how to integrate ai tools for better lead scoring in sales with otter
-**Last updated:** 2026-02-15
+**Primary keyword:** ai content repurposing workflow
+**Last updated:** 2026-02-18
 
 ---
 
@@ -23,7 +23,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of Otter (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of Descript (and Pictory, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -97,12 +97,9 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
-- [Guide to personalize email marketing campaigns using AI insights with Otter](/articles/2026-02-18-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/)
-- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
+- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
+- [SEO Tools Compared](/articles/2026-02-18-seo-tools-comparison/)
 
 ---
 

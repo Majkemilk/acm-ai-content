@@ -68,9 +68,6 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
 
 ---
