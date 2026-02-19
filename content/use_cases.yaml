@@ -34,15 +34,3 @@ use_cases:
   - problem: utilize AI for predictive analytics in customer purchasing behavior
     suggested_content_type: how-to
     category_slug: ai-marketing-automation
-  - problem: generate personalized content suggestions using AI algorithms
-    suggested_content_type: guide
-    category_slug: ai-marketing-automation
-  - problem: automate the lead nurturing process through AI-driven workflows
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: implement AI to measure and enhance customer lifetime value effectively
-    suggested_content_type: guide
-    category_slug: ai-marketing-automation
-  - problem: create visual content strategies using AI image generation tools
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation

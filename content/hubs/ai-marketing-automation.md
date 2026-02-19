@@ -15,31 +15,31 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights with Otter</a>
+                <a href="/articles/2026-02-19-how-to-utilize-ai-for-predictive-analytics-in-customer-purchasing-behavior/" class="text-gray-900 hover:text-[#17266B]">How to utilize AI for predictive analytics in customer purchasing behavior</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-19-how-to-utilize-ai-for-predictive-analytics-in-customer-purchasing-behavior/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights with Descript</a>
+                <a href="/articles/2026-02-19-how-to-use-ai-to-create-dynamic-landing-pages-that-adapt-to-user-behavior/" class="text-gray-900 hover:text-[#17266B]">How to use AI to create dynamic landing pages that adapt to user behavior</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-19-how-to-use-ai-to-create-dynamic-landing-pages-that-adapt-to-user-behavior/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-best-ai-tools-for-content-repurposing/" class="text-gray-900 hover:text-[#17266B]">Best AI Tools for Content Repurposing</a>
+                <a href="/articles/2026-02-19-how-to-use-ai-to-analyze-customer-feedback-and-improve-products/" class="text-gray-900 hover:text-[#17266B]">How to use AI to analyze customer feedback and improve products</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-best-ai-tools-for-content-repurposing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-19-how-to-use-ai-to-analyze-customer-feedback-and-improve-products/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-ai-marketing-tools/" class="text-gray-900 hover:text-[#17266B]">AI Marketing Tools</a>
+                <a href="/articles/2026-02-19-how-to-leverage-ai-to-optimize-ad-spending-and-campaign-performance/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI to optimize ad spending and campaign performance</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-ai-marketing-tools/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-19-how-to-leverage-ai-to-optimize-ad-spending-and-campaign-performance/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
@@ -99,6 +99,34 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
             <a href="/articles/2026-02-19-ai-marketing-tools/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-guide-to-automate-customer-segmentation-for-targeted-marketing-with-ai/" class="text-gray-900 hover:text-[#17266B]">Guide to automate customer segmentation for targeted marketing with AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-guide-to-automate-customer-segmentation-for-targeted-marketing-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-guide-to-enhance-ab-testing-strategies-using-ai-driven-insights/" class="text-gray-900 hover:text-[#17266B]">Guide to enhance A/B testing strategies using AI-driven insights</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-guide-to-enhance-ab-testing-strategies-using-ai-driven-insights/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-guide-to-implement-ai-chatbots-to-enhance-customer-engagement/" class="text-gray-900 hover:text-[#17266B]">Guide to implement AI chatbots to enhance customer engagement</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-guide-to-implement-ai-chatbots-to-enhance-customer-engagement/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
@@ -228,6 +256,48 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-17</p>
             <a href="/articles/2026-02-18-use-ai-for-sentiment-analysis-in-marketing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-how-to-automate-social-media-posting-schedules-with-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate social media posting schedules with AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-how-to-automate-social-media-posting-schedules-with-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales/" class="text-gray-900 hover:text-[#17266B]">How to integrate AI tools for better lead scoring in sales</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-how-to-integrate-ai-tools-for-better-lead-scoring-in-sales/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-how-to-leverage-ai-to-optimize-ad-spending-and-campaign-performance/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI to optimize ad spending and campaign performance</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-how-to-leverage-ai-to-optimize-ad-spending-and-campaign-performance/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-how-to-use-ai-to-analyze-customer-feedback-and-improve-products/" class="text-gray-900 hover:text-[#17266B]">How to use AI to analyze customer feedback and improve products</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-how-to-use-ai-to-analyze-customer-feedback-and-improve-products/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-how-to-use-ai-to-create-dynamic-landing-pages-that-adapt-to-user-behavior/" class="text-gray-900 hover:text-[#17266B]">How to use AI to create dynamic landing pages that adapt to user behavior</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-how-to-use-ai-to-create-dynamic-landing-pages-that-adapt-to-user-behavior/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-19-how-to-utilize-ai-for-predictive-analytics-in-customer-purchasing-behavior/" class="text-gray-900 hover:text-[#17266B]">How to utilize AI for predictive analytics in customer purchasing behavior</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
+            <a href="/articles/2026-02-19-how-to-utilize-ai-for-predictive-analytics-in-customer-purchasing-behavior/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
