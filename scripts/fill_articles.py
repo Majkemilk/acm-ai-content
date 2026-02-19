@@ -200,6 +200,44 @@ def strip_editor_notes(text: str) -> tuple[str, list[str]]:
     return ("\n".join(out_lines), notes)
 
 
+# Known bracket placeholders the model sometimes leaves; replace with safe prose before QA.
+# (placeholder_substring, replacement) — replacement is used for all occurrences.
+_KNOWN_BRACKET_FALLBACKS: list[tuple[str, str]] = [
+    ("[Link to blog]", "the blog post"),
+    ("[Link to article]", "the article"),
+    ("[Insert link]", "the link"),
+    ("[Insert URL]", "the link"),
+    ("[Your company]", "your company"),
+    ("[Your Company]", "your company"),
+    ("[Company name]", "your company"),
+    ("[Product name]", "the product"),
+    ("[Product Category]", "the product category"),
+    ("[Customer name]", "the customer"),
+    ("[Customer Name]", "the customer"),
+    ("[Discount/Offer]", "the offer"),
+    ("[Date]", "the date"),
+    ("[Key Point 1]", "the main point"),
+    ("[Key Point 2]", "another point"),
+    ("[Your Brand Name]", "your brand"),
+    ("[Recipient's Name]", "the recipient"),
+    ("[Relevant Topic]", "the topic"),
+    ("[Your Name]", "your name"),
+    ("[Your Position]", "your role"),
+]
+
+
+def replace_known_bracket_placeholders(text: str) -> tuple[str, list[str]]:
+    """Replace known leftover bracket placeholders with safe text so QA does not fail. Returns (text, notes)."""
+    notes: list[str] = []
+    out = text
+    for placeholder, replacement in _KNOWN_BRACKET_FALLBACKS:
+        count = out.count(placeholder)
+        if count:
+            out = out.replace(placeholder, replacement)
+            notes.append(f"replaced {placeholder!r} -> {replacement!r} ({count}x)")
+    return (out, notes)
+
+
 def _h1_lines(body: str) -> list[str]:
     """Extract H1 lines (exactly # then space), stripped."""
     out: list[str] = []
@@ -760,6 +798,9 @@ def fill_one(
             new_body, strip_notes = strip_editor_notes(new_body)
             if strip_notes:
                 print(f"  Stripped editor notes: {path.name} — {'; '.join(strip_notes)}")
+            new_body, bracket_notes = replace_known_bracket_placeholders(new_body)
+            if bracket_notes:
+                print(f"  Replaced known placeholders: {path.name} — {'; '.join(bracket_notes)}")
             last_reasons = check_output_contract(new_body, meta.get("content_type", ""), quality_strict)
             if not last_reasons:
                 if attempt > 0:
@@ -808,6 +849,9 @@ def fill_one(
         new_body, strip_notes = strip_editor_notes(new_body)
         if strip_notes:
             print(f"  Stripped editor notes: {path.name} — {'; '.join(strip_notes)}")
+        new_body, bracket_notes = replace_known_bracket_placeholders(new_body)
+        if bracket_notes:
+            print(f"  Replaced known placeholders: {path.name} — {'; '.join(bracket_notes)}")
     new_content = _serialize_frontmatter(meta, order) + "\n" + new_body
 
     if qa_enabled:
