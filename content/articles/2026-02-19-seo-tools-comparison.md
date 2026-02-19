@@ -1,19 +1,19 @@
 ---
-title: "Comparison: Jasper vs Copy.ai for Content Creation"
+title: "SEO Tools Comparison"
 content_type: "comparison"
 category: "ai-marketing-automation"
-primary_keyword: "jasper vs copy.ai for content creation"
-primary_tool: "Jasper"
-secondary_tool: "Copy.ai"
-last_updated: "2026-02-18"
+primary_keyword: "seo tools comparison"
+primary_tool: "{{PRIMARY_TOOL}}"
+secondary_tool: "{{SECONDARY_TOOL}}"
+last_updated: "2026-02-19"
 status: "draft"
 ---
-# Comparison: Jasper vs Copy.ai for Content Creation
+# SEO Tools Comparison
 
 **Content type:** comparison
 **Category:** ai-marketing-automation
-**Primary keyword:** jasper vs copy.ai for content creation
-**Last updated:** 2026-02-18
+**Primary keyword:** seo tools comparison
+**Last updated:** 2026-02-19
 
 ---
 
@@ -23,7 +23,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of Jasper (and Copy.ai, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of {{PRIMARY_TOOL}} (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -68,10 +68,10 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [SEO Tools Compared](/articles/2026-02-18-seo-tools-comparison/)
+- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-15-ai-content-repurposing-workflow/)
+- [AI Marketing Tools Overview](/articles/2026-02-15-ai-marketing-tools/)
+- [Best AI Tools for Content Repurposing](/articles/2026-02-15-best-ai-tools-for-content-repurposing/)
+- [SEO Tools Compared](/articles/2026-02-15-seo-tools-comparison/)
 
 ---
 

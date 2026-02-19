@@ -1,19 +1,19 @@
 ---
-title: "How to use AI to analyze customer feedback and improve products with Descript"
-content_type: "how-to"
+title: "Guide to personalize email marketing campaigns using AI insights with Descript"
+content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "how to use ai to analyze customer feedback and improve products with descript"
+primary_keyword: "guide to personalize email marketing campaigns using ai insights with descript"
 primary_tool: "Descript"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-15"
+last_updated: "2026-02-19"
 status: "draft"
 ---
-# How to use AI to analyze customer feedback and improve products with Descript
+# Guide to personalize email marketing campaigns using AI insights with Descript
 
-**Content type:** how-to
+**Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** how to use ai to analyze customer feedback and improve products with descript
-**Last updated:** 2026-02-15
+**Primary keyword:** guide to personalize email marketing campaigns using ai insights with descript
+**Last updated:** 2026-02-19
 
 ---
 
@@ -97,12 +97,12 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Guide to personalize email marketing campaigns using AI insights with Descript](/articles/2026-02-18-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/)
-- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
-- [How to automate social media posting schedules with AI with Otter](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-otter/)
+- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-15-ai-content-repurposing-workflow/)
+- [AI Marketing Tools Overview](/articles/2026-02-15-ai-marketing-tools/)
+- [Best AI Tools for Content Repurposing](/articles/2026-02-15-best-ai-tools-for-content-repurposing/)
+- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
+- [Guide to personalize email marketing campaigns using AI insights with Descript](/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-descript/)
+- [How to Choose an SEO Tool](/articles/2026-02-15-choose-seo-tool/)
 
 ---
 

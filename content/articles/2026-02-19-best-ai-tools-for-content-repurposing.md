@@ -1,19 +1,19 @@
 ---
-title: "AI Marketing Tools Overview"
-content_type: "guide"
+title: "Best AI Tools for Content Repurposing"
+content_type: "best"
 category: "ai-marketing-automation"
-primary_keyword: "ai marketing tools"
+primary_keyword: "best ai tools for content repurposing"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-14"
+last_updated: "2026-02-19"
 status: "draft"
 ---
-# AI Marketing Tools Overview
+# Best AI Tools for Content Repurposing
 
-**Content type:** guide
+**Content type:** best
 **Category:** ai-marketing-automation
-**Primary keyword:** ai marketing tools
-**Last updated:** 2026-02-14
+**Primary keyword:** best ai tools for content repurposing
+**Last updated:** 2026-02-19
 
 ---
 
@@ -42,37 +42,6 @@ Before publishing, verify the following:
 
 ### Tradeoffs:
 
-### Failure modes:
-
-### SOP checklist:
-
-### Template 1:
-
-### Template 2:
-
----
-
-## Step-by-step workflow (practical)
-
-1.
-2.
-3.
-4.
-5.
-6.
-7.
-
-**Inputs / Outputs**
-
-- Inputs:
-- Outputs:
-
-**Common pitfalls**
-
--
--
--
-
 ---
 
 ## When NOT to use this
@@ -97,8 +66,9 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-- [SEO Tools Compared](/articles/2026-02-18-seo-tools-comparison/)
+- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-15-ai-content-repurposing-workflow/)
+- [AI Marketing Tools Overview](/articles/2026-02-15-ai-marketing-tools/)
+- [Best AI Tools for Content Repurposing](/articles/2026-02-15-best-ai-tools-for-content-repurposing/)
 
 ---
 

@@ -1,19 +1,19 @@
 ---
-title: "How to integrate AI tools for better lead scoring in sales with Otter"
+title: "How to integrate AI tools for better lead scoring in sales with Pictory"
 content_type: "how-to"
 category: "ai-marketing-automation"
-primary_keyword: "how to integrate ai tools for better lead scoring in sales with otter"
-primary_tool: "Otter"
+primary_keyword: "how to integrate ai tools for better lead scoring in sales with pictory"
+primary_tool: "Pictory"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-15"
+last_updated: "2026-02-19"
 status: "draft"
 ---
-# How to integrate AI tools for better lead scoring in sales with Otter
+# How to integrate AI tools for better lead scoring in sales with Pictory
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
-**Primary keyword:** how to integrate ai tools for better lead scoring in sales with otter
-**Last updated:** 2026-02-15
+**Primary keyword:** how to integrate ai tools for better lead scoring in sales with pictory
+**Last updated:** 2026-02-19
 
 ---
 
@@ -23,7 +23,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of Otter (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of Pictory (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -97,12 +97,12 @@ Before publishing, verify the following:
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [AI Marketing Tools Overview](/articles/2026-02-18-ai-marketing-tools/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
-- [Guide to personalize email marketing campaigns using AI insights with Otter](/articles/2026-02-18-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-otter/)
-- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
+- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-15-ai-content-repurposing-workflow/)
+- [AI Marketing Tools Overview](/articles/2026-02-15-ai-marketing-tools/)
+- [Best AI Tools for Content Repurposing](/articles/2026-02-15-best-ai-tools-for-content-repurposing/)
+- [Guide to implement AI chatbots to enhance customer engagement with Pictory](/articles/2026-02-15-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/)
+- [Guide to personalize email marketing campaigns using AI insights with Pictory](/articles/2026-02-15-guide-to-personalize-email-marketing-campaigns-using-ai-insights-with-pictory/)
+- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-15-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
 
 ---
 
