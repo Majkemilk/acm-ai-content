@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Generate content/queue.yaml from content/use_cases.yaml and content/affiliate_tools.yaml.
-Creates one queue entry per (use_case × tool). Uses only Python standard library.
-Line-based YAML parsing (no external deps); same serialization as generate_articles.py.
+Generate content/queue.yaml from content/use_cases.yaml (and optionally affiliate_tools.yaml).
+Creates one queue entry per use case. Number of entries = number of use cases in use_cases.yaml.
+Uses only Python standard library. Line-based YAML parsing (no external deps).
 """
 
 import json
@@ -127,12 +127,8 @@ def title_to_primary_keyword(title: str) -> str:
     return (title or "").strip().lower() or "article"
 
 
-def build_queue_items(
-    use_cases: list[dict],
-    tools: list[dict],
-    today: str,
-) -> list[dict]:
-    """Build queue items: one per (use_case × tool). Formulaic titles, no AI."""
+def build_queue_items(use_cases: list[dict], today: str) -> list[dict]:
+    """Build queue items: one entry per use case. Tool fields left empty for later assignment."""
     items = []
     for uc in use_cases:
         problem = (uc.get("problem") or "").strip()
@@ -142,21 +138,18 @@ def build_queue_items(
         if content_type not in ALLOWED_CONTENT_TYPES:
             content_type = DEFAULT_CONTENT_TYPE
         category_slug = (uc.get("category_slug") or "").strip() or "ai-marketing-automation"
-        for t in tools:
-            tool_name = (t.get("name") or "").strip()
-            if not tool_name:
-                continue
-            title = title_for_entry(problem, content_type, tool_name)
-            items.append({
-                "title": title,
-                "primary_keyword": title_to_primary_keyword(title),
-                "content_type": content_type,
-                "category_slug": category_slug,
-                "primary_tool": tool_name,
-                "secondary_tool": "",
-                "status": "todo",
-                "last_updated": today,
-            })
+        # No tool: title is "{action} {problem}" (title_for_entry with tool_name="")
+        title = title_for_entry(problem, content_type, "")
+        items.append({
+            "title": title,
+            "primary_keyword": title_to_primary_keyword(title),
+            "content_type": content_type,
+            "category_slug": category_slug,
+            "primary_tool": "",
+            "secondary_tool": "",
+            "status": "todo",
+            "last_updated": today,
+        })
     return items
 
 
@@ -225,7 +218,7 @@ def _duplicate_key(item: dict) -> tuple[str, str, str]:
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(
-        description="Append queue entries from use_cases.yaml × affiliate_tools.yaml (one per use case × tool).",
+        description="Append queue entries from use_cases.yaml (one entry per use case).",
     )
     parser.add_argument(
         "--dry-run",
@@ -235,12 +228,11 @@ def main() -> None:
     args = parser.parse_args()
 
     today = date.today().isoformat()
-    tools = load_tools(AFFILIATE_TOOLS_PATH)
     use_cases = load_use_cases(USE_CASES_PATH)
 
-    candidates = build_queue_items(use_cases, tools, today)
+    candidates = build_queue_items(use_cases, today)
     if not candidates:
-        print("No queue entries to add (use_cases or tools list is empty).")
+        print("No queue entries to add (use_cases list is empty).")
         return
 
     existing = load_existing_queue(QUEUE_PATH)

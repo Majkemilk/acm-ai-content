@@ -119,8 +119,8 @@ def _article_paths_one_per_stem(articles_dir: Path) -> list[Path]:
 
 
 def collect_article_stats(articles_dir: Path, config: dict) -> dict:
-    """Return counts: total, by status, production count, by content_type. Counts .md and .html, one per stem."""
-    production_cat = (config.get("production_category") or "ai-marketing-automation").strip()
+    """Return counts: total, by status, production count, by content_type. Counts .md and .html, one per stem.
+    Production = all articles with status != 'blocked' (aligned with get_production_articles())."""
     total = 0
     by_status = {}
     production_count = 0
@@ -139,8 +139,7 @@ def collect_article_stats(articles_dir: Path, config: dict) -> dict:
             meta = _parse_frontmatter_from_content(content)
         status = (meta.get("status") or "draft").strip().lower()
         by_status[status] = by_status.get(status, 0) + 1
-        cat = (meta.get("category") or meta.get("category_slug") or "").strip()
-        if cat == production_cat and status != "blocked":
+        if status != "blocked":
             production_count += 1
         ctype = (meta.get("content_type") or "").strip().lower()
         if ctype:

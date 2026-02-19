@@ -27,6 +27,7 @@ USE_CASES_PATH = CONTENT_DIR / "use_cases.yaml"
 ARTICLES_DIR = CONTENT_DIR / "articles"
 
 ALLOWED_CONTENT_TYPES = ["how-to", "guide", "best", "comparison"]
+TARGET_USE_CASE_COUNT = 10  # Exact number of use cases to keep; change here to affect both use_cases.yaml and queue size
 USE_CASES_HEADER = """# List of business problems / use cases for content generation
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
@@ -260,7 +261,7 @@ Existing use cases already in our list (do NOT suggest these or very similar one
 Existing article keywords/topics we already cover (suggest complementary or new angles, not duplicates):
 {json.dumps(keywords_list[:50])}
 
-Generate 5 to 10 new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above. Prefer problems that fit how-to or guide content. Return only the JSON array."""
+Generate exactly {TARGET_USE_CASE_COUNT} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above. Prefer problems that fit how-to or guide content. Return only the JSON array."""
 
     return instructions, user
 
@@ -372,10 +373,10 @@ def main() -> None:
         print("All generated use cases were duplicates or too similar to existing ones. Nothing added.")
         sys.exit(0)
 
-    # Append to existing and save
-    combined = existing + new_use_cases
+    # Append to existing, cap to TARGET_USE_CASE_COUNT, then save
+    combined = (existing + new_use_cases)[:TARGET_USE_CASE_COUNT]
     save_use_cases(USE_CASES_PATH, combined)
-    print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)}.")
+    print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)} (capped at {TARGET_USE_CASE_COUNT}).")
     for uc in new_use_cases:
         print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')})")
 
