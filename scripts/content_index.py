@@ -114,12 +114,10 @@ def get_production_articles(
     config_path: Path | None = None,
 ) -> list[tuple[dict, Path]]:
     """
-    Load all article metadata from articles_dir, then return only articles whose
-    category equals config's production_category (sandbox categories are excluded).
-    Returns list of (meta, path) for production-only articles.
+    Load all article metadata from articles_dir and return all articles that are
+    not blocked (status != "blocked"). Category is not used; all non-blocked
+    articles are treated as production. Returns list of (meta, path).
     """
-    config = load_config(config_path)
-    production = (config.get("production_category") or "ai-marketing-automation").strip()
     dir_path = articles_dir or ARTICLES_DIR
     if not dir_path.exists():
         return []
@@ -148,9 +146,6 @@ def get_production_articles(
             if not meta:
                 continue
         if (meta.get("status") or "").strip().lower() == "blocked":
-            continue
-        cat = (meta.get("category") or meta.get("category_slug") or "").strip()
-        if cat != production:
             continue
         out.append((meta, path))
     return out
