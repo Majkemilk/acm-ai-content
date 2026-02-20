@@ -75,6 +75,8 @@ FRONTMATTER_KEYS = [
     "secondary_tool",
     "last_updated",
     "status",
+    "audience_type",
+    "batch_id",
 ]
 
 
@@ -202,6 +204,23 @@ def load_existing_articles(articles_dir: Path, exclude_slug: str) -> list[dict]:
     return out
 
 
+# Audience order for "adjacent" in same-batch internal links
+AUDIENCE_ORDER = {"beginner": 0, "intermediate": 1, "professional": 2}
+MAX_INTERNAL_LINKS = 6
+
+
+def _adjacent_audiences(current: str) -> list[str]:
+    """Return audience types to prefer when linking (same batch)."""
+    c = (current or "").strip().lower()
+    if c == "beginner":
+        return ["intermediate"]
+    if c == "intermediate":
+        return ["beginner", "professional"]
+    if c == "professional":
+        return ["intermediate"]
+    return []
+
+
 def select_internal_links(
     existing: list[dict],
     current_category: str,
@@ -210,8 +229,10 @@ def select_internal_links(
     max_category: int = 3,
     max_tool: int = 2,
     max_content_type: int = 1,
+    current_batch_id: str | None = None,
+    current_audience_type: str | None = None,
 ) -> list[tuple[str, str]]:
-    """Select 3–6 internal links by priority: same category (up to 3), same primary_tool (up to 2), same content_type (up to 1). Deterministic order."""
+    """Select up to 6 internal links. Priority 1: same batch_id, adjacent audience. Priority 2: same category (3), same tool (2), same content_type (1)."""
     current_category = (current_category or "").strip().lower()
     current_primary_tool = (current_primary_tool or "").strip().lower()
     current_content_type = (current_content_type or "").strip().lower()
@@ -225,6 +246,36 @@ def select_internal_links(
     chosen: list[tuple[str, str]] = []
     used_slugs: set[str] = set()
 
+    # Priority 1: same batch, prefer adjacent audience
+    if current_batch_id and current_batch_id.strip():
+        batch_id = current_batch_id.strip()
+        same_batch = [
+            m for m in existing
+            if (m.get("batch_id") or "").strip() == batch_id
+            and (m.get("slug") or "").strip()
+            and (m.get("slug") or "").strip() not in used_slugs
+        ]
+        preferred = _adjacent_audiences(current_audience_type or "")
+        # First: adjacent audience, then rest of same batch (by audience order)
+        for aud in preferred:
+            for meta in same_batch:
+                slug = (meta.get("slug") or "").strip()
+                if slug in used_slugs:
+                    continue
+                if (meta.get("audience_type") or "").strip().lower() == aud:
+                    chosen.append((title_for(meta), url_for(slug)))
+                    used_slugs.add(slug)
+                    if len(chosen) >= MAX_INTERNAL_LINKS:
+                        return chosen
+        for meta in sorted(same_batch, key=lambda m: AUDIENCE_ORDER.get((m.get("audience_type") or "").strip().lower(), 99)):
+            slug = (meta.get("slug") or "").strip()
+            if slug and slug not in used_slugs:
+                chosen.append((title_for(meta), url_for(slug)))
+                used_slugs.add(slug)
+                if len(chosen) >= MAX_INTERNAL_LINKS:
+                    return chosen
+
+    # Priority 2: same category, then tool, then content_type
     for meta in existing:
         slug = meta.get("slug") or ""
         if not slug or slug in used_slugs:
@@ -233,8 +284,8 @@ def select_internal_links(
         if cat == current_category:
             chosen.append((title_for(meta), url_for(slug)))
             used_slugs.add(slug)
-            if len(chosen) >= max_category:
-                break
+            if len(chosen) >= MAX_INTERNAL_LINKS:
+                return chosen
     for meta in existing:
         slug = meta.get("slug") or ""
         if not slug or slug in used_slugs:
@@ -243,8 +294,8 @@ def select_internal_links(
         if tool and tool == current_primary_tool:
             chosen.append((title_for(meta), url_for(slug)))
             used_slugs.add(slug)
-            if len(chosen) >= max_category + max_tool:
-                break
+            if len(chosen) >= MAX_INTERNAL_LINKS:
+                return chosen
     for meta in existing:
         slug = meta.get("slug") or ""
         if not slug or slug in used_slugs:
@@ -253,8 +304,8 @@ def select_internal_links(
         if ctype and ctype == current_content_type:
             chosen.append((title_for(meta), url_for(slug)))
             used_slugs.add(slug)
-            if len(chosen) >= max_category + max_tool + max_content_type:
-                break
+            if len(chosen) >= MAX_INTERNAL_LINKS:
+                return chosen
     return chosen
 
 
@@ -315,8 +366,15 @@ def backfill_internal_links_in_file(
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
     primary_tool = (meta.get("primary_tool") or "").strip()
     content_type = (meta.get("content_type") or "").strip()
+    batch_id = (meta.get("batch_id") or "").strip() or None
+    audience_type = (meta.get("audience_type") or "").strip() or None
     links = select_internal_links(
-        existing, current_category=category, current_primary_tool=primary_tool, current_content_type=content_type
+        existing,
+        current_category=category,
+        current_primary_tool=primary_tool,
+        current_content_type=content_type,
+        current_batch_id=batch_id,
+        current_audience_type=audience_type,
     )
     new_bullets = format_internal_links_bullets(links)
     if "{{INTERNAL_LINKS}}" in section:
@@ -368,6 +426,10 @@ def build_frontmatter(item: dict, today: str) -> str:
         "last_updated": item.get("last_updated") or today,
         "status": "draft",
     }
+    if item.get("audience_type"):
+        fm["audience_type"] = (item.get("audience_type") or "").strip()
+    if item.get("batch_id"):
+        fm["batch_id"] = (item.get("batch_id") or "").strip()
     lines = ["---"]
     for k, v in fm.items():
         v = str(v)
@@ -479,7 +541,11 @@ def main() -> None:
         template = template_path.read_text(encoding="utf-8")
 
         slug = slug_from_keyword(item.get("primary_keyword") or "")
-        filename = f"{today}-{slug}.md"
+        audience_type = (item.get("audience_type") or "").strip()
+        if audience_type:
+            filename = f"{today}-{slug}.audience_{audience_type}.md"
+        else:
+            filename = f"{today}-{slug}.md"
         out_slug = filename.removesuffix(".md")
         out_path = articles_dir / filename
 
@@ -487,8 +553,15 @@ def main() -> None:
         existing = [m for m, p in production_pairs if (m.get("slug") or p.stem) != out_slug]
         category = normalize_category((item.get("category_slug") or item.get("category") or "").strip())
         primary_tool = (item.get("primary_tool") or "").strip()
+        batch_id = (item.get("batch_id") or "").strip() or None
+        audience_type = (item.get("audience_type") or "").strip() or None
         links = select_internal_links(
-            existing, current_category=category, current_primary_tool=primary_tool, current_content_type=content_type
+            existing,
+            current_category=category,
+            current_primary_tool=primary_tool,
+            current_content_type=content_type,
+            current_batch_id=batch_id,
+            current_audience_type=audience_type,
         )
         internal_links_str = format_internal_links_bullets(links) if links else None
 

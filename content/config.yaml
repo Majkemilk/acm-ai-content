@@ -1,5 +1,12 @@
-production_category: "AI Automation & AI Agents"
+production_category: "ai-marketing-automation"
 hub_slug: "ai-marketing-automation"
 sandbox_categories:
   - "LLM SEO"
   - "Visual automation and integrations"
+  - "ai video"
+  - "automation-workflows"
+  - "advanced ai marketing"
+use_case_batch_size: 9
+use_case_audience_pyramid:
+  - 3
+  - 3

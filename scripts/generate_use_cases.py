@@ -12,6 +12,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 # Allow importing from same package (scripts/)
@@ -34,6 +35,8 @@ USE_CASES_HEADER = """# List of business problems / use cases for content genera
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
 # - suggested_content_type: string (one of: how-to, guide, best, comparison)
 # - category_slug: string (e.g., "ai-marketing-automation")
+# - audience_type: optional; beginner | intermediate | professional (from batch position)
+# - batch_id: optional; run id (e.g. 2026-02-20T143022)
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 """
 
@@ -107,21 +110,24 @@ def load_use_cases(path: Path) -> list[dict]:
 
 def save_use_cases(path: Path, items: list[dict]) -> None:
     """Write use_cases.yaml with header comments and list of use cases (same format as template)."""
+    def q(v: str) -> str:
+        v = str(v)
+        if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
+            v = '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
+        return v
     lines = [USE_CASES_HEADER.strip(), "use_cases:"]
     if items:
         for item in items:
             problem = (item.get("problem") or "").strip()
             content_type = (item.get("suggested_content_type") or "").strip()
             category = (item.get("category_slug") or "").strip()
-            # Quote values that contain special chars
-            def q(v: str) -> str:
-                v = str(v)
-                if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
-                    v = '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
-                return v
             lines.append(f"  - problem: {q(problem)}")
             lines.append(f"    suggested_content_type: {q(content_type)}")
             lines.append(f"    category_slug: {q(category)}")
+            if item.get("audience_type"):
+                lines.append(f"    audience_type: {q(str(item.get('audience_type', '')).strip())}")
+            if item.get("batch_id"):
+                lines.append(f"    batch_id: {q(str(item.get('batch_id', '')).strip())}")
             if "status" in item and str(item.get("status", "")).strip():
                 lines.append(f"    status: {q(str(item.get('status', '')).strip())}")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -234,8 +240,10 @@ def build_prompt(
     article_keywords: list[dict],
     categories: list[str],
     count: int,
+    content_type_filter: str | None = None,
 ) -> tuple[str, str]:
-    """Build (instructions, user_message) for the model. count = how many use cases to ask for."""
+    """Build (instructions, user_message) for the model. count = how many use cases to ask for.
+    If content_type_filter is set, prompt restricts suggested_content_type to that value."""
     instructions = """You are a content strategist. Your task is to suggest new business problems / use cases for blog content in the AI marketing automation space.
 
 Output ONLY a valid JSON array of objects. Each object must have exactly these keys:
@@ -266,9 +274,30 @@ Existing use cases already in our list (do NOT suggest these or very similar one
 Existing article keywords/topics we already cover (suggest complementary or new angles, not duplicates):
 {json.dumps(keywords_list[:50])}
 
-Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above. Prefer problems that fit how-to or guide content. Return only the JSON array."""
+Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
+
+Structure by audience (follow this order strictly):
+- First 3: for beginners (simple, entry-level).
+- Next 3: for intermediate or mixed (can build on or complement the first three).
+- Remaining: for professional users only (advanced, scaling, integration)."""
+    if content_type_filter:
+        user += f" For every use case, set suggested_content_type to exactly: {json.dumps(content_type_filter)}."
+    else:
+        user += " Prefer problems that fit how-to or guide content."
+    user += " Return only the JSON array."
 
     return instructions, user
+
+
+def audience_type_for_position(position_1based: int, pyramid: list[int]) -> str:
+    """Return beginner | intermediate | professional from 1-based position and pyramid [n1, n2]."""
+    n1 = pyramid[0] if pyramid else 3
+    n2 = pyramid[1] if len(pyramid) > 1 else 3
+    if position_1based <= n1:
+        return "beginner"
+    if position_1based <= n1 + n2:
+        return "intermediate"
+    return "professional"
 
 
 def parse_ai_use_cases(raw: str, allowed_types: list[str], allowed_categories: list[str]) -> list[dict]:
@@ -334,12 +363,26 @@ def main() -> None:
     parser.add_argument(
         "--limit",
         type=int,
-        default=TARGET_USE_CASE_COUNT,
+        default=None,
         metavar="N",
-        help=f"Number of use cases to generate and cap total list at (default: {TARGET_USE_CASE_COUNT})",
+        help="Number of use cases to generate and cap total list at (default: from config use_case_batch_size, else 9)",
+    )
+    parser.add_argument(
+        "--category",
+        type=str,
+        default=None,
+        metavar="SLUG",
+        help="Restrict generated use cases to this category_slug only (must be in config production_category or sandbox_categories).",
+    )
+    parser.add_argument(
+        "--content-type",
+        type=str,
+        default=None,
+        metavar="TYPE",
+        choices=ALLOWED_CONTENT_TYPES,
+        help="Restrict suggested_content_type to this value only (one of: how-to, guide, best, comparison).",
     )
     args = parser.parse_args()
-    limit = max(1, min(args.limit, 100))  # clamp 1..100
 
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:
@@ -348,9 +391,25 @@ def main() -> None:
     base_url = (os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com").strip()
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip()
 
-    # Load config for categories
+    # Load config for categories, batch size, pyramid; optionally restrict to --category
     config_path = CONFIG_PATH
-    categories = get_categories_from_config(config_path)
+    config = load_config(config_path)
+    batch_size = int(config.get("use_case_batch_size", 9))
+    pyramid = list(config.get("use_case_audience_pyramid") or [3, 3])
+    if not pyramid:
+        pyramid = [3, 3]
+    pyramid = [int(x) for x in pyramid]
+    limit = args.limit if args.limit is not None else batch_size
+    limit = max(1, min(100, limit))
+    all_categories = get_categories_from_config(config_path)
+    if args.category:
+        if args.category.strip() not in all_categories:
+            print(f"Error: --category {args.category!r} is not in allowed categories: {all_categories}")
+            sys.exit(1)
+        categories = [args.category.strip()]
+    else:
+        categories = all_categories
+    allowed_types = [args.content_type.strip().lower()] if args.content_type else ALLOWED_CONTENT_TYPES
 
     # Load existing use cases (create file with empty list if missing)
     existing = load_use_cases(USE_CASES_PATH)
@@ -361,7 +420,8 @@ def main() -> None:
     article_keywords = collect_article_keywords(ARTICLES_DIR)
 
     # Build prompt and call API (ask for exactly limit use cases)
-    instructions, user_message = build_prompt(existing, article_keywords, categories, limit)
+    content_type_filter = args.content_type.strip().lower() if args.content_type else None
+    instructions, user_message = build_prompt(existing, article_keywords, categories, limit, content_type_filter=content_type_filter)
     try:
         response_text = call_responses_api(
             instructions,
@@ -374,11 +434,17 @@ def main() -> None:
         print(f"API error: {e}")
         sys.exit(1)
 
-    # Parse JSON and validate
-    candidates = parse_ai_use_cases(response_text, ALLOWED_CONTENT_TYPES, categories)
+    # Parse JSON and validate (use restricted types/categories when --content-type/--category were set)
+    candidates = parse_ai_use_cases(response_text, allowed_types, categories)
     if not candidates:
         print("No valid use cases in API response (invalid or empty JSON).")
         sys.exit(0)
+
+    # Assign audience_type by position (1–3 beginner, 4–6 intermediate, 7+ professional) and batch_id
+    batch_id = datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    for i, uc in enumerate(candidates):
+        uc["audience_type"] = audience_type_for_position(i + 1, pyramid)
+        uc["batch_id"] = batch_id
 
     # Deduplicate against existing
     new_use_cases = [
@@ -395,7 +461,7 @@ def main() -> None:
     save_use_cases(USE_CASES_PATH, combined)
     print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)} (capped at {limit}).")
     for uc in new_use_cases:
-        print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')})")
+        print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")
 
 
 if __name__ == "__main__":

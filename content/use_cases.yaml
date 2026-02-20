@@ -5,11 +5,57 @@
 # - category_slug: string (e.g., "ai-marketing-automation")
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 use_cases:
-  - problem: automate the personalization of landing pages based on user behavior with AI
+  - problem: automate video thumbnails creation for social media
     suggested_content_type: how-to
-    category_slug: AI Automation & AI Agents
-    status: todo
-  - problem: use AI to dynamically adjust social media ad spending based on real-time performance metrics
+    category_slug: ai video
+    audience_type: beginner
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: use ai to optimize video length for different platforms
     suggested_content_type: guide
-    category_slug: AI Automation & AI Agents
-    status: todo
+    category_slug: ai video
+    audience_type: beginner
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: implement ai tools to personalize video marketing content
+    suggested_content_type: how-to
+    category_slug: ai video
+    audience_type: beginner
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: create ai-driven video content strategies for engagement
+    suggested_content_type: guide
+    category_slug: ai video
+    audience_type: intermediate
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: automate A/B testing for video ads using ai
+    suggested_content_type: how-to
+    category_slug: ai video
+    audience_type: intermediate
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: integrate ai tools to analyze video performance metrics
+    suggested_content_type: guide
+    category_slug: ai video
+    audience_type: intermediate
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: scale content production by integrating ai with video platforms
+    suggested_content_type: how-to
+    category_slug: ai video
+    audience_type: professional
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: leverage ai to enhance collaborative video editing workflows
+    suggested_content_type: guide
+    category_slug: ai video
+    audience_type: professional
+    batch_id: 2026-02-20T225029
+    status: generated
+  - problem: utilize ai for video marketing analytics and insights
+    suggested_content_type: how-to
+    category_slug: ai video
+    audience_type: professional
+    batch_id: 2026-02-20T225029
+    status: generated

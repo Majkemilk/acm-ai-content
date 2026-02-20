@@ -277,6 +277,15 @@ def _h2_lines(body: str) -> list[str]:
     return out
 
 
+# Word-count thresholds by audience (normal, strict). Used by run_preflight_qa.
+WORD_COUNT_BY_AUDIENCE: dict[str, tuple[int, int]] = {
+    "beginner": (500, 800),       # current length
+    "intermediate": (700, 1000),
+    "professional": (1000, 1200), # more than 1000
+}
+WORD_COUNT_DEFAULT = (500, 800)  # when audience_type missing or unknown
+
+
 def run_preflight_qa(
     original_full_text: str,
     filled_full_text: str,
@@ -284,9 +293,11 @@ def run_preflight_qa(
     filled_body: str,
     strict: bool = False,
     is_html: bool = False,
+    audience_type: str | None = None,
 ) -> tuple[bool, list[str]]:
     """Validate filled output. Returns (ok, list of failure reasons).
-    When is_html=True, H1/H2 structure check is skipped; bracket/word/forbidden use stripped text."""
+    When is_html=True, H1/H2 structure check is skipped; bracket/word/forbidden use stripped text.
+    Word-count threshold depends on audience_type: beginner (500/800), intermediate (700/1000), professional (1000/1200)."""
     reasons: list[str] = []
 
     # A. Mustache preservation (skip in HTML mode – HTML articles do not use {{...}})
@@ -336,12 +347,13 @@ def run_preflight_qa(
         if missing_h2:
             reasons.append(f"H2 headings missing: {', '.join(missing_h2)}")
 
-    # D. Word count (use stripped text for HTML)
+    # D. Word count (use stripped text for HTML); threshold by audience
     word_count = len(text_for_checks.split())
-    # TEMPORARY: lowered for testing; revert to 1000/700 later
-    threshold = 800 if strict else 500
+    at = (audience_type or "").strip().lower()
+    min_words, min_words_strict = WORD_COUNT_BY_AUDIENCE.get(at, WORD_COUNT_DEFAULT)
+    threshold = min_words_strict if strict else min_words
     if word_count < threshold:
-        reasons.append(f"word count {word_count} < {threshold}")
+        reasons.append(f"word count {word_count} < {threshold} (audience: {at or 'default'})")
 
     # E. Forbidden patterns (use stripped text for HTML to avoid matching inside attributes)
     for pat, label in FORBIDDEN_PATTERNS:
@@ -498,6 +510,7 @@ def _build_html_prompt(
     keyword = (meta.get("primary_keyword") or "").strip()
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
     content_type = (meta.get("content_type") or "").strip()
+    audience_type = (meta.get("audience_type") or "").strip()
 
     def _fmt(t: tuple[str, str, str]) -> str:
         name, url, short = t[0], t[1], t[2]
@@ -567,7 +580,7 @@ Include a section titled "List of AI tools mentioned in this article" near the e
 - Description rules: Use the same style as in-article descriptions: factual, in English, one sentence (e.g. "video editing and transcription", "AI-powered transcription with speaker identification"). If a description was provided after | in the tool list, use it here too. Otherwise be concise and specific; if unsure, use a generic form like "AI tool for [use case]". Avoid vague phrases like "powerful tool". Do not invent tools.
 - Format: Use H2 for the section title. Use <ul class="list-disc list-inside space-y-2 text-gray-700"> for the list. Each item: <a href="URL">Tool Name</a> — description sentence. Include only tools from the Affiliate or Other list above; do not invent tools. The AI decides which tools to include based on article relevance. If both lists are empty, omit this section.
 
-IMPORTANT — LENGTH: The article MUST be at least 700 words. For comprehensive guides, aim for 900+ words. To achieve this:
+IMPORTANT — LENGTH: Follow the audience-based length rule (see Audience and Length below). To achieve the required word count:
 - Expand "Template 1" and "Template 2" with rich, detailed examples (multiple lines or bullets each; real company names, metrics, and scenarios).
 - Consider adding a "Case study" section after the templates: a concrete example of someone using the described AI tools, with specific data, challenges, and outcomes (a few paragraphs long).
 Example case study tone: "A small e-commerce company, ShopSmart, used Descript to analyze competitor social media videos. They discovered that competitors were heavily using influencer marketing, which led them to pivot their strategy. Within three months, their engagement increased by 40%."
@@ -598,6 +611,10 @@ Weaknesses: Limited international
 {tools_blob}
 
 Output ONLY the HTML fragment that goes inside the article (no wrapper tags, no markdown)."""
+    audience_line = _audience_instruction(audience_type)
+    if audience_line:
+        instructions += "\n\nAudience (MUST follow): " + audience_line
+    instructions += "\n\nLength (MUST follow): " + _audience_length_guidance(audience_type)
 
     user = f"Article title: {title}\n"
     if keyword:
@@ -606,7 +623,10 @@ Output ONLY the HTML fragment that goes inside the article (no wrapper tags, no 
         user += f"Category: {category}\n"
     if content_type:
         user += f"Content type: {content_type}\n"
-    user += "\nGenerate the complete article body in HTML with Tailwind classes. Include all required sections (including 'List of AI tools mentioned in this article' near the end), at least 700 words (expand templates and add a case study if helpful), and no square-bracket placeholders."
+    if audience_type:
+        user += f"Target audience level: {audience_type}\n"
+    length_guide = _audience_length_guidance(audience_type)
+    user += f"\nGenerate the complete article body in HTML with Tailwind classes. Include all required sections (including 'List of AI tools mentioned in this article' near the end). {length_guide} No square-bracket placeholders."
     return instructions, user
 
 
@@ -708,12 +728,37 @@ def call_responses_api(
     raise RuntimeError("No output text in API response")
 
 
+def _audience_instruction(audience_type: str) -> str:
+    """One-line instruction for tone/depth by audience (from use-case batch)."""
+    at = (audience_type or "").strip().lower()
+    if at == "beginner":
+        return "Target audience: beginners. Use simple language, avoid jargon; assume no prior experience; focus on getting started and clear step-by-step."
+    if at == "intermediate":
+        return "Target audience: intermediate. Assume some familiarity with the topic; you may use common terminology; include workflow depth and practical tradeoffs."
+    if at == "professional":
+        return "Target audience: professional/advanced. Assume experience; focus on scaling, integration, team use, and decision criteria; more concise, less hand-holding."
+    return ""
+
+
+def _audience_length_guidance(audience_type: str) -> str:
+    """Minimum and target word count for prompt by audience (aligned with WORD_COUNT_BY_AUDIENCE)."""
+    at = (audience_type or "").strip().lower()
+    if at == "beginner":
+        return "Minimum length: 500 words."
+    if at == "intermediate":
+        return "Minimum length: 700 words; for comprehensive sections aim for 1000."
+    if at == "professional":
+        return "Minimum length: 1000 words; aim for 1200+ for full depth."
+    return "Minimum length: 500 words."
+
+
 def build_prompt(meta: dict, body: str, style: str = "docs") -> tuple[str, str]:
     """(instructions, user_message) for the model. style: docs | concise | detailed."""
     title = (meta.get("title") or "").strip()
     keyword = (meta.get("primary_keyword") or "").strip()
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
     content_type = (meta.get("content_type") or "").strip()
+    audience_type = (meta.get("audience_type") or "").strip()
     tools_note = ""
     tool_keys = ["primary_tool", "secondary_tool", "tools_mentioned", "tools"]
     tool_names: list[str] = []
@@ -810,6 +855,10 @@ D) Do not use the word "pricing". Do not use "the best" or "#1". Do not use "unl
 E) If you cannot comply with the OUTPUT CONTRACT, regenerate until you can. Do not omit the markers.
 
 Output must feel like an internal playbook: decisions + steps + templates."""
+    audience_line = _audience_instruction(audience_type)
+    if audience_line:
+        instructions += "\n\nAudience (MUST follow): " + audience_line
+    instructions += "\n\nLength (MUST follow): " + _audience_length_guidance(audience_type)
 
     user = f"Article title: {title}\n"
     if keyword:
@@ -818,6 +867,8 @@ Output must feel like an internal playbook: decisions + steps + templates."""
         user += f"Category: {category}\n"
     if content_type:
         user += f"Content type: {content_type}\n"
+    if audience_type:
+        user += f"Target audience level: {audience_type}\n"
     user += "\nMarkdown body to fill (replace only [...] placeholders; keep {{...}} and all headings):\n\n"
     user += body
     return instructions, user
@@ -951,7 +1002,9 @@ def fill_one(
 
     if qa_enabled:
         ok, reasons = run_preflight_qa(
-            content, new_content, body, new_body, strict=qa_strict, is_html=use_html
+            content, new_content, body, new_body,
+            strict=qa_strict, is_html=use_html,
+            audience_type=(meta.get("audience_type") or "").strip() or None,
         )
         if not ok:
             print(f"  QA FAIL: {path.name} — {'; '.join(reasons)}")

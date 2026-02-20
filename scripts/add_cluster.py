@@ -17,28 +17,10 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from content_index import load_config  # noqa: E402
+from config_manager import write_config as write_config_full  # noqa: E402
 
 CONFIG_PATH = _PROJECT_ROOT / "content" / "config.yaml"
-
-
-def _quote_yaml_value(s: str) -> str:
-    """Quote a string for YAML if it contains special chars."""
-    s = str(s)
-    if "\n" in s or ":" in s or '"' in s or s.startswith("#"):
-        return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
-    return f'"{s}"'
-
-
-def write_config(path: Path, production_category: str, sandbox_categories: list[str]) -> None:
-    """Write config.yaml with production_category and sandbox_categories. No comments preserved."""
-    lines = [
-        f"production_category: {_quote_yaml_value(production_category)}",
-        "sandbox_categories:",
-    ]
-    for cat in sandbox_categories:
-        lines.append(f'  - {_quote_yaml_value(cat)}')
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+DEFAULT_HUB_SLUG = "ai-marketing-automation"
 
 
 def main() -> None:
@@ -94,8 +76,9 @@ def main() -> None:
             sandbox.append(category)
 
     if not already_present:
+        hub_slug = (config.get("hub_slug") or DEFAULT_HUB_SLUG).strip()
         try:
-            write_config(CONFIG_PATH, production, sandbox)
+            write_config_full(CONFIG_PATH, production, hub_slug, sandbox)
         except OSError as e:
             print(f"Error: Could not write config: {e}")
             sys.exit(1)

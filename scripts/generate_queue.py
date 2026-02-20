@@ -140,7 +140,7 @@ def build_queue_items(use_cases: list[dict], today: str) -> list[dict]:
         category_slug = (uc.get("category_slug") or "").strip() or "ai-marketing-automation"
         # No tool: title is "{action} {problem}" (title_for_entry with tool_name="")
         title = title_for_entry(problem, content_type, "")
-        items.append({
+        item = {
             "title": title,
             "primary_keyword": title_to_primary_keyword(title),
             "content_type": content_type,
@@ -149,7 +149,12 @@ def build_queue_items(use_cases: list[dict], today: str) -> list[dict]:
             "secondary_tool": "",
             "status": "todo",
             "last_updated": today,
-        })
+        }
+        if uc.get("audience_type"):
+            item["audience_type"] = (uc.get("audience_type") or "").strip()
+        if uc.get("batch_id"):
+            item["batch_id"] = (uc.get("batch_id") or "").strip()
+        items.append(item)
     return items
 
 
@@ -239,6 +244,10 @@ def _save_use_cases(path: Path, items: list[dict]) -> None:
         lines.append(f"  - problem: {q(problem)}")
         lines.append(f"    suggested_content_type: {q(content_type)}")
         lines.append(f"    category_slug: {q(category)}")
+        if item.get("audience_type"):
+            lines.append(f"    audience_type: {q(str(item.get('audience_type', '')).strip())}")
+        if item.get("batch_id"):
+            lines.append(f"    batch_id: {q(str(item.get('batch_id', '')).strip())}")
         if "status" in item and str(item.get("status", "")).strip():
             lines.append(f"    status: {q(str(item.get('status', '')).strip())}")
     path.parent.mkdir(parents=True, exist_ok=True)

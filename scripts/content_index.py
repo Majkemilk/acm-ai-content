@@ -20,34 +20,55 @@ def load_config(path: Path | None = None) -> dict:
     """
     p = path or CONFIG_PATH
     if not p.exists() or p.stat().st_size == 0:
-        return {"production_category": "ai-marketing-automation", "sandbox_categories": []}
+        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3]}
     text = p.read_text(encoding="utf-8").strip()
     if not text:
-        return {"production_category": "ai-marketing-automation", "sandbox_categories": []}
+        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3]}
     try:
         data = json.loads(text)
         if isinstance(data, dict):
+            pyramid = data.get("use_case_audience_pyramid")
+            if not isinstance(pyramid, list):
+                pyramid = [3, 3]
+            pyramid = [int(x) for x in pyramid if isinstance(x, (int, float))]
+            if not pyramid:
+                pyramid = [3, 3]
             return {
                 "production_category": data.get("production_category") or "ai-marketing-automation",
                 "hub_slug": (data.get("hub_slug") or "ai-marketing-automation").strip(),
                 "sandbox_categories": data.get("sandbox_categories") or [],
+                "use_case_batch_size": int(data["use_case_batch_size"]) if isinstance(data.get("use_case_batch_size"), (int, float)) else 9,
+                "use_case_audience_pyramid": pyramid,
             }
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, ValueError):
         pass
-    # Simple YAML: top-level key: value and sandbox_categories as list
-    out: dict = {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": []}
+    # Simple YAML: top-level key: value and list keys
+    out: dict = {
+        "production_category": "ai-marketing-automation",
+        "hub_slug": "ai-marketing-automation",
+        "sandbox_categories": [],
+        "use_case_batch_size": 9,
+        "use_case_audience_pyramid": [3, 3],
+    }
     in_list = False
+    list_key: str | None = None
     for line in text.split("\n"):
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if in_list:
+        if in_list and list_key:
             if stripped.startswith("-"):
                 val = stripped[1:].strip().strip('"\'')
-                if val:
+                if val and list_key == "sandbox_categories":
                     out["sandbox_categories"].append(val)
+                elif val and list_key == "use_case_audience_pyramid":
+                    try:
+                        out["use_case_audience_pyramid"].append(int(val))
+                    except ValueError:
+                        pass
             else:
                 in_list = False
+                list_key = None
         if not in_list and ":" in stripped:
             key, _, rest = stripped.partition(":")
             key, rest = key.strip(), rest.strip()
@@ -55,14 +76,33 @@ def load_config(path: Path | None = None) -> dict:
                 out["production_category"] = rest.strip('"\'').strip() or out["production_category"]
             elif key == "hub_slug":
                 out["hub_slug"] = rest.strip('"\'').strip() or out["hub_slug"]
+            elif key == "use_case_batch_size":
+                try:
+                    out["use_case_batch_size"] = int(rest.strip())
+                except ValueError:
+                    pass
             elif key == "sandbox_categories":
                 in_list = True
+                list_key = "sandbox_categories"
                 if rest and rest != "|":
                     first = rest.strip().strip('"\'')
                     if first.startswith("-"):
                         first = first[1:].strip().strip('"\'')
                     if first:
                         out["sandbox_categories"].append(first)
+            elif key == "use_case_audience_pyramid":
+                in_list = True
+                list_key = "use_case_audience_pyramid"
+                out["use_case_audience_pyramid"] = []
+                if rest and rest != "|":
+                    try:
+                        first = rest.strip().strip('"\'')
+                        if first.startswith("-"):
+                            first = first[1:].strip().strip('"\'')
+                        if first:
+                            out["use_case_audience_pyramid"].append(int(first))
+                    except ValueError:
+                        pass
     return out
 
 
