@@ -5,6 +5,7 @@ Uses existing articles (keywords/topics) and OpenAI API to suggest new, non-dupl
 Stdlib only + OpenAI Responses API (urllib). No PyYAML; simple line-based YAML read/write.
 """
 
+import argparse
 import json
 import os
 import re
@@ -232,8 +233,9 @@ def build_prompt(
     existing_use_cases: list[dict],
     article_keywords: list[dict],
     categories: list[str],
+    count: int,
 ) -> tuple[str, str]:
-    """Build (instructions, user_message) for the model."""
+    """Build (instructions, user_message) for the model. count = how many use cases to ask for."""
     instructions = """You are a content strategist. Your task is to suggest new business problems / use cases for blog content in the AI marketing automation space.
 
 Output ONLY a valid JSON array of objects. Each object must have exactly these keys:
@@ -264,7 +266,7 @@ Existing use cases already in our list (do NOT suggest these or very similar one
 Existing article keywords/topics we already cover (suggest complementary or new angles, not duplicates):
 {json.dumps(keywords_list[:50])}
 
-Generate exactly {TARGET_USE_CASE_COUNT} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above. Prefer problems that fit how-to or guide content. Return only the JSON array."""
+Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above. Prefer problems that fit how-to or guide content. Return only the JSON array."""
 
     return instructions, user
 
@@ -328,6 +330,17 @@ def is_duplicate(problem: str, existing: list[dict]) -> bool:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate new use cases and append to content/use_cases.yaml")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=TARGET_USE_CASE_COUNT,
+        metavar="N",
+        help=f"Number of use cases to generate and cap total list at (default: {TARGET_USE_CASE_COUNT})",
+    )
+    args = parser.parse_args()
+    limit = max(1, min(args.limit, 100))  # clamp 1..100
+
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:
         print("Error: OPENAI_API_KEY environment variable is not set.")
@@ -347,8 +360,8 @@ def main() -> None:
     # Collect keywords from existing articles
     article_keywords = collect_article_keywords(ARTICLES_DIR)
 
-    # Build prompt and call API
-    instructions, user_message = build_prompt(existing, article_keywords, categories)
+    # Build prompt and call API (ask for exactly limit use cases)
+    instructions, user_message = build_prompt(existing, article_keywords, categories, limit)
     try:
         response_text = call_responses_api(
             instructions,
@@ -377,10 +390,10 @@ def main() -> None:
         print("All generated use cases were duplicates or too similar to existing ones. Nothing added.")
         sys.exit(0)
 
-    # Append new to existing; keep last TARGET_USE_CASE_COUNT so new use cases appear in file
-    combined = (existing + new_use_cases)[-TARGET_USE_CASE_COUNT:]
+    # Append new to existing; keep last limit so new use cases appear in file
+    combined = (existing + new_use_cases)[-limit:]
     save_use_cases(USE_CASES_PATH, combined)
-    print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)} (capped at {TARGET_USE_CASE_COUNT}).")
+    print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)} (capped at {limit}).")
     for uc in new_use_cases:
         print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')})")
 

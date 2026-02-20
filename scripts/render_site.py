@@ -347,6 +347,16 @@ def enhance_article(html: str) -> str:
     return html
 
 
+def _strip_leading_h1(html: str) -> str:
+    """Remove the first <h1>...</h1> from html so we can show a single title from frontmatter above meta."""
+    return re.sub(r"^\s*<h1(?:\s[^>]*)?>.*?</h1>\s*", "", html, count=1, flags=re.DOTALL | re.IGNORECASE).lstrip()
+
+
+def _article_title_h1(title: str) -> str:
+    """HTML for article title as H1 (visible at top of article, above meta and Introduction)."""
+    return f'<h1 class="text-2xl font-bold mb-6 text-[#17266B]">{_escape(title)}</h1>\n'
+
+
 def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str) -> str:
     """HTML for meta block under H1 (articles only). Styled badge row with category, date, reading time."""
     parts: list[str] = []
@@ -688,15 +698,18 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
 
     # Remove any Disclosure section from body; the script adds it in a yellow box at the end.
     body_html = _strip_disclosure_from_html(body_html)
+    # Remove leading <h1> from body so we show one title from frontmatter above meta (avoids duplicate for .md)
+    body_html = _strip_leading_h1(body_html)
 
     html_path = out_dir / "articles" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
 
     category_slug = (meta.get("category") or meta.get("category_slug") or "").strip() or None
     lead = _extract_lead(meta, body_html)
-    # Prepend meta block (category badge, date, reading time, lead) for all article types (MD and HTML)
+    # Title (H1) at top, then meta block (category, date, reading time, lead), then body
+    title_h1 = _article_title_h1(title)
     meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead)
-    full_body_html = meta_html + body_html
+    full_body_html = title_h1 + meta_html + body_html
 
     # Generate "Read Next" section
     read_next_html = ""

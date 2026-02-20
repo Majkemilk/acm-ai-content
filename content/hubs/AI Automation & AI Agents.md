@@ -36,10 +36,10 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-how-to-leverage-ai-for-effective-upselling-during-the-checkout-process/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI for effective upselling during the checkout process</a>
+                <a href="/articles/2026-02-20-how-to-leverage-ai-to-automate-the-segmentation-of-email-list-for-targeted-campaigns/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI to automate the segmentation of email list for targeted campaigns</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-how-to-leverage-ai-for-effective-upselling-during-the-checkout-process/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-20-how-to-leverage-ai-to-automate-the-segmentation-of-email-list-for-targeted-campaigns/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
@@ -127,13 +127,6 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
             <a href="/articles/2026-02-19-guide-to-implement-ai-chatbots-to-enhance-customer-engagement/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights/" class="text-gray-900 hover:text-[#17266B]">Guide to personalize email marketing campaigns using AI insights</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-guide-to-personalize-email-marketing-campaigns-using-ai-insights/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
@@ -434,10 +427,17 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-automate-the-generation-of-personalized-content-across-multiple-platforms-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the generation of personalized content across multiple platforms using AI</a>
+                <a href="/articles/2026-02-20-add-auto-captions-subtitles-to-videos-with-veed/" class="text-gray-900 hover:text-[#17266B]">How to add auto-generated captions and subtitles to videos with VEED</a>
             </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-automate-the-generation-of-personalized-content-across-multiple-platforms-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <p class="text-gray-600 text-sm mb-4">2026-02-14</p>
+            <a href="/articles/2026-02-20-add-auto-captions-subtitles-to-videos-with-veed/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-create-viral-short-clips-with-submagic/" class="text-gray-900 hover:text-[#17266B]">How to create viral short-form clips from long videos with Submagic</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-14</p>
+            <a href="/articles/2026-02-20-create-viral-short-clips-with-submagic/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
@@ -469,6 +469,13 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-automate-the-curation-of-user-generated-content-for-brand-promotion-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the curation of user-generated content for brand promotion using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-automate-the-curation-of-user-generated-content-for-brand-promotion-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/2026-02-20-how-to-automate-the-identification-of-emerging-consumer-trends-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the identification of emerging consumer trends using AI</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
@@ -497,10 +504,24 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-implement-ai-tools-to-enhance-visual-asset-management-for-marketing-campaigns/" class="text-gray-900 hover:text-[#17266B]">How to implement AI tools to enhance visual asset management for marketing campaigns</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-implement-ai-tools-to-enhance-visual-asset-management-for-marketing-campaigns/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/2026-02-20-how-to-leverage-ai-for-effective-upselling-during-the-checkout-process/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI for effective upselling during the checkout process</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
             <a href="/articles/2026-02-20-how-to-leverage-ai-for-effective-upselling-during-the-checkout-process/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-leverage-ai-to-automate-the-segmentation-of-email-list-for-targeted-campaigns/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI to automate the segmentation of email list for targeted campaigns</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-leverage-ai-to-automate-the-segmentation-of-email-list-for-targeted-campaigns/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
@@ -530,6 +551,13 @@ title: "AI Marketing Automation Tools & Workflows"
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
             <a href="/articles/2026-02-20-leverage-ai-for-real-time-personalization-of-website-content/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-turn-long-form-videos-into-short-clips-with-opus-clip/" class="text-gray-900 hover:text-[#17266B]">How to turn long-form videos into short clips with Opus Clip</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-14</p>
+            <a href="/articles/2026-02-20-turn-long-form-videos-into-short-clips-with-opus-clip/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Comparisons</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -553,6 +581,13 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
             <a href="/articles/2026-02-20-comparison-of-make-vs-zapier-vs-n8n-choose-the-right-automation-platform/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-veed-vs-submagic-vs-opus-clip-comparison/" class="text-gray-900 hover:text-[#17266B]">VEED vs Submagic vs Opus Clip – which short-form video tool to choose</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-14</p>
+            <a href="/articles/2026-02-20-veed-vs-submagic-vs-opus-clip-comparison/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Best</h2>

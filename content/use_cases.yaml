@@ -5,43 +5,43 @@
 # - category_slug: string (e.g., "ai-marketing-automation")
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 use_cases:
-  - problem: automate customer onboarding processes using AI
+  - problem: automate the analysis of competitor marketing strategies using AI
     suggested_content_type: how-to
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: develop AI-driven loyalty rewards systems based on purchasing behavior
+  - problem: use AI to prioritize leads based on engagement metrics for sales teams
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: use AI to predict customer churn and implement retention strategies
+  - problem: implement AI for automating customer feedback response systems
     suggested_content_type: how-to
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: automate event-triggered marketing messages with AI insights
+  - problem: streamline budget allocation for marketing campaigns using AI insights
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: implement AI to streamline the creation of promotional content based on real-time trends
+  - problem: leverage AI to automate the segmentation of email list for targeted campaigns
     suggested_content_type: how-to
-    category_slug: LLM SEO
+    category_slug: AI Automation & AI Agents
     status: generated
-  - problem: leverage AI for effective upselling during the checkout process
-    suggested_content_type: how-to
-    category_slug: LLM SEO
-    status: generated
-  - problem: automate cross-channel customer engagement insights with AI
+  - problem: create AI-driven systems for measuring the effectiveness of different marketing channels
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: use AI to enhance visual content strategies for better audience engagement
+  - problem: automate the generation of personalized video content based on user data with AI
     suggested_content_type: how-to
     category_slug: Visual automation and integrations
     status: generated
-  - problem: integrate AI for automating influencer performance tracking and analytics
+  - problem: use AI to analyze customer journey data to identify drop-off points
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: utilize AI to create interactive content experiences tailored to user preferences
+  - problem: implement AI tools to enhance visual asset management for marketing campaigns
+    suggested_content_type: how-to
+    category_slug: Visual automation and integrations
+    status: generated
+  - problem: automate the curation of user-generated content for brand promotion using AI
     suggested_content_type: how-to
     category_slug: Visual automation and integrations
     status: generated
