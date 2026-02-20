@@ -2,8 +2,11 @@
 title: "AI Marketing Automation Tools & Workflows"
 ---
 
-<h1>AI Marketing Automation Tools &amp; Workflows</h1>
+<div style="text-align: justify">
+<h1 style="margin-bottom: 1em">AI Marketing Automation Tools &amp; Workflows</h1>
+
 <p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below are organized by type so you can find what fits your goal.</p>
+</div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">

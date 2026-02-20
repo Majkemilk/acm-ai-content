@@ -121,11 +121,13 @@ def _section_html(section_title: str, articles: list[tuple[dict, Path]]) -> str:
 def build_hub_content(articles: list[tuple[dict, Path]]) -> str:
     """Build hub page as HTML: H1, intro, then sections by content_type (cards). No 'Start here' – newest are on homepage."""
     parts: list[str] = []
-    parts.append(f"<h1>{html_module.escape(HUB_TITLE)}</h1>\n")
     parts.append(
+        '<div style="text-align: justify">\n'
+        f"<h1 style=\"margin-bottom: 1em\">{html_module.escape(HUB_TITLE)}</h1>\n\n"
         "<p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. "
         "Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below "
         "are organized by type so you can find what fits your goal.</p>\n"
+        "</div>\n"
     )
     # Group by content_type
     by_type: dict[str, list[tuple[dict, Path]]] = {}
