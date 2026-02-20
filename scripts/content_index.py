@@ -29,12 +29,13 @@ def load_config(path: Path | None = None) -> dict:
         if isinstance(data, dict):
             return {
                 "production_category": data.get("production_category") or "ai-marketing-automation",
+                "hub_slug": (data.get("hub_slug") or "ai-marketing-automation").strip(),
                 "sandbox_categories": data.get("sandbox_categories") or [],
             }
     except json.JSONDecodeError:
         pass
     # Simple YAML: top-level key: value and sandbox_categories as list
-    out: dict = {"production_category": "ai-marketing-automation", "sandbox_categories": []}
+    out: dict = {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": []}
     in_list = False
     for line in text.split("\n"):
         stripped = line.strip()
@@ -52,6 +53,8 @@ def load_config(path: Path | None = None) -> dict:
             key, rest = key.strip(), rest.strip()
             if key == "production_category":
                 out["production_category"] = rest.strip('"\'').strip() or out["production_category"]
+            elif key == "hub_slug":
+                out["hub_slug"] = rest.strip('"\'').strip() or out["hub_slug"]
             elif key == "sandbox_categories":
                 in_list = True
                 if rest and rest != "|":

@@ -5,43 +5,11 @@
 # - category_slug: string (e.g., "ai-marketing-automation")
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 use_cases:
-  - problem: automate the analysis of competitor marketing strategies using AI
+  - problem: automate the personalization of landing pages based on user behavior with AI
     suggested_content_type: how-to
     category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: use AI to prioritize leads based on engagement metrics for sales teams
+    status: todo
+  - problem: use AI to dynamically adjust social media ad spending based on real-time performance metrics
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: implement AI for automating customer feedback response systems
-    suggested_content_type: how-to
-    category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: streamline budget allocation for marketing campaigns using AI insights
-    suggested_content_type: guide
-    category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: leverage AI to automate the segmentation of email list for targeted campaigns
-    suggested_content_type: how-to
-    category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: create AI-driven systems for measuring the effectiveness of different marketing channels
-    suggested_content_type: guide
-    category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: automate the generation of personalized video content based on user data with AI
-    suggested_content_type: how-to
-    category_slug: Visual automation and integrations
-    status: generated
-  - problem: use AI to analyze customer journey data to identify drop-off points
-    suggested_content_type: guide
-    category_slug: AI Automation & AI Agents
-    status: generated
-  - problem: implement AI tools to enhance visual asset management for marketing campaigns
-    suggested_content_type: how-to
-    category_slug: Visual automation and integrations
-    status: generated
-  - problem: automate the curation of user-generated content for brand promotion using AI
-    suggested_content_type: how-to
-    category_slug: Visual automation and integrations
-    status: generated
+    status: todo

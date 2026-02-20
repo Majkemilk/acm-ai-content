@@ -830,9 +830,10 @@ def _render_hub(
     out_dir: Path,
     articles: list[tuple[dict, Path]],
     existing_slugs: set[str] | None = None,
+    output_slug: str | None = None,
 ) -> None:
     meta, body = _parse_md_file(path)
-    slug = meta.get("slug") or path.stem
+    slug = (output_slug or meta.get("slug") or path.stem).strip()
     title = (meta.get("title") or "").strip()
     if not title and body.lstrip().startswith("# "):
         title = body.lstrip().split("\n", 1)[0].replace("# ", "").strip()
@@ -879,10 +880,10 @@ def _render_hub(
     print(f"  {html_path.relative_to(out_dir)}")
 
 
-def _update_index(out_dir: Path, production_category: str, articles: list[tuple[dict, Path]]) -> None:
+def _update_index(out_dir: Path, hub_slug: str, articles: list[tuple[dict, Path]]) -> None:
     index_path = out_dir / "index.html"
     newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:12]
-    hub_link = f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"><a href="/hubs/{_escape(production_category)}/" class="text-[rgb(23,38,107)] hover:underline">All articles</a></h2>\n'
+    hub_link = f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"><a href="/hubs/{_escape(hub_slug)}/" class="text-[rgb(23,38,107)] hover:underline">All articles</a></h2>\n'
     articles_html = ""
     if newest:
         articles_html = '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Newest articles</h2>\n'
@@ -984,6 +985,7 @@ def _ensure_images(out_dir: Path) -> None:
 def main() -> None:
     config = load_config(CONFIG_PATH)
     production_category = (config.get("production_category") or "ai-marketing-automation").strip()
+    hub_slug = (config.get("hub_slug") or "ai-marketing-automation").strip()
     public = PUBLIC_DIR
     public.mkdir(parents=True, exist_ok=True)
 
@@ -996,12 +998,12 @@ def main() -> None:
     print("Rendering production hub...")
     hub_path = HUBS_DIR / f"{production_category}.md"
     if hub_path.exists():
-        _render_hub(hub_path, public, articles, existing_slugs)
+        _render_hub(hub_path, public, articles, existing_slugs, output_slug=hub_slug)
     else:
         print(f"  (no {hub_path.name})")
 
     print("Updating public/index.html...")
-    _update_index(public, production_category, articles)
+    _update_index(public, hub_slug, articles)
 
     print("Writing privacy page...")
     _write_privacy_page(public)

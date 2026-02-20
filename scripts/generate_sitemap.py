@@ -58,12 +58,12 @@ def _write_sitemap_xml(urls: list[tuple[str, str | None]]) -> str:
 
 def main() -> None:
     config = load_config(CONFIG_PATH)
-    production_category = (config.get("production_category") or "ai-marketing-automation").strip()
+    hub_slug = (config.get("hub_slug") or "ai-marketing-automation").strip()
     articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
     articles_sorted = sorted(articles, key=lambda x: (x[0].get("slug") or x[1].stem,))
 
     urls: list[tuple[str, str | None]] = []
-    urls.append((f"/hubs/{production_category}/", None))
+    urls.append((f"/hubs/{hub_slug}/", None))
     for meta, path in articles_sorted:
         slug = meta.get("slug") or path.stem
         urls.append((f"/articles/{slug}/", _lastmod_for_article(meta, path)))
