@@ -5,73 +5,43 @@
 # - category_slug: string (e.g., "ai-marketing-automation")
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 use_cases:
-  - problem: automate social media posting schedules with AI
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: personalize email marketing campaigns using AI insights
-    suggested_content_type: guide
-    category_slug: ai-marketing-automation
-  - problem: use AI to analyze customer feedback and improve products
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: implement AI chatbots to enhance customer engagement
-    suggested_content_type: guide
-    category_slug: ai-marketing-automation
-  - problem: integrate AI tools for better lead scoring in sales
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: leverage AI to optimize ad spending and campaign performance
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: automate customer segmentation for targeted marketing with AI
-    suggested_content_type: guide
-    category_slug: ai-marketing-automation
-  - problem: use AI to create dynamic landing pages that adapt to user behavior
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: enhance A/B testing strategies using AI-driven insights
-    suggested_content_type: guide
-    category_slug: ai-marketing-automation
-  - problem: utilize AI for predictive analytics in customer purchasing behavior
-    suggested_content_type: how-to
-    category_slug: ai-marketing-automation
-  - problem: automate the creation of social media influencer match reports using AI
+  - problem: automate customer onboarding processes using AI
     suggested_content_type: how-to
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: use AI to streamline multi-channel customer feedback aggregation
+  - problem: develop AI-driven loyalty rewards systems based on purchasing behavior
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: implement AI-driven chatbot analytics to measure engagement effectiveness
+  - problem: use AI to predict customer churn and implement retention strategies
     suggested_content_type: how-to
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: leverage AI for sentiment analysis in brand campaigns
+  - problem: automate event-triggered marketing messages with AI insights
     suggested_content_type: guide
     category_slug: AI Automation & AI Agents
     status: generated
-  - problem: automate the identification of emerging consumer trends using AI
+  - problem: implement AI to streamline the creation of promotional content based on real-time trends
     suggested_content_type: how-to
     category_slug: LLM SEO
     status: generated
-  - problem: use AI for automated content gap analysis in SEO strategies
-    suggested_content_type: guide
+  - problem: leverage AI for effective upselling during the checkout process
+    suggested_content_type: how-to
     category_slug: LLM SEO
     status: generated
-  - problem: apply AI to optimize content distribution timing for maximum engagement
-    suggested_content_type: how-to
-    category_slug: Visual automation and integrations
-    status: generated
-  - problem: automate image optimization for website and social media using AI
-    suggested_content_type: how-to
-    category_slug: Visual automation and integrations
-    status: generated
-  - problem: leverage AI for generating personalized video messaging in marketing
+  - problem: automate cross-channel customer engagement insights with AI
     suggested_content_type: guide
+    category_slug: AI Automation & AI Agents
+    status: generated
+  - problem: use AI to enhance visual content strategies for better audience engagement
+    suggested_content_type: how-to
     category_slug: Visual automation and integrations
     status: generated
-  - problem: create AI-driven workflows for integrating offline and online marketing data
+  - problem: integrate AI for automating influencer performance tracking and analytics
+    suggested_content_type: guide
+    category_slug: AI Automation & AI Agents
+    status: generated
+  - problem: utilize AI to create interactive content experiences tailored to user preferences
     suggested_content_type: how-to
     category_slug: Visual automation and integrations
     status: generated

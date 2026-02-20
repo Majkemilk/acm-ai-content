@@ -6,7 +6,7 @@ primary_keyword: "guide to leverage ai for generating personalized video messagi
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-20"
-status: "draft"
+status: "filled"
 ---
 # Guide to leverage AI for generating personalized video messaging in marketing
 

@@ -6,7 +6,7 @@ primary_keyword: "guide to use ai to streamline multi-channel customer feedback 
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-20"
-status: "draft"
+status: "filled"
 ---
 # Guide to use AI to streamline multi-channel customer feedback aggregation
 

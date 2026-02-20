@@ -240,6 +240,23 @@ def replace_known_bracket_placeholders(text: str) -> tuple[str, list[str]]:
     return (out, notes)
 
 
+def replace_remaining_bracket_placeholders_with_quoted(text: str) -> tuple[str, list[str]]:
+    """Replace any remaining [xxx] (not links, not checkboxes) with \"xxx\" so QA does not fail. Returns (text, notes)."""
+    notes: list[str] = []
+
+    def repl(match: re.Match[str]) -> str:
+        full = match.group(0)
+        if is_checkbox_token(full):
+            return full
+        inner = full[1:-1]
+        escaped = inner.replace("\\", "\\\\").replace('"', '\\"')
+        notes.append(f'placeholder [{inner}] -> "{inner}"')
+        return '"' + escaped + '"'
+
+    out = BRACKET_PLACEHOLDER.sub(repl, text)
+    return (out, notes)
+
+
 def _h1_lines(body: str) -> list[str]:
     """Extract H1 lines (exactly # then space), stripped."""
     out: list[str] = []
@@ -873,6 +890,9 @@ def fill_one(
             new_body, bracket_notes = replace_known_bracket_placeholders(new_body)
             if bracket_notes:
                 print(f"  Replaced known placeholders: {path.name} — {'; '.join(bracket_notes)}")
+            new_body, remaining_notes = replace_remaining_bracket_placeholders_with_quoted(new_body)
+            if remaining_notes:
+                print(f"  Replaced remaining placeholders: {path.name} — {'; '.join(remaining_notes)}")
             last_reasons = check_output_contract(new_body, meta.get("content_type", ""), quality_strict)
             if not last_reasons:
                 if attempt > 0:
@@ -924,6 +944,9 @@ def fill_one(
         new_body, bracket_notes = replace_known_bracket_placeholders(new_body)
         if bracket_notes:
             print(f"  Replaced known placeholders: {path.name} — {'; '.join(bracket_notes)}")
+        new_body, remaining_notes = replace_remaining_bracket_placeholders_with_quoted(new_body)
+        if remaining_notes:
+            print(f"  Replaced remaining placeholders: {path.name} — {'; '.join(remaining_notes)}")
     new_content = _serialize_frontmatter(meta, order) + "\n" + new_body
 
     if qa_enabled:

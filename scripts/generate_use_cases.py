@@ -306,6 +306,7 @@ def parse_ai_use_cases(raw: str, allowed_types: list[str], allowed_categories: l
             "problem": problem,
             "suggested_content_type": content_type,
             "category_slug": category,
+            "status": "todo",  # so generate_queue.py adds them to the queue
         })
     return out
 
@@ -376,8 +377,8 @@ def main() -> None:
         print("All generated use cases were duplicates or too similar to existing ones. Nothing added.")
         sys.exit(0)
 
-    # Append to existing, cap to TARGET_USE_CASE_COUNT, then save
-    combined = (existing + new_use_cases)[:TARGET_USE_CASE_COUNT]
+    # Append new to existing; keep last TARGET_USE_CASE_COUNT so new use cases appear in file
+    combined = (existing + new_use_cases)[-TARGET_USE_CASE_COUNT:]
     save_use_cases(USE_CASES_PATH, combined)
     print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)} (capped at {TARGET_USE_CASE_COUNT}).")
     for uc in new_use_cases:

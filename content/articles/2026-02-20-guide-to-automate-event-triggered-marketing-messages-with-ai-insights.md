@@ -1,23 +1,19 @@
 ---
-
-
-title: "Guide to personalize email marketing campaigns using AI insights"
+title: "Guide to automate event-triggered marketing messages with AI insights"
 content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "guide to personalize email marketing campaigns using ai insights"
+primary_keyword: "guide to automate event-triggered marketing messages with ai insights"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-19"
-status: "filled"
+last_updated: "2026-02-20"
+status: "draft"
 ---
-
-
-# Guide to personalize email marketing campaigns using AI insights
+# Guide to automate event-triggered marketing messages with AI insights
 
 **Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to personalize email marketing campaigns using ai insights
-**Last updated:** 2026-02-19
+**Primary keyword:** guide to automate event-triggered marketing messages with ai insights
+**Last updated:** 2026-02-20
 
 ---
 
