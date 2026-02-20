@@ -1,19 +1,19 @@
 ---
-title: "Guide to automate customer segmentation for targeted marketing with AI"
-content_type: "guide"
+title: "Comparison of Make vs Zapier vs n8n — choose the right automation platform"
+content_type: "comparison"
 category: "ai-marketing-automation"
-primary_keyword: "guide to automate customer segmentation for targeted marketing with ai"
+primary_keyword: "comparison of make vs zapier vs n8n — choose the right automation platform"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-19"
+last_updated: "2026-02-20"
 status: "filled"
 ---
-# Guide to automate customer segmentation for targeted marketing with AI
+# Comparison of Make vs Zapier vs n8n — choose the right automation platform
 
-**Content type:** guide
+**Content type:** comparison
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to automate customer segmentation for targeted marketing with ai
-**Last updated:** 2026-02-19
+**Primary keyword:** comparison of make vs zapier vs n8n — choose the right automation platform
+**Last updated:** 2026-02-20
 
 ---
 
@@ -44,35 +44,6 @@ Before publishing, verify the following:
 
 ### Failure modes:
 
-### SOP checklist:
-
-### Template 1:
-
-### Template 2:
-
----
-
-## Step-by-step workflow (practical)
-
-1.
-2.
-3.
-4.
-5.
-6.
-7.
-
-**Inputs / Outputs**
-
-- Inputs:
-- Outputs:
-
-**Common pitfalls**
-
--
--
--
-
 ---
 
 ## When NOT to use this
@@ -100,9 +71,8 @@ Before publishing, verify the following:
 - [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
-- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
-- [Guide to implement AI chatbots to enhance customer engagement with Pictory](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/)
+- [Comparison: Jasper vs Copy.ai for Content Creation](/articles/2026-02-18-jasper-vs-copyai-for-content-creation/)
+- [SEO Tools Compared](/articles/2026-02-19-seo-tools-comparison/)
 
 ---
 

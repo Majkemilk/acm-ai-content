@@ -1,19 +1,19 @@
 ---
-title: "Guide to automate customer segmentation for targeted marketing with AI"
+title: "Guide to leverage AI for generating personalized video messaging in marketing"
 content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "guide to automate customer segmentation for targeted marketing with ai"
+primary_keyword: "guide to leverage ai for generating personalized video messaging in marketing"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-19"
-status: "filled"
+last_updated: "2026-02-20"
+status: "draft"
 ---
-# Guide to automate customer segmentation for targeted marketing with AI
+# Guide to leverage AI for generating personalized video messaging in marketing
 
 **Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to automate customer segmentation for targeted marketing with ai
-**Last updated:** 2026-02-19
+**Primary keyword:** guide to leverage ai for generating personalized video messaging in marketing
+**Last updated:** 2026-02-20
 
 ---
 

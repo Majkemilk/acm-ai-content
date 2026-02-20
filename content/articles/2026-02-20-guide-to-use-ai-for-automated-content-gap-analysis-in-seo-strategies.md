@@ -1,19 +1,19 @@
 ---
-title: "Guide to automate customer segmentation for targeted marketing with AI"
+title: "Guide to use AI for automated content gap analysis in SEO strategies"
 content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "guide to automate customer segmentation for targeted marketing with ai"
+primary_keyword: "guide to use ai for automated content gap analysis in seo strategies"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-19"
+last_updated: "2026-02-20"
 status: "filled"
 ---
-# Guide to automate customer segmentation for targeted marketing with AI
+# Guide to use AI for automated content gap analysis in SEO strategies
 
 **Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to automate customer segmentation for targeted marketing with ai
-**Last updated:** 2026-02-19
+**Primary keyword:** guide to use ai for automated content gap analysis in seo strategies
+**Last updated:** 2026-02-20
 
 ---
 

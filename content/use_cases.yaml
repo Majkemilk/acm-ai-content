@@ -3,6 +3,7 @@
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
 # - suggested_content_type: string (one of: how-to, guide, best, comparison)
 # - category_slug: string (e.g., "ai-marketing-automation")
+# - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 use_cases:
   - problem: automate social media posting schedules with AI
     suggested_content_type: how-to
@@ -34,3 +35,43 @@ use_cases:
   - problem: utilize AI for predictive analytics in customer purchasing behavior
     suggested_content_type: how-to
     category_slug: ai-marketing-automation
+  - problem: automate the creation of social media influencer match reports using AI
+    suggested_content_type: how-to
+    category_slug: AI Automation & AI Agents
+    status: generated
+  - problem: use AI to streamline multi-channel customer feedback aggregation
+    suggested_content_type: guide
+    category_slug: AI Automation & AI Agents
+    status: generated
+  - problem: implement AI-driven chatbot analytics to measure engagement effectiveness
+    suggested_content_type: how-to
+    category_slug: AI Automation & AI Agents
+    status: generated
+  - problem: leverage AI for sentiment analysis in brand campaigns
+    suggested_content_type: guide
+    category_slug: AI Automation & AI Agents
+    status: generated
+  - problem: automate the identification of emerging consumer trends using AI
+    suggested_content_type: how-to
+    category_slug: LLM SEO
+    status: generated
+  - problem: use AI for automated content gap analysis in SEO strategies
+    suggested_content_type: guide
+    category_slug: LLM SEO
+    status: generated
+  - problem: apply AI to optimize content distribution timing for maximum engagement
+    suggested_content_type: how-to
+    category_slug: Visual automation and integrations
+    status: generated
+  - problem: automate image optimization for website and social media using AI
+    suggested_content_type: how-to
+    category_slug: Visual automation and integrations
+    status: generated
+  - problem: leverage AI for generating personalized video messaging in marketing
+    suggested_content_type: guide
+    category_slug: Visual automation and integrations
+    status: generated
+  - problem: create AI-driven workflows for integrating offline and online marketing data
+    suggested_content_type: how-to
+    category_slug: Visual automation and integrations
+    status: generated

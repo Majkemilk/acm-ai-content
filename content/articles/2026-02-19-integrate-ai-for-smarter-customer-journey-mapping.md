@@ -6,7 +6,7 @@ primary_keyword: "integrate ai for smarter customer journey mapping"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to integrate AI for smarter customer journey mapping
 

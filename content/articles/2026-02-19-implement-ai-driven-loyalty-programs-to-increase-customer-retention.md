@@ -6,7 +6,7 @@ primary_keyword: "implement ai-driven loyalty programs to increase customer rete
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to implement AI-driven loyalty programs to increase customer retention
 

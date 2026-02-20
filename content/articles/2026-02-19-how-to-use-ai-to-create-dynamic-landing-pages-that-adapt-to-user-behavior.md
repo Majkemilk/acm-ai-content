@@ -6,7 +6,7 @@ primary_keyword: "how to use ai to create dynamic landing pages that adapt to us
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to use AI to create dynamic landing pages that adapt to user behavior
 

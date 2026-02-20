@@ -6,7 +6,7 @@ primary_keyword: "utilize ai for content curation and distribution strategies"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # Guide to utilize AI for content curation and distribution strategies
 

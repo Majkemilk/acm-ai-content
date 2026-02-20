@@ -204,6 +204,28 @@ def _parse_md_file(path: Path) -> tuple[dict, str]:
     return meta, body
 
 
+def _set_source_status_filled(path: Path) -> None:
+    """Set status to 'filled' in a .md file's frontmatter after it has been rendered to public."""
+    if path.suffix.lower() != ".md":
+        return
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return
+    if not text.startswith("---"):
+        return
+    end = text.find("\n---", 3)
+    if end == -1:
+        return
+    fm = text[3:end]
+    if re.search(r"^\s*status\s*:", fm, re.MULTILINE):
+        fm_new = re.sub(r"^status\s*:\s*.*$", 'status: "filled"', fm, count=1, flags=re.MULTILINE)
+    else:
+        fm_new = fm.rstrip() + '\nstatus: "filled"\n'
+    new_text = "---\n" + fm_new + "\n---\n" + text[end + 4 :]
+    path.write_text(new_text, encoding="utf-8")
+
+
 def _escape(s: str) -> str:
     return html.escape(s, quote=True)
 
@@ -715,6 +737,8 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
         content = _wrap_page(title, body_html, updated_iso)
     html_path.write_text(content, encoding="utf-8")
     print(f"  {html_path.relative_to(out_dir)}")
+    # Mark source .md as filled so fill_articles skips it next time
+    _set_source_status_filled(path)
 
 
 def _parse_hub_body(body: str) -> tuple[str, list[tuple[str, list[tuple[str, str]]]]]:

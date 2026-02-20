@@ -6,7 +6,7 @@ primary_keyword: "use ai to analyze social listening data for brand insights"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # Guide to use AI to analyze social listening data for brand insights
 

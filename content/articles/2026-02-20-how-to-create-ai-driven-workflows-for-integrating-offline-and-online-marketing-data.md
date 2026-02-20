@@ -1,19 +1,19 @@
 ---
-title: "Guide to automate customer segmentation for targeted marketing with AI"
-content_type: "guide"
+title: "How to create AI-driven workflows for integrating offline and online marketing data"
+content_type: "how-to"
 category: "ai-marketing-automation"
-primary_keyword: "guide to automate customer segmentation for targeted marketing with ai"
+primary_keyword: "how to create ai-driven workflows for integrating offline and online marketing data"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-19"
+last_updated: "2026-02-20"
 status: "filled"
 ---
-# Guide to automate customer segmentation for targeted marketing with AI
+# How to create AI-driven workflows for integrating offline and online marketing data
 
-**Content type:** guide
+**Content type:** how-to
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to automate customer segmentation for targeted marketing with ai
-**Last updated:** 2026-02-19
+**Primary keyword:** how to create ai-driven workflows for integrating offline and online marketing data
+**Last updated:** 2026-02-20
 
 ---
 
@@ -100,9 +100,9 @@ Before publishing, verify the following:
 - [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
-- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
-- [Guide to implement AI chatbots to enhance customer engagement with Pictory](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-pictory/)
+- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
+- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
+- [How to automate social media posting schedules with AI with Otter](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-otter/)
 
 ---
 

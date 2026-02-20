@@ -1,4 +1,5 @@
 ---
+
 title: "How to automate the generation of personalized content across multiple platforms using AI"
 content_type: "how-to"
 category: "ai-marketing-automation"
@@ -6,8 +7,9 @@ primary_keyword: "automate the generation of personalized content across multipl
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-20"
-status: "draft"
+status: "filled"
 ---
+
 # How to automate the generation of personalized content across multiple platforms using AI
 
 **Content type:** how-to

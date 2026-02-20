@@ -211,7 +211,9 @@ _KNOWN_BRACKET_FALLBACKS: list[tuple[str, str]] = [
     ("[Your Company]", "your company"),
     ("[Company name]", "your company"),
     ("[Product name]", "the product"),
+    ("[Product Name]", "the product"),
     ("[Product Category]", "the product category"),
+    ("[Video Link]", "the video link"),
     ("[Customer name]", "the customer"),
     ("[Customer Name]", "the customer"),
     ("[Discount/Offer]", "the offer"),
@@ -360,16 +362,39 @@ def _strip_html_tags(html: str) -> str:
     return re.sub(r"<[^>]+>", " ", html)
 
 
-def _load_affiliate_tools() -> list[tuple[str, str]]:
-    """Load (name, url) from content/affiliate_tools.yaml. Stdlib only."""
+def _is_affiliate_url(url: str) -> bool:
+    """True if URL looks like an affiliate/tracking link (query params or path indicating referral)."""
+    if not url or not url.strip():
+        return False
+    if "?" in url:
+        query = url.split("?", 1)[1].lower()
+        if any(k in query for k in ("via=", "ref=", "affiliate=", "aff=", "tag=", "tid=", "pc=")):
+            return True
+    path = url.split("?")[0].lower()
+    if "/ref/" in path or "/aff/" in path or "/affiliate" in path:
+        return True
+    return False
+
+
+def _load_affiliate_tools() -> list[tuple[str, str, str]]:
+    """Load (name, url, short_description_en) from content/affiliate_tools.yaml. Stdlib only.
+    short_description_en is optional in YAML; use "" when missing."""
     path = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
     if not path.exists():
         return []
     text = path.read_text(encoding="utf-8")
-    items: list[tuple[str, str]] = []
+
+    def _val(s: str) -> str:
+        s = (s or "").strip()
+        if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+            return s[1:-1].replace('\\"', '"').strip()
+        return s
+
+    items: list[tuple[str, str, str]] = []
     in_tools = False
     current_name = ""
     current_url = ""
+    current_short = ""
     for line in text.split("\n"):
         stripped = line.strip()
         if stripped.startswith("#"):
@@ -381,28 +406,49 @@ def _load_affiliate_tools() -> list[tuple[str, str]]:
             continue
         if stripped.startswith("- "):
             if current_name:
-                items.append((current_name, current_url))
+                items.append((current_name, current_url, current_short))
             current_name = ""
             current_url = ""
+            current_short = ""
             part = stripped[2:].strip()
             kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", part)
             if kv:
-                k, v = kv.group(1), kv.group(2).strip().strip('"\'')
+                k, v = kv.group(1), _val(kv.group(2))
                 if k == "name":
                     current_name = v
                 elif k == "affiliate_link":
                     current_url = v
+                elif k == "short_description_en":
+                    current_short = v
             continue
         kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", stripped)
         if kv:
-            k, v = kv.group(1), kv.group(2).strip().strip('"\'')
+            k, v = kv.group(1), _val(kv.group(2))
             if k == "name":
                 current_name = v
             elif k == "affiliate_link":
                 current_url = v
+            elif k == "short_description_en":
+                current_short = v
     if current_name:
-        items.append((current_name, current_url))
+        items.append((current_name, current_url, current_short))
     return items
+
+
+def _split_tools_by_affiliate(
+    tools: list[tuple[str, str, str]],
+) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
+    """Split (name, url, short_desc) into affiliate list and other list based on URL heuristics."""
+    affiliate: list[tuple[str, str, str]] = []
+    other: list[tuple[str, str, str]] = []
+    for name, url, short_desc in tools:
+        if not url:
+            continue
+        if _is_affiliate_url(url):
+            affiliate.append((name, url, short_desc))
+        else:
+            other.append((name, url, short_desc))
+    return (affiliate, other)
 
 
 def _frontmatter_comment_string(meta: dict, status_value: str = "filled") -> str:
@@ -424,18 +470,43 @@ def _frontmatter_comment_string(meta: dict, status_value: str = "filled") -> str
     return "\n".join(lines) + "\n"
 
 
-def _build_html_prompt(meta: dict, tool_list: list[tuple[str, str]]) -> tuple[str, str]:
-    """(instructions, user_message) for AI to generate article body as HTML with Tailwind."""
+def _build_html_prompt(
+    meta: dict,
+    affiliate_tools: list[tuple[str, str, str]],
+    other_tools: list[tuple[str, str, str]],
+) -> tuple[str, str]:
+    """(instructions, user_message) for AI to generate article body as HTML with Tailwind.
+    Each tool is (name, url, short_description_en). Prefer affiliate tools when context fits; else use best from other."""
     title = (meta.get("title") or "").strip()
     keyword = (meta.get("primary_keyword") or "").strip()
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
     content_type = (meta.get("content_type") or "").strip()
+
+    def _fmt(t: tuple[str, str, str]) -> str:
+        name, url, short = t[0], t[1], t[2]
+        if short:
+            return f"{name}={url}|{short}"
+        return f"{name}={url}"
+
     tools_blob = ""
-    if tool_list:
-        tools_blob = (
-            "Tool names and URLs to link (first occurrence only): "
-            + ", ".join(f"{name}={url}" for name, url in tool_list if url)
-            + ". Link each tool name at its first occurrence as <a href=\"URL\">Name</a> using the exact URL provided."
+    if affiliate_tools or other_tools:
+        parts = []
+        if affiliate_tools:
+            parts.append(
+                "Affiliate tools (prefer when the tool truly fits the sentence/paragraph context; use exact URL): "
+                + ", ".join(_fmt(t) for t in affiliate_tools if t[1])
+            )
+        if other_tools:
+            parts.append(
+                "Other tools (use when no affiliate tool fits the context; choose the best match for the task): "
+                + ", ".join(_fmt(t) for t in other_tools if t[1])
+            )
+        tools_blob = " ".join(parts) + "\n\n"
+        tools_blob += (
+            "LINKING RULES:\n"
+            "- Prefer tools from the Affiliate list when they are a good fit for the context. Use the Other list only when no affiliate tool fits.\n"
+            "- At the first occurrence of each tool in the article body, use this format: <a href=\"URL\">Name</a> (short description in English, one sentence). Example: <a href=\"https://example.com\">Pictory</a> (AI video from text). At later occurrences of the same tool, link only the name: <a href=\"URL\">Name</a>, without repeating the description.\n"
+            "- If a tool has a description after | in the list above (e.g. Name=URL|description), use that description in the parentheses. Otherwise write a factual one-sentence description of what the tool does; if unsure, use a generic form like \"AI tool for [category or use case]\"."
         )
 
     instructions = f"""You are a documentation writer. Generate the BODY of an article as HTML only. The output will be inserted inside an <article> tag; the page already has header, footer, and the article title (H1). Do NOT output <html>, <head>, <body>, or an H1 — start with the first section (e.g. Introduction or first H2). Do not generate any part of the page layout (header, footer, navigation); only the article content.
@@ -475,9 +546,9 @@ Do not merge or abbreviate these into a single short paragraph. The meta-prompt 
 SECTION: "List of AI tools mentioned in this article"
 Include a section titled "List of AI tools mentioned in this article" near the end of the article (e.g. after FAQ or after Internal links; choose a consistent, logical position). This section gives readers a quick reference and supports affiliate links.
 - Placement: Near the end, after FAQ or after Internal links. Do not place after the disclosure (the template adds disclosure automatically).
-- Content: A bulleted list. For each tool that is both (a) in the tool list above and (b) relevant to the article (actually discussed or clearly pertinent), add one bullet containing: the tool name as a link using the exact URL from the tool list above, then a short one-sentence description.
-- Description rules: The one-sentence description must be factual and state what the tool does and its key differentiator (e.g. "video editing and transcription", "AI-powered transcription with speaker identification", "AI content generation for blogs"). Be concise and specific; avoid vague phrases like "powerful tool" or "comprehensive solution". If you cannot provide a reliable, factual description for a tool, omit that tool from the list.
-- Format: Use H2 for the section title. Use <ul class="list-disc list-inside space-y-2 text-gray-700"> for the list. Each item: <a href="URL">Tool Name</a> — description sentence. Include only tools from the tool list above; do not invent tools. The AI decides which tools to include based on article relevance. If the tool list is empty, omit this section.
+- Content: A bulleted list. For each tool that is both (a) in the Affiliate or Other tool list above and (b) relevant to the article (actually discussed or clearly pertinent), add one bullet containing: the tool name as a link using the exact URL from the list above, then a short one-sentence description in English.
+- Description rules: Use the same style as in-article descriptions: factual, in English, one sentence (e.g. "video editing and transcription", "AI-powered transcription with speaker identification"). If a description was provided after | in the tool list, use it here too. Otherwise be concise and specific; if unsure, use a generic form like "AI tool for [use case]". Avoid vague phrases like "powerful tool". Do not invent tools.
+- Format: Use H2 for the section title. Use <ul class="list-disc list-inside space-y-2 text-gray-700"> for the list. Each item: <a href="URL">Tool Name</a> — description sentence. Include only tools from the Affiliate or Other list above; do not invent tools. The AI decides which tools to include based on article relevance. If both lists are empty, omit this section.
 
 IMPORTANT — LENGTH: The article MUST be at least 700 words. For comprehensive guides, aim for 900+ words. To achieve this:
 - Expand "Template 1" and "Template 2" with rich, detailed examples (multiple lines or bullets each; real company names, metrics, and scenarios).
@@ -763,8 +834,9 @@ def fill_one(
         print(f"  Skip {path.name}: empty body")
         return "skip"
     if use_html:
-        tool_list = _load_affiliate_tools()
-        base_instructions, user_message = _build_html_prompt(meta, tool_list)
+        all_tools = _load_affiliate_tools()
+        affiliate_tools, other_tools = _split_tools_by_affiliate(all_tools)
+        base_instructions, user_message = _build_html_prompt(meta, affiliate_tools, other_tools)
     else:
         base_instructions, user_message = build_prompt(meta, body, style=style)
     new_body = ""

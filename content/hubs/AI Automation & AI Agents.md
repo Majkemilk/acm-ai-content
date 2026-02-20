@@ -15,31 +15,31 @@ title: "AI Marketing Automation Tools & Workflows"
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-comparison-of-make-vs-zapier-vs-n8n-choose-the-right-automation-platform/" class="text-gray-900 hover:text-[#17266B]">Comparison of Make vs Zapier vs n8n — choose the right automation platform</a>
+                <a href="/articles/2026-02-20-how-to-implement-ai-driven-chatbot-analytics-to-measure-engagement-effectiveness/" class="text-gray-900 hover:text-[#17266B]">How to implement AI-driven chatbot analytics to measure engagement effectiveness</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-comparison-of-make-vs-zapier-vs-n8n-choose-the-right-automation-platform/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-20-how-to-implement-ai-driven-chatbot-analytics-to-measure-engagement-effectiveness/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-automate-the-generation-of-personalized-content-across-multiple-platforms-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the generation of personalized content across multiple platforms using AI</a>
+                <a href="/articles/2026-02-20-how-to-create-ai-driven-workflows-for-integrating-offline-and-online-marketing-data/" class="text-gray-900 hover:text-[#17266B]">How to create AI-driven workflows for integrating offline and online marketing data</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-automate-the-generation-of-personalized-content-across-multiple-platforms-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/2026-02-20-how-to-create-ai-driven-workflows-for-integrating-offline-and-online-marketing-data/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-utilize-ai-for-content-curation-and-distribution-strategies/" class="text-gray-900 hover:text-[#17266B]">Guide to utilize AI for content curation and distribution strategies</a>
+                <a href="/articles/2026-02-20-how-to-automate-the-identification-of-emerging-consumer-trends-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the identification of emerging consumer trends using AI</a>
             </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-utilize-ai-for-content-curation-and-distribution-strategies/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-automate-the-identification-of-emerging-consumer-trends-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-19-use-ai-to-enhance-video-marketing-strategies-for-better-engagement/" class="text-gray-900 hover:text-[#17266B]">Guide to use AI to enhance video marketing strategies for better engagement</a>
+                <a href="/articles/2026-02-20-how-to-automate-the-creation-of-social-media-influencer-match-reports-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the creation of social media influencer match reports using AI</a>
             </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
-            <a href="/articles/2026-02-19-use-ai-to-enhance-video-marketing-strategies-for-better-engagement/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-automate-the-creation-of-social-media-influencer-match-reports-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
@@ -169,6 +169,34 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-19</p>
             <a href="/articles/2026-02-19-utilize-ai-for-content-curation-and-distribution-strategies/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-guide-to-leverage-ai-for-generating-personalized-video-messaging-in-marketing/" class="text-gray-900 hover:text-[#17266B]">Guide to leverage AI for generating personalized video messaging in marketing</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-guide-to-leverage-ai-for-generating-personalized-video-messaging-in-marketing/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-guide-to-leverage-ai-for-sentiment-analysis-in-brand-campaigns/" class="text-gray-900 hover:text-[#17266B]">Guide to leverage AI for sentiment analysis in brand campaigns</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-guide-to-leverage-ai-for-sentiment-analysis-in-brand-campaigns/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-guide-to-use-ai-for-automated-content-gap-analysis-in-seo-strategies/" class="text-gray-900 hover:text-[#17266B]">Guide to use AI for automated content gap analysis in SEO strategies</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-guide-to-use-ai-for-automated-content-gap-analysis-in-seo-strategies/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-guide-to-use-ai-to-streamline-multi-channel-customer-feedback-aggregation/" class="text-gray-900 hover:text-[#17266B]">Guide to use AI to streamline multi-channel customer feedback aggregation</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-guide-to-use-ai-to-streamline-multi-channel-customer-feedback-aggregation/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
 </div>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">How-to</h2>
@@ -382,6 +410,48 @@ title: "AI Marketing Automation Tools & Workflows"
             </h3>
             <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
             <a href="/articles/2026-02-20-automate-the-generation-of-personalized-content-across-multiple-platforms-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-apply-ai-to-optimize-content-distribution-timing-for-maximum-engagement/" class="text-gray-900 hover:text-[#17266B]">How to apply AI to optimize content distribution timing for maximum engagement</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-apply-ai-to-optimize-content-distribution-timing-for-maximum-engagement/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-automate-image-optimization-for-website-and-social-media-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate image optimization for website and social media using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-automate-image-optimization-for-website-and-social-media-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-automate-the-creation-of-social-media-influencer-match-reports-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the creation of social media influencer match reports using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-automate-the-creation-of-social-media-influencer-match-reports-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-automate-the-identification-of-emerging-consumer-trends-using-ai/" class="text-gray-900 hover:text-[#17266B]">How to automate the identification of emerging consumer trends using AI</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-automate-the-identification-of-emerging-consumer-trends-using-ai/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-create-ai-driven-workflows-for-integrating-offline-and-online-marketing-data/" class="text-gray-900 hover:text-[#17266B]">How to create AI-driven workflows for integrating offline and online marketing data</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-create-ai-driven-workflows-for-integrating-offline-and-online-marketing-data/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <h3 class="text-xl font-semibold mb-2">
+                <a href="/articles/2026-02-20-how-to-implement-ai-driven-chatbot-analytics-to-measure-engagement-effectiveness/" class="text-gray-900 hover:text-[#17266B]">How to implement AI-driven chatbot analytics to measure engagement effectiveness</a>
+            </h3>
+            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
+            <a href="/articles/2026-02-20-how-to-implement-ai-driven-chatbot-analytics-to-measure-engagement-effectiveness/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
         </div>
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">

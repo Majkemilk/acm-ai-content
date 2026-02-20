@@ -6,7 +6,7 @@ primary_keyword: "how to automate social media posting schedules with ai"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to automate social media posting schedules with AI
 

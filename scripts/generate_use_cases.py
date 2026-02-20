@@ -33,6 +33,7 @@ USE_CASES_HEADER = """# List of business problems / use cases for content genera
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
 # - suggested_content_type: string (one of: how-to, guide, best, comparison)
 # - category_slug: string (e.g., "ai-marketing-automation")
+# - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 """
 
 
@@ -120,6 +121,8 @@ def save_use_cases(path: Path, items: list[dict]) -> None:
             lines.append(f"  - problem: {q(problem)}")
             lines.append(f"    suggested_content_type: {q(content_type)}")
             lines.append(f"    category_slug: {q(category)}")
+            if "status" in item and str(item.get("status", "")).strip():
+                lines.append(f"    status: {q(str(item.get('status', '')).strip())}")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

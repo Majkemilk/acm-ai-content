@@ -6,7 +6,7 @@ primary_keyword: "how to leverage ai to optimize ad spending and campaign perfor
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to leverage AI to optimize ad spending and campaign performance
 

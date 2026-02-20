@@ -6,7 +6,7 @@ primary_keyword: "leverage ai for real-time personalization of website content"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-20"
-status: "draft"
+status: "filled"
 ---
 # How to leverage AI for real-time personalization of website content
 

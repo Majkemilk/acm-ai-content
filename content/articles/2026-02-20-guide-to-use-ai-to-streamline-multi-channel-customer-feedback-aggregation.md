@@ -1,19 +1,19 @@
 ---
-title: "Guide to automate customer segmentation for targeted marketing with AI"
+title: "Guide to use AI to streamline multi-channel customer feedback aggregation"
 content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "guide to automate customer segmentation for targeted marketing with ai"
+primary_keyword: "guide to use ai to streamline multi-channel customer feedback aggregation"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-19"
-status: "filled"
+last_updated: "2026-02-20"
+status: "draft"
 ---
-# Guide to automate customer segmentation for targeted marketing with AI
+# Guide to use AI to streamline multi-channel customer feedback aggregation
 
 **Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to automate customer segmentation for targeted marketing with ai
-**Last updated:** 2026-02-19
+**Primary keyword:** guide to use ai to streamline multi-channel customer feedback aggregation
+**Last updated:** 2026-02-20
 
 ---
 

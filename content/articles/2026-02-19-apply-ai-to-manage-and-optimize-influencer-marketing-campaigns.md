@@ -6,7 +6,7 @@ primary_keyword: "apply ai to manage and optimize influencer marketing campaigns
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # Guide to apply AI to manage and optimize influencer marketing campaigns
 

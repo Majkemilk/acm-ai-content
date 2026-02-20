@@ -6,7 +6,7 @@ primary_keyword: "how to integrate ai tools for better lead scoring in sales"
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to integrate AI tools for better lead scoring in sales
 

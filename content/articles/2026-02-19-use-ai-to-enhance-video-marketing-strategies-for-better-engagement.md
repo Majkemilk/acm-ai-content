@@ -6,7 +6,7 @@ primary_keyword: "use ai to enhance video marketing strategies for better engage
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # Guide to use AI to enhance video marketing strategies for better engagement
 

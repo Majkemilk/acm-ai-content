@@ -6,7 +6,7 @@ primary_keyword: "automate the generation of personalized content across multipl
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to automate the generation of personalized content across multiple platforms using AI
 

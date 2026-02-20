@@ -6,7 +6,7 @@ primary_keyword: "develop ai-powered recommendations for upselling and cross-sel
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to develop AI-powered recommendations for upselling and cross-selling
 

@@ -215,6 +215,36 @@ def _duplicate_key(item: dict) -> tuple[str, str, str]:
     )
 
 
+USE_CASES_HEADER = """# List of business problems / use cases for content generation
+# Each item should have:
+# - problem: string (description of the problem, e.g., "turn podcasts into written content")
+# - suggested_content_type: string (one of: how-to, guide, best, comparison)
+# - category_slug: string (e.g., "ai-marketing-automation")
+# - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
+"""
+
+
+def _save_use_cases(path: Path, items: list[dict]) -> None:
+    """Write use_cases.yaml (same format as generate_use_cases). Preserves status."""
+    def q(v: str) -> str:
+        v = str(v)
+        if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
+            v = '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
+        return v
+    lines = [USE_CASES_HEADER.strip(), "use_cases:"]
+    for item in items:
+        problem = (item.get("problem") or "").strip()
+        content_type = (item.get("suggested_content_type") or "").strip()
+        category = (item.get("category_slug") or "").strip()
+        lines.append(f"  - problem: {q(problem)}")
+        lines.append(f"    suggested_content_type: {q(content_type)}")
+        lines.append(f"    category_slug: {q(category)}")
+        if "status" in item and str(item.get("status", "")).strip():
+            lines.append(f"    status: {q(str(item.get('status', '')).strip())}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(
@@ -229,10 +259,14 @@ def main() -> None:
 
     today = date.today().isoformat()
     use_cases = load_use_cases(USE_CASES_PATH)
-
-    candidates = build_queue_items(use_cases, today)
+    # Only use cases with status "todo" go to queue; missing/empty = "generated" (backward compat)
+    todo_use_cases = [
+        uc for uc in use_cases
+        if str(uc.get("status") or "generated").strip().lower() == "todo"
+    ]
+    candidates = build_queue_items(todo_use_cases, today)
     if not candidates:
-        print("No queue entries to add (use_cases list is empty).")
+        print("No queue entries to add (no use cases with status 'todo').")
         return
 
     existing = load_existing_queue(QUEUE_PATH)
@@ -253,7 +287,20 @@ def main() -> None:
 
     QUEUE_PATH.parent.mkdir(parents=True, exist_ok=True)
     save_queue(QUEUE_PATH, final)
-    print(f"Added {len(added)} new entr{'y' if len(added) == 1 else 'ies'} to {QUEUE_PATH}. Total queue: {len(final)}.")
+    # Mark added use cases as generated so they are not queued again
+    added_keys_set = {_duplicate_key(a) for a in added}
+    for i, c in enumerate(candidates):
+        if _duplicate_key(c) in added_keys_set:
+            uc = todo_use_cases[i]
+            p = (uc.get("problem") or "").strip()
+            ct = (uc.get("suggested_content_type") or "").strip()
+            cat = (uc.get("category_slug") or "").strip()
+            for u in use_cases:
+                if (u.get("problem") or "").strip() == p and (u.get("suggested_content_type") or "").strip() == ct and (u.get("category_slug") or "").strip() == cat:
+                    u["status"] = "generated"
+                    break
+    _save_use_cases(USE_CASES_PATH, use_cases)
+    print(f"Added {len(added)} new entr{'y' if len(added) == 1 else 'ies'} to {QUEUE_PATH}. Total queue: {len(final)}. Marked those use cases as 'generated' in use_cases.yaml.")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ primary_keyword: "create automated reporting systems using ai for marketing metr
 primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-19"
-status: "draft"
+status: "filled"
 ---
 # How to create automated reporting systems using AI for marketing metrics
 
