@@ -994,6 +994,12 @@ def fill_one(
         except OSError as e:
             print(f"  Skip {path.name}: write failed — {e}")
             return "skip"
+        # Update .md frontmatter only: set status to "filled" (body unchanged)
+        md_content = _serialize_frontmatter(meta, order, "filled") + "\n" + body
+        try:
+            path.write_text(md_content, encoding="utf-8")
+        except OSError:
+            pass  # .html already written; .md status update is best-effort
         _record_fill_cost(path.stem, new_content)
         print(f"  Filled: {out_path.name}" + (f" (backup: {backup.name})" if had_existing else ""))
         return "wrote"

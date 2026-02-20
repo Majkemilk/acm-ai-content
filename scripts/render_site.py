@@ -881,7 +881,7 @@ def _render_hub(
 
 def _update_index(out_dir: Path, production_category: str, articles: list[tuple[dict, Path]]) -> None:
     index_path = out_dir / "index.html"
-    newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:5]
+    newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:12]
     hub_link = f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"><a href="/hubs/{_escape(production_category)}/" class="text-[rgb(23,38,107)] hover:underline">All articles</a></h2>\n'
     articles_html = ""
     if newest:

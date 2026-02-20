@@ -3,45 +3,7 @@ title: "AI Marketing Automation Tools & Workflows"
 ---
 
 <h1>AI Marketing Automation Tools &amp; Workflows</h1>
-<p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below are organized by type so you can start with what fits your goal. Use the <strong>Start here</strong> links for the newest material, or browse by section.</p>
-<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Start here</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-leverage-ai-for-real-time-personalization-of-website-content/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI for real-time personalization of website content</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-leverage-ai-for-real-time-personalization-of-website-content/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-how-to-utilize-ai-to-create-interactive-content-experiences-tailored-to-user-preferences/" class="text-gray-900 hover:text-[#17266B]">How to utilize AI to create interactive content experiences tailored to user preferences</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-how-to-utilize-ai-to-create-interactive-content-experiences-tailored-to-user-preferences/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-how-to-use-ai-to-predict-customer-churn-and-implement-retention-strategies/" class="text-gray-900 hover:text-[#17266B]">How to use AI to predict customer churn and implement retention strategies</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-how-to-use-ai-to-predict-customer-churn-and-implement-retention-strategies/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-how-to-use-ai-to-enhance-visual-content-strategies-for-better-audience-engagement/" class="text-gray-900 hover:text-[#17266B]">How to use AI to enhance visual content strategies for better audience engagement</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-how-to-use-ai-to-enhance-visual-content-strategies-for-better-audience-engagement/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <h3 class="text-xl font-semibold mb-2">
-                <a href="/articles/2026-02-20-how-to-leverage-ai-to-automate-the-segmentation-of-email-list-for-targeted-campaigns/" class="text-gray-900 hover:text-[#17266B]">How to leverage AI to automate the segmentation of email list for targeted campaigns</a>
-            </h3>
-            <p class="text-gray-600 text-sm mb-4">2026-02-20</p>
-            <a href="/articles/2026-02-20-how-to-leverage-ai-to-automate-the-segmentation-of-email-list-for-targeted-campaigns/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
-        </div>
-</div>
+<p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below are organized by type so you can find what fits your goal.</p>
 <h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Guides</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">

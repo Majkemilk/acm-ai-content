@@ -30,8 +30,6 @@ CONTENT_TYPE_SECTIONS = [
     ("comparison", "Comparisons"),
     ("best", "Best"),
 ]
-MAX_START_HERE = 5
-
 H2_CLASS = 'class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"'
 GRID_CLASS = 'class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"'
 
@@ -71,19 +69,6 @@ def date_from_string(s: str) -> date | None:
         return date(int(s[:4]), int(s[5:7]), int(s[8:10]))
     except (ValueError, IndexError):
         return None
-
-
-def sort_key_newest(meta: dict, path: Path) -> tuple[date, str]:
-    """Sort key: newest first. Use last_updated if valid, else date from filename (YYYY-MM-DD-...)."""
-    d = date_from_string(meta.get("last_updated") or "")
-    if d is not None:
-        return (d, meta.get("slug", path.stem))
-    # Fallback: first 10 chars of filename as date
-    stem = path.stem
-    d = date_from_string(stem)
-    if d is not None:
-        return (d, stem)
-    return (date.min, stem)
 
 
 def updated_iso(meta: dict, path: Path) -> str:
@@ -134,19 +119,14 @@ def _section_html(section_title: str, articles: list[tuple[dict, Path]]) -> str:
 
 
 def build_hub_content(articles: list[tuple[dict, Path]]) -> str:
-    """Build hub page as HTML: H1, intro, Start here (cards), then sections by content_type (cards)."""
+    """Build hub page as HTML: H1, intro, then sections by content_type (cards). No 'Start here' – newest are on homepage."""
     parts: list[str] = []
     parts.append(f"<h1>{html_module.escape(HUB_TITLE)}</h1>\n")
     parts.append(
         "<p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. "
         "Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below "
-        "are organized by type so you can start with what fits your goal. Use the <strong>Start here</strong> links "
-        "for the newest material, or browse by section.</p>\n"
+        "are organized by type so you can find what fits your goal.</p>\n"
     )
-    # Start here: newest 5
-    sorted_articles = sorted(articles, key=lambda x: sort_key_newest(x[0], x[1]), reverse=True)
-    start_here = sorted_articles[:MAX_START_HERE]
-    parts.append(_section_html("Start here", start_here))
     # Group by content_type
     by_type: dict[str, list[tuple[dict, Path]]] = {}
     for meta, path in articles:

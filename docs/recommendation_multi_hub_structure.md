@@ -48,6 +48,12 @@ Opcja: zamiast listy obiektów można mieć mapowanie `category_slug → title` 
 - **Frontmatter:** opcjonalnie `slug`, `title` (nadpisują config).
 - **Render:** Dla każdego wpisu z `hubs` w configu: jeśli istnieje `content/hubs/{slug}.md`, renderuj do `public/hubs/{slug}/index.html`; lista artykułów **tylko** dla tego huba (patrz 2.4).
 
+### 2.2a Nawigacja i zawartość huba (audyt)
+
+- **Strona główna:** "All articles" prowadzi do huba; "Newest articles" pokazuje 12 najnowszych. Użytkownik, który klika "All articles", już widział najnowsze na głównej.
+- **Obecnie w hubie:** Intro zachęca do "Start here" (najnowszy materiał), potem sekcja "Start here" (5 kart), potem Guides / How-to / Reviews / Comparisons / Best. Sekcja "Start here" jest redundantna względem "Newest articles" na głównej i nie wnosi wartości.
+- **Rekomendacja:** Usunąć sekcję "Start here" z huba oraz z intro zdanie o "Start here" / "newest material". Hub powinien zaczynać się od linku Home, tytułu, krótkiego intro (np. że artykuły są pogrupowane po typie), a następnie od razu sekcji Guides, How-to, Reviews, Comparisons, Best. Najnowsze artykuły pozostają wyłącznie na stronie głównej (Newest articles).
+
 ### 2.3 Strona główna (index)
 
 - **"All articles":** Może prowadzić do:
@@ -73,6 +79,7 @@ Rekomendacja: na początek **A)** (link do pierwszego huba), żeby nie mnożyć 
 - **Dla każdego huba:**
   - Pobierz artykuły dla tego huba (ta sama logika co w content_index: filtrowanie po `category_slug == slug`).
   - Wygeneruj treść (sekcje po content_type itd.) i zapisz **jeden plik**: `content/hubs/{slug}.md` (bez spacji/znaków w nazwie).
+- **Zawartość huba:** Nie generować sekcji "Start here"; intro bez wzmianki o "Start here" ani "newest material". Po intro od razu sekcje po content_type (Guides, How-to, itd.).
 - Usunąć stałe `HUB_SLUG` i `HUB_TITLE`; wszystko z configu.
 
 ### 2.6 Sitemap i indeks
@@ -105,7 +112,7 @@ Rekomendacja: na początek **A)** (link do pierwszego huba), żeby nie mnożyć 
 | `content/config.yaml` | Dodać `hubs: [{ slug, title }, ...]`. |
 | `scripts/content_index.py` | `load_config`: obsługa `hubs`; nowa funkcja `get_articles_for_hub(slug, ...)`. |
 | `scripts/render_site.py` | Pętla po hubach, ścieżka `{slug}.md`, filtrowane artykuły; `_update_index`: link do pierwszego huba (lub /hubs/). |
-| `scripts/generate_hubs.py` | Lista hubów z configu; generowanie `{slug}.md` per hub; filtrowanie artykułów po `category_slug`. |
+| `scripts/generate_hubs.py` | Lista hubów z configu; generowanie `{slug}.md` per hub; filtrowanie po `category_slug`; bez sekcji "Start here", intro bez wzmianki o "Start here"/"newest material". |
 | `scripts/generate_sitemap.py` | Dodawanie wszystkich `/hubs/{slug}/` do sitemap. |
 | Artykuły w `content/articles/` | Ujednolicić `category_slug` z slugami hubów. |
 

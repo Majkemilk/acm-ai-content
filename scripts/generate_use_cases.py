@@ -28,7 +28,7 @@ USE_CASES_PATH = CONTENT_DIR / "use_cases.yaml"
 ARTICLES_DIR = CONTENT_DIR / "articles"
 
 ALLOWED_CONTENT_TYPES = ["how-to", "guide", "best", "comparison"]
-TARGET_USE_CASE_COUNT = 10  # Exact number of use cases to keep; change here to affect both use_cases.yaml and queue size
+TARGET_USE_CASE_COUNT = 12  # Exact number of use cases to keep; change here to affect both use_cases.yaml and queue size
 USE_CASES_HEADER = """# List of business problems / use cases for content generation
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
