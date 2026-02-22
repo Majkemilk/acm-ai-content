@@ -9,9 +9,7 @@ last_updated: "2026-02-20"
 status: "filled"
 audience_type: "intermediate"
 batch_id: "2026-02-20T225029"
----
-
-# How to automate A/B testing for video ads using ai
+---# How to automate A/B testing for video ads using ai
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
@@ -103,11 +101,9 @@ Before publishing, verify the following:
 - [Guide to use ai to optimize video length for different platforms](/articles/2026-02-20-guide-to-use-ai-to-optimize-video-length-for-different-platforms.audience_beginner/)
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
 - [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
-- [Guide to create ai-driven video content strategies for engagement](/articles/2026-02-20-guide-to-create-ai-driven-video-content-strategies-for-engagement.audience_intermediate/)
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-
----
+- [Guide to leverage ai to enhance collaborative video editing workflows](/articles/2026-02-20-guide-to-leverage-ai-to-enhance-collaborative-video-editing-workflows.audience_professional/)
+- [How to scale content production by integrating ai with video platforms](/articles/2026-02-20-how-to-scale-content-production-by-integrating-ai-with-video-platforms.audience_professional/)
+- [How to utilize ai for video marketing analytics and insights](/articles/2026-02-20-how-to-utilize-ai-for-video-marketing-analytics-and-insights.audience_professional/)
 
 ## CTA
 

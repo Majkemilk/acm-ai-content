@@ -241,9 +241,11 @@ def build_prompt(
     categories: list[str],
     count: int,
     content_type_filter: str | None = None,
+    suggested_problems: list[str] | None = None,
 ) -> tuple[str, str]:
     """Build (instructions, user_message) for the model. count = how many use cases to ask for.
-    If content_type_filter is set, prompt restricts suggested_content_type to that value."""
+    If content_type_filter is set, prompt restricts suggested_content_type to that value.
+    suggested_problems (from config): optional list of problems to prefer turning into use cases."""
     instructions = """You are a content strategist. Your task is to suggest new business problems / use cases for blog content in the AI marketing automation space.
 
 Output ONLY a valid JSON array of objects. Each object must have exactly these keys:
@@ -266,6 +268,7 @@ Do not output any markdown, explanation, or text outside the JSON array. The res
         if (a.get("primary_keyword") or a.get("title") or "").strip()
     ]
 
+    suggested_list = list(suggested_problems or [])
     user = f"""Allowed category_slug values (use exactly one per use case): {json.dumps(categories)}
 
 Existing use cases already in our list (do NOT suggest these or very similar ones):
@@ -273,8 +276,12 @@ Existing use cases already in our list (do NOT suggest these or very similar one
 
 Existing article keywords/topics we already cover (suggest complementary or new angles, not duplicates):
 {json.dumps(keywords_list[:50])}
+"""
+    if suggested_list:
+        user += f"""Optionally consider these problems (if not already covered); prefer turning them into use cases: {json.dumps(suggested_list)}
 
-Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
+"""
+    user += f"""Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
 
 Structure by audience (follow this order strictly):
 - First 3: for beginners (simple, entry-level).
@@ -377,10 +384,11 @@ def main() -> None:
     parser.add_argument(
         "--content-type",
         type=str,
+        action="append",
         default=None,
         metavar="TYPE",
         choices=ALLOWED_CONTENT_TYPES,
-        help="Restrict suggested_content_type to this value only (one of: how-to, guide, best, comparison).",
+        help="Restrict suggested_content_type to one or more (repeat for multiple: how-to, guide, best, comparison).",
     )
     args = parser.parse_args()
 
@@ -409,7 +417,12 @@ def main() -> None:
         categories = [args.category.strip()]
     else:
         categories = all_categories
-    allowed_types = [args.content_type.strip().lower()] if args.content_type else ALLOWED_CONTENT_TYPES
+    if args.content_type:
+        allowed_types = [t.strip().lower() for t in args.content_type if t and t.strip() in ALLOWED_CONTENT_TYPES]
+        if not allowed_types:
+            allowed_types = ALLOWED_CONTENT_TYPES
+    else:
+        allowed_types = ALLOWED_CONTENT_TYPES
 
     # Load existing use cases (create file with empty list if missing)
     existing = load_use_cases(USE_CASES_PATH)
@@ -420,8 +433,16 @@ def main() -> None:
     article_keywords = collect_article_keywords(ARTICLES_DIR)
 
     # Build prompt and call API (ask for exactly limit use cases)
-    content_type_filter = args.content_type.strip().lower() if args.content_type else None
-    instructions, user_message = build_prompt(existing, article_keywords, categories, limit, content_type_filter=content_type_filter)
+    suggested_problems = list(config.get("suggested_problems") or [])
+    content_type_filter = (args.content_type[0].strip().lower() if args.content_type else None)
+    instructions, user_message = build_prompt(
+        existing,
+        article_keywords,
+        categories,
+        limit,
+        content_type_filter=content_type_filter,
+        suggested_problems=suggested_problems,
+    )
     try:
         response_text = call_responses_api(
             instructions,

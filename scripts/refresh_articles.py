@@ -99,6 +99,29 @@ def find_articles_older_than(articles_dir: Path, days: int, limit: int = 0) -> l
     return paths
 
 
+def find_articles_younger_than(articles_dir: Path, max_days: int, limit: int = 0) -> list[Path]:
+    """Return list of article paths whose last_updated is at most `max_days` ago. 0 = today only. Sorted by path."""
+    if not articles_dir.exists():
+        return []
+    today = date.today()
+    candidates: list[tuple[date, Path]] = []
+    for path in sorted(articles_dir.glob("*.md")):
+        try:
+            content = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        last = _get_last_updated(path, content)
+        if last is None:
+            continue
+        if (today - last).days <= max_days:
+            candidates.append((last, path))
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    paths = [p for _, p in candidates]
+    if limit > 0:
+        paths = paths[:limit]
+    return paths
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Refresh articles older than N days by re-filling with AI and updating last_updated.",
@@ -108,7 +131,14 @@ def main() -> None:
         type=int,
         default=90,
         metavar="N",
-        help="Refresh articles with last_updated older than N days (default: 90).",
+        help="Refresh articles with last_updated older than N days (default: 90). Ignored when --max-days is set.",
+    )
+    parser.add_argument(
+        "--max-days",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Refresh articles with last_updated at most N days ago (0 = today only). When set (0-6), overrides --days.",
     )
     parser.add_argument(
         "--dry-run",
@@ -133,10 +163,15 @@ def main() -> None:
         print("Error: Articles directory not found.")
         sys.exit(1)
 
-    to_refresh = find_articles_older_than(ARTICLES_DIR, args.days, args.limit)
+    if args.max_days is not None:
+        to_refresh = find_articles_younger_than(ARTICLES_DIR, args.max_days, args.limit)
+        filter_desc = f"younger than {args.max_days} day(s) (last_updated within last {args.max_days} days)"
+    else:
+        to_refresh = find_articles_older_than(ARTICLES_DIR, args.days, args.limit)
+        filter_desc = f"older than {args.days} days"
 
     if args.dry_run:
-        print(f"Articles with last_updated older than {args.days} days (would refresh):")
+        print(f"Articles with last_updated {filter_desc} (would refresh):")
         if not to_refresh:
             print("  (none)")
         else:

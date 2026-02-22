@@ -68,7 +68,16 @@ Existing article keywords/topics we already cover (suggest complementary or new 
 - **Źródło:** `article_keywords` = dla każdego `.md` z `content/articles/` brane są `primary_keyword` lub `title` (i opcjonalnie category); do user message trafia **max 50** pierwszych.
 - **Efekt:** Model ma unikać powtórzeń i proponować uzupełniające / nowe kąty.
 
-### 3.4 Wytyczna główna + liczba
+### 3.4 Sugerowane problemy (opcjonalnie)
+
+- **Gdy w configu jest niepusta lista `suggested_problems`:** w user message dodawany jest blok:
+  ```
+  Optionally consider these problems (if not already covered); prefer turning them into use cases: {json.dumps(suggested_problems)}
+  ```
+- **Źródło:** `content/config.yaml` → `suggested_problems` (lista stringów). Zarządzanie: `scripts/manage_config.py --get suggested_problems` / `--suggested-problems "A, B, C"` lub API config_manager (FlowMonitor).
+- **Efekt:** Model dostaje pozytywny sygnał – te problemy warto przekształcić w use case’y (o ile nie są już na liście istniejących). Deduplikacja po odpowiedzi nadal usuwa duplikaty względem `existing_problems`.
+
+### 3.5 Wytyczna główna + liczba
 
 ```
 Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
@@ -77,7 +86,7 @@ Generate exactly {count} new, specific, actionable business problems that people
 - **Źródło:** `count` = z `--limit` (domyślnie `TARGET_USE_CASE_COUNT`, np. 12), ograniczone do 1–100.
 - **Efekt:** Konkretna liczba do wygenerowania, wymóg „specific, actionable”, „people actively search for” i „different from existing”.
 
-### 3.5 Typ treści (opcjonalnie)
+### 3.6 Typ treści (opcjonalnie)
 
 - **Jeśli podano `--content-type`:**  
   `For every use case, set suggested_content_type to exactly: "{content_type_filter}".`
@@ -101,6 +110,7 @@ Na końcu zawsze:
 | Liczba use case’ów | `--limit` | „Generate exactly {count} new…” |
 | Jakość / intencja | Stała w user message | „specific, actionable”, „people actively search for”, „different from existing” |
 | Preferowany / wymuszony typ | `--content-type` lub brak | „Prefer how-to or guide” albo „set suggested_content_type to exactly: X” |
+| Sugerowane problemy | `content/config.yaml` → suggested_problems | „Optionally consider these problems… prefer turning them into use cases” (gdy lista niepusta) |
 
 Po stronie skryptu jest jeszcze **walidacja po odpowiedzi:**  
 `parse_ai_use_cases()` sprawdza, że `suggested_content_type` jest z listy dozwolonych (np. z `--content-type` lub `ALLOWED_CONTENT_TYPES`), a `category_slug` z listy `categories`; w razie błędu ustawiane są wartości domyślne (guide, pierwsza kategoria). Dodatkowo **deduplikacja** po tekście `problem` względem istniejących use case’ów (case-insensitive + proste dopasowanie „jeden zawiera drugi”).
@@ -115,6 +125,7 @@ Po stronie skryptu jest jeszcze **walidacja po odpowiedzi:**
 | Kategoria | `--category SLUG` | Wszystkie z configu (production + sandbox) |
 | Typ treści | `--content-type TYPE` | Dowolny z how-to, guide, best, comparison; w tekście: „Prefer how-to or guide” |
 | Lista kategorii | `content/config.yaml` | production_category + sandbox_categories |
+| Sugerowane problemy | `content/config.yaml` | suggested_problems (lista; opcjonalnie) |
 | Model API | Zmienna środowiskowa `OPENAI_MODEL` | gpt-4o-mini |
 | Adres API | `OPENAI_BASE_URL` | https://api.openai.com |
 
@@ -148,4 +159,12 @@ Stałe w kodzie (bez flag ani configu):
 - **Stałe domyślne**  
   `TARGET_USE_CASE_COUNT` i domyślna kategoria fallback („ai-marketing-automation”) można przenieść do `config.yaml` jako np. `default_use_case_count` i `default_category_slug`.
 
-Dokładna treść tego, co jest „dawane” w poleceniu generowania use case’ów, to powyższe `instructions` + złożony `input` (user message) z punktów 3.1–3.5; wytyczne to całość tych instrukcji i bloków, a parametryzacja jest częściowo już zaimplementowana (CLI + config), a częściowo możliwa przez rozszerzenie configu i plików promptów.
+---
+
+## 7. Mapowanie problem → narzędzia (kolejka i artykuły)
+
+Przypisanie narzędzi do use case’ów jest **po stronie redakcji**, nie modelu. Plik `content/use_case_tools_mapping.yaml` zawiera listę wpisów `problem` (tekst problemu, dopasowanie po znormalizowanym tekście) oraz `tools` (nazwy z `affiliate_tools.yaml`, po przecinku). Skrypt `generate_queue.py` ładuje ten plik i przy budowaniu wpisów kolejki ustawia `primary_tool` i `secondary_tool` (pierwsze dwa z listy). Te pola są przekazywane do `fill_articles` i wykorzystywane jako priorytetowe narzędzia w artykule („You may mention only these tools”, preferowanie z listy affiliate). Docelowo edycja mapowania i listy `suggested_problems` będzie w aplikacji FlowtaroMonitor.
+
+---
+
+Dokładna treść tego, co jest „dawane” w poleceniu generowania use case’ów, to powyższe `instructions` + złożony `input` (user message) z punktów 3.1–3.6; wytyczne to całość tych instrukcji i bloków, a parametryzacja jest częściowo już zaimplementowana (CLI + config), a częściowo możliwa przez rozszerzenie configu i plików promptów.

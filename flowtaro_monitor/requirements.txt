@@ -1,0 +1,6 @@
+# Zależności tylko do buildu .exe (opcjonalne)
+# Aplikacja używa wyłącznie stdlib (tkinter). Do stworzenia .exe:
+#   pip install pyinstaller
+#   python flowtaro_monitor/build_exe.py
+# lub z katalogu ACM: pyinstaller flowtaro_monitor/FlowtaroMonitor.spec
+pyinstaller>=6.0.0

@@ -1,0 +1,9 @@
+# Editorial mapping: use case problem (exact match, normalized) -> preferred tools for the article.
+# Tool names must match content/affiliate_tools.yaml "name" exactly (e.g. "Opus Clip", "Descript").
+# Used by generate_queue.py to set primary_tool / secondary_tool; fill_articles uses these for priority.
+# When this list is empty: fill_articles still passes all tools from affiliate_tools.yaml to the model
+# so it can mention 1–2 that fit the topic; render_site then turns those names into links.
+# Example:
+#   - problem: "automate video thumbnails creation for social media"
+#     tools: "Canva, Pictory"
+mapping:

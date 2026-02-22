@@ -20,10 +20,10 @@ def load_config(path: Path | None = None) -> dict:
     """
     p = path or CONFIG_PATH
     if not p.exists() or p.stat().st_size == 0:
-        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3]}
+        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3], "suggested_problems": []}
     text = p.read_text(encoding="utf-8").strip()
     if not text:
-        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3]}
+        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3], "suggested_problems": []}
     try:
         data = json.loads(text)
         if isinstance(data, dict):
@@ -33,12 +33,18 @@ def load_config(path: Path | None = None) -> dict:
             pyramid = [int(x) for x in pyramid if isinstance(x, (int, float))]
             if not pyramid:
                 pyramid = [3, 3]
+            suggested = data.get("suggested_problems")
+            if not isinstance(suggested, list):
+                suggested = []
+            else:
+                suggested = [str(x).strip() for x in suggested if str(x).strip()]
             return {
                 "production_category": data.get("production_category") or "ai-marketing-automation",
                 "hub_slug": (data.get("hub_slug") or "ai-marketing-automation").strip(),
                 "sandbox_categories": data.get("sandbox_categories") or [],
                 "use_case_batch_size": int(data["use_case_batch_size"]) if isinstance(data.get("use_case_batch_size"), (int, float)) else 9,
                 "use_case_audience_pyramid": pyramid,
+                "suggested_problems": suggested,
             }
     except (json.JSONDecodeError, ValueError):
         pass
@@ -49,6 +55,7 @@ def load_config(path: Path | None = None) -> dict:
         "sandbox_categories": [],
         "use_case_batch_size": 9,
         "use_case_audience_pyramid": [3, 3],
+        "suggested_problems": [],
     }
     in_list = False
     list_key: str | None = None
@@ -66,6 +73,8 @@ def load_config(path: Path | None = None) -> dict:
                         out["use_case_audience_pyramid"].append(int(val))
                     except ValueError:
                         pass
+                elif val and list_key == "suggested_problems":
+                    out["suggested_problems"].append(val)
             else:
                 in_list = False
                 list_key = None
@@ -103,6 +112,16 @@ def load_config(path: Path | None = None) -> dict:
                             out["use_case_audience_pyramid"].append(int(first))
                     except ValueError:
                         pass
+            elif key == "suggested_problems":
+                in_list = True
+                list_key = "suggested_problems"
+                out["suggested_problems"] = []
+                if rest and rest.strip() != "[]" and rest != "|":
+                    first = rest.strip().strip('"\'')
+                    if first.startswith("-"):
+                        first = first[1:].strip().strip('"\'')
+                    if first and first != "[]":
+                        out["suggested_problems"].append(first)
     return out
 
 

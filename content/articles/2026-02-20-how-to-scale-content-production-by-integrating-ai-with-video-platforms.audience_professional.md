@@ -9,9 +9,7 @@ last_updated: "2026-02-20"
 status: "filled"
 audience_type: "professional"
 batch_id: "2026-02-20T225029"
----
-
-# How to scale content production by integrating ai with video platforms
+---# How to scale content production by integrating ai with video platforms
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
@@ -106,8 +104,6 @@ Before publishing, verify the following:
 - [Guide to use ai to optimize video length for different platforms](/articles/2026-02-20-guide-to-use-ai-to-optimize-video-length-for-different-platforms.audience_beginner/)
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
 - [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
-
----
 
 ## CTA
 

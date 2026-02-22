@@ -7,8 +7,7 @@ primary_tool: "VEED"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-14"
 status: "filled"
----
-# How to add auto-generated captions and subtitles to videos with VEED
+---# How to add auto-generated captions and subtitles to videos with VEED
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
@@ -100,11 +99,9 @@ Before publishing, verify the following:
 - [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
-- [VEED vs Submagic vs Opus Clip – which short-form video tool to choose](/articles/2026-02-20-veed-vs-submagic-vs-opus-clip-comparison/)
 - [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
-
----
+- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
+- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
 
 ## CTA
 

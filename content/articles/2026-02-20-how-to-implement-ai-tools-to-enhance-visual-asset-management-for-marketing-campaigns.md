@@ -7,8 +7,7 @@ primary_tool: "{{PRIMARY_TOOL}}"
 secondary_tool: "{{SECONDARY_TOOL}}"
 last_updated: "2026-02-20"
 status: "filled"
----
-# How to implement AI tools to enhance visual asset management for marketing campaigns
+---# How to implement AI tools to enhance visual asset management for marketing campaigns
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
@@ -101,10 +100,8 @@ Before publishing, verify the following:
 - [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
 - [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-- [How to automate social media posting schedules with AI with Descript](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-descript/)
-- [How to automate social media posting schedules with AI with Otter](/articles/2026-02-18-how-to-automate-social-media-posting-schedules-with-ai-with-otter/)
-
----
+- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
+- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
 
 ## CTA
 

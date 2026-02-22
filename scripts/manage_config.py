@@ -46,7 +46,7 @@ def _main() -> None:
         "--get",
         choices=list(CONFIG_KEYS),
         metavar="KEY",
-        help="Odczytaj wartość: production_category, hub_slug, sandbox_categories",
+        help="Odczytaj wartość: production_category, hub_slug, sandbox_categories, suggested_problems",
     )
     # Set
     parser.add_argument(
@@ -79,6 +79,12 @@ def _main() -> None:
         type=str,
         metavar="NAME",
         help="Usuń jedną kategorię z sandbox_categories",
+    )
+    parser.add_argument(
+        "--suggested-problems",
+        type=str,
+        metavar="A,B,C",
+        help="Nadpisz sugerowane problemy (lista po przecinku; dla generowania use case’ów)",
     )
     # Init
     parser.add_argument(
@@ -128,6 +134,7 @@ def _main() -> None:
         args.sandbox_categories is not None,
         args.add_sandbox_category is not None,
         args.remove_sandbox_category is not None,
+        args.suggested_problems is not None,
     ])
     if not has_change:
         parser.print_help()
@@ -136,6 +143,9 @@ def _main() -> None:
         sandbox_list = None
         if args.sandbox_categories is not None:
             sandbox_list = [p.strip() for p in args.sandbox_categories.split(",") if p.strip()]
+        suggested_list = None
+        if args.suggested_problems is not None:
+            suggested_list = [p.strip() for p in args.suggested_problems.split(",") if p.strip()]
         update_config(
             path,
             production_category=args.production_category,
@@ -143,6 +153,7 @@ def _main() -> None:
             sandbox_categories=sandbox_list,
             add_sandbox=args.add_sandbox_category,
             remove_sandbox=args.remove_sandbox_category,
+            suggested_problems=suggested_list,
         )
         if not args.json:
             print("Zaktualizowano config.", file=sys.stderr)

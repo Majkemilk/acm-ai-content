@@ -9,9 +9,7 @@ last_updated: "2026-02-20"
 status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-20T225029"
----
-
-# How to implement ai tools to personalize video marketing content
+---# How to implement ai tools to personalize video marketing content
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
@@ -100,14 +98,12 @@ Before publishing, verify the following:
 
 ## Internal links
 
+- [Guide to create ai-driven video content strategies for engagement](/articles/2026-02-20-guide-to-create-ai-driven-video-content-strategies-for-engagement.audience_intermediate/)
+- [Guide to integrate ai tools to analyze video performance metrics](/articles/2026-02-20-guide-to-integrate-ai-tools-to-analyze-video-performance-metrics.audience_intermediate/)
+- [How to automate A/B testing for video ads using ai](/articles/2026-02-20-how-to-automate-ab-testing-for-video-ads-using-ai.audience_intermediate/)
 - [Guide to use ai to optimize video length for different platforms](/articles/2026-02-20-guide-to-use-ai-to-optimize-video-length-for-different-platforms.audience_beginner/)
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
-- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-
----
+- [Guide to leverage ai to enhance collaborative video editing workflows](/articles/2026-02-20-guide-to-leverage-ai-to-enhance-collaborative-video-editing-workflows.audience_professional/)
 
 ## CTA
 

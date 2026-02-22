@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -770,6 +771,12 @@ def build_prompt(meta: dict, body: str, style: str = "docs") -> tuple[str, str]:
             tool_names.extend(str(x).strip() for x in v if str(x).strip())
     if tool_names:
         tools_note = f" You may mention only these tools (do not invent others): {', '.join(dict.fromkeys(tool_names))}."
+    else:
+        # Fallback when mapping is empty: pass all affiliate tool names so the model can choose 1–2 that fit the topic
+        all_tools = _load_affiliate_tools()
+        fallback_names = [t[0].strip() for t in all_tools if (t[0] or "").strip()]
+        if fallback_names:
+            tools_note = f" No specific tools were assigned to this article. You may mention 1–2 tools from this list that best fit the topic (prefer at least one when relevant): {', '.join(dict.fromkeys(fallback_names))}. Do not invent other tool names."
 
     style_phrase = {
         "concise": "Be concise: shorter sentences, fewer examples.",
@@ -1070,6 +1077,13 @@ def fill_one(
 
 
 def main() -> None:
+    # Ensure stdout handles Unicode (e.g. emoji in API response) on Windows
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(
         description="Fill article skeletons: replace [...] with AI-generated prose. Default: dry-run."
     )

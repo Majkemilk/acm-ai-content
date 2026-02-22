@@ -81,7 +81,7 @@ Before publishing, verify the following:
 
 ## Tools mentioned
 
-- {{TOOLS_MENTIONED}}
+{{TOOLS_MENTIONED}}
 
 ---
 

@@ -36,6 +36,7 @@ DEFAULT_CONTENT_TYPE = "guide"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QUEUE_PATH = PROJECT_ROOT / "content" / "queue.yaml"
 CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
+AFFILIATE_TOOLS_PATH = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 
@@ -440,6 +441,74 @@ def build_frontmatter(item: dict, today: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _load_affiliate_tools_name_to_url() -> dict[str, str]:
+    """Load name -> affiliate_link from content/affiliate_tools.yaml. Stdlib only. Cached per process."""
+    if not AFFILIATE_TOOLS_PATH.exists():
+        return {}
+    text = AFFILIATE_TOOLS_PATH.read_text(encoding="utf-8")
+
+    def _val(s: str) -> str:
+        s = (s or "").strip()
+        if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+            return s[1:-1].replace('\\"', '"').strip()
+        return s
+
+    result: dict[str, str] = {}
+    in_tools = False
+    current_name = ""
+    current_url = ""
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if stripped == "tools:":
+            in_tools = True
+            continue
+        if not in_tools:
+            continue
+        if stripped.startswith("- "):
+            if current_name:
+                result[current_name] = current_url or current_name
+            current_name = ""
+            current_url = ""
+            part = stripped[2:].strip()
+            kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", part)
+            if kv:
+                k, v = kv.group(1), _val(kv.group(2))
+                if k == "name":
+                    current_name = v
+                elif k == "affiliate_link":
+                    current_url = v
+            continue
+        kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", stripped)
+        if kv:
+            k, v = kv.group(1), _val(kv.group(2))
+            if k == "name":
+                current_name = v
+            elif k == "affiliate_link":
+                current_url = v
+    if current_name:
+        result[current_name] = current_url or current_name
+    return result
+
+
+def _build_tools_mentioned_from_queue_item(
+    item: dict, name_to_url: dict[str, str]
+) -> str:
+    """Build markdown list for {{TOOLS_MENTIONED}} from primary_tool and secondary_tool."""
+    tools: list[str] = []
+    for key in ("primary_tool", "secondary_tool"):
+        name = (item.get(key) or "").strip()
+        if not name:
+            continue
+        url = name_to_url.get(name)
+        if url:
+            tools.append(f"- [{name}]({url})")
+        else:
+            tools.append(f"- {name}")
+    return "\n".join(tools) if tools else ""
+
+
 def get_replacements(
     item: dict,
     today: str,
@@ -461,7 +530,13 @@ def get_replacements(
         if var == "SECONDARY_TOOL":
             return (item.get("secondary_tool") or "").strip() or None
         if var == "TOOLS_MENTIONED":
-            return (item.get("tools_mentioned") or "").strip() or None
+            explicit = (item.get("tools_mentioned") or "").strip()
+            if explicit:
+                return explicit
+            built = _build_tools_mentioned_from_queue_item(
+                item, _load_affiliate_tools_name_to_url()
+            )
+            return built if built else None
         if var == "INTERNAL_LINKS":
             if internal_links_override is not None:
                 return internal_links_override

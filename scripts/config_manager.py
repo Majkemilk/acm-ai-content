@@ -11,7 +11,7 @@ from pathlib import Path
 from content_index import load_config  # noqa: E402
 
 # Keys and defaults (must match content_index.load_config contract)
-CONFIG_KEYS = ("production_category", "hub_slug", "sandbox_categories")
+CONFIG_KEYS = ("production_category", "hub_slug", "sandbox_categories", "suggested_problems")
 DEFAULT_PRODUCTION_CATEGORY = "ai-marketing-automation"
 DEFAULT_HUB_SLUG = "ai-marketing-automation"
 HUB_SLUG_PATTERN = re.compile(r"^[a-z0-9-]+$")
@@ -72,10 +72,11 @@ def write_config(
     sandbox_categories: list[str],
     use_case_batch_size: int | None = None,
     use_case_audience_pyramid: list[int] | None = None,
+    suggested_problems: list[str] | None = None,
 ) -> None:
     """
-    Write content/config.yaml. Preserves use_case_batch_size and use_case_audience_pyramid
-    from existing file when not provided. No comments preserved.
+    Write content/config.yaml. Preserves use_case_batch_size, use_case_audience_pyramid,
+    and suggested_problems from existing file when not provided. No comments preserved.
     """
     production_category = _validate_production_category(production_category)
     hub_slug = _validate_hub_slug(hub_slug)
@@ -90,6 +91,10 @@ def write_config(
     if use_case_audience_pyramid is None:
         p = existing.get("use_case_audience_pyramid")
         use_case_audience_pyramid = [int(x) for x in p] if isinstance(p, list) and p else [3, 3]
+    if suggested_problems is None:
+        suggested_problems = list(existing.get("suggested_problems") or [])
+    else:
+        suggested_problems = [str(x).strip() for x in suggested_problems if str(x).strip()]
     lines = [
         f"production_category: {_quote_yaml_value(production_category)}",
         f"hub_slug: {_quote_yaml_value(hub_slug)}",
@@ -101,6 +106,9 @@ def write_config(
     lines.append("use_case_audience_pyramid:")
     for n in use_case_audience_pyramid:
         lines.append(f"  - {int(n)}")
+    lines.append("suggested_problems:")
+    for prob in suggested_problems:
+        lines.append(f'  - {_quote_yaml_value(prob)}')
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -108,30 +116,38 @@ def write_config(
 def get_config_value(path: Path, key: str):
     """
     Return current value for one key. path: path to config.yaml.
-    key: production_category | hub_slug | sandbox_categories.
+    key: production_category | hub_slug | sandbox_categories | suggested_problems.
     """
     if key not in CONFIG_KEYS:
         raise ValueError(f"Nieznany klucz: {key}. Dozwolone: {list(CONFIG_KEYS)}")
     config = load_config(path)
     if key == "hub_slug":
         return config.get("hub_slug") or DEFAULT_HUB_SLUG
+    if key == "suggested_problems":
+        return list(config.get("suggested_problems") or [])
     return config.get(key) if config.get(key) is not None else (
         [] if key == "sandbox_categories" else (DEFAULT_PRODUCTION_CATEGORY if key == "production_category" else None)
     )
 
 
+def _validate_suggested_problems(value: list) -> list:
+    if not isinstance(value, list):
+        raise ValueError("suggested_problems musi być listą")
+    return [str(x).strip() for x in value if str(x).strip()]
+
+
 def set_config_value(path: Path, key: str, value) -> None:
     """
     Set one key and write config. value: str for production_category/hub_slug,
-    list[str] for sandbox_categories. Validates and normalizes (hub_slug).
+    list[str] for sandbox_categories / suggested_problems. Validates and normalizes (hub_slug).
     """
     if key not in CONFIG_KEYS:
         raise ValueError(f"Nieznany klucz: {key}. Dozwolone: {list(CONFIG_KEYS)}")
     config = load_config(path)
-    # Ensure we have all keys for write
     prod = (config.get("production_category") or DEFAULT_PRODUCTION_CATEGORY).strip()
     hub = (config.get("hub_slug") or DEFAULT_HUB_SLUG).strip()
     sandbox = list(config.get("sandbox_categories") or [])
+    suggested = list(config.get("suggested_problems") or [])
 
     if key == "production_category":
         prod = _validate_production_category(str(value))
@@ -139,7 +155,9 @@ def set_config_value(path: Path, key: str, value) -> None:
         hub = _validate_hub_slug(str(value))
     elif key == "sandbox_categories":
         sandbox = _validate_sandbox_categories(value if isinstance(value, list) else [])
-    write_config(path, prod, hub, sandbox)
+    elif key == "suggested_problems":
+        suggested = _validate_suggested_problems(value if isinstance(value, list) else [])
+    write_config(path, prod, hub, sandbox, suggested_problems=suggested)
 
 
 def add_sandbox_category(path: Path, category: str) -> bool:
@@ -201,6 +219,7 @@ def update_config(
     sandbox_categories: list[str] | None = None,
     add_sandbox: str | None = None,
     remove_sandbox: str | None = None,
+    suggested_problems: list[str] | None = None,
 ) -> bool:
     """
     Load config, apply optional overrides (set/add/remove), write. Returns True if written.
@@ -210,6 +229,7 @@ def update_config(
     prod = (config.get("production_category") or DEFAULT_PRODUCTION_CATEGORY).strip()
     hub = (config.get("hub_slug") or DEFAULT_HUB_SLUG).strip()
     sandbox = list(config.get("sandbox_categories") or [])
+    suggested = list(config.get("suggested_problems") or [])
 
     if production_category is not None:
         prod = _validate_production_category(production_category)
@@ -217,6 +237,8 @@ def update_config(
         hub = _validate_hub_slug(hub_slug)
     if sandbox_categories is not None:
         sandbox = _validate_sandbox_categories(sandbox_categories)
+    if suggested_problems is not None:
+        suggested = _validate_suggested_problems(suggested_problems)
     if add_sandbox is not None:
         add_sandbox = add_sandbox.strip()
         if add_sandbox and add_sandbox not in sandbox:
@@ -226,7 +248,7 @@ def update_config(
         if remove_sandbox in sandbox:
             sandbox.remove(remove_sandbox)
 
-    write_config(path, prod, hub, sandbox)
+    write_config(path, prod, hub, sandbox, suggested_problems=suggested)
     return True
 
 
@@ -235,4 +257,5 @@ FRIENDLY_NAMES = {
     "production_category": "Główny plik huba",
     "hub_slug": "Adres huba (slug)",
     "sandbox_categories": "Kategorie do pomysłów",
+    "suggested_problems": "Sugerowane problemy (do use case’ów)",
 }
