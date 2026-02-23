@@ -1,9 +1,14 @@
-# Editorial mapping: use case problem (exact match, normalized) -> preferred tools for the article.
-# Tool names must match content/affiliate_tools.yaml "name" exactly (e.g. "Opus Clip", "Descript").
-# Used by generate_queue.py to set primary_tool / secondary_tool; fill_articles uses these for priority.
-# When this list is empty: fill_articles still passes all tools from affiliate_tools.yaml to the model
-# so it can mention 1–2 that fit the topic; render_site then turns those names into links.
-# Example:
-#   - problem: "automate video thumbnails creation for social media"
-#     tools: "Canva, Pictory"
+# DEPRECATED — This file is no longer used by the pipeline.
+# Tool selection is now handled by fill_articles.py (AI picks tools from affiliate_tools.yaml
+# based on article context). Selected tools are stored in each article's frontmatter
+# (primary_tool, secondary_tool, tools_mentioned).
+# This file is kept only as a historical log.
+#
+# Previous purpose: editorial mapping use case problem -> preferred tools.
 mapping:
+  - problem: streamline content approval processes using AI tools to reduce bottlenecks
+    tools: Opus Clip, Make
+  - problem: integrate AI tools for automating multi-channel marketing reporting
+    tools: Opus Clip, Make
+  - problem: automate troubleshooting workflows for API error handling in marketing tools
+    tools: Opus Clip, Make

@@ -3,16 +3,17 @@ title: "How to leverage AI to automate the segmentation of email list for target
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to leverage ai to automate the segmentation of email list for targeted campaigns"
-primary_tool: "{{PRIMARY_TOOL}}"
-secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-20"
+tools: "Make"
+last_updated: "2026-02-23"
 status: "filled"
----# How to leverage AI to automate the segmentation of email list for targeted campaigns
+---
+
+# How to leverage AI to automate the segmentation of email list for targeted campaigns
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to leverage ai to automate the segmentation of email list for targeted campaigns
-**Last updated:** 2026-02-20
+**Last updated:** 2026-02-23
 
 ---
 
@@ -22,7 +23,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of {{PRIMARY_TOOL}} (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of all tools mentioned in this article must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -72,6 +73,10 @@ Before publishing, verify the following:
 -
 -
 
+### Try it yourself: Build your own AI prompt
+
+[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+
 ---
 
 ## When NOT to use this
@@ -90,7 +95,7 @@ Before publishing, verify the following:
 
 ## Tools mentioned
 
-- {{TOOLS_MENTIONED}}
+{{TOOLS_MENTIONED}}
 
 ---
 
@@ -102,6 +107,8 @@ Before publishing, verify the following:
 - [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
 - [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
 - [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
+
+---
 
 ## CTA
 

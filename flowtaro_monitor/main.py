@@ -9,9 +9,11 @@ if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 import json
+import os
 import queue
 import re
 import subprocess
+from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from urllib.parse import urlparse, urlunparse
@@ -46,6 +48,66 @@ def _create_tooltip(widget: tk.Widget, text: str):
     widget.bind("<Leave>", hide)
 
 
+def _show_article_selector(parent, title: str, items: list[tuple[str, str]],
+                           confirm_label: str, on_confirm):
+    """Popup dialog with checkboxes for article selection.
+
+    items: [(display_text, stem_value), ...]
+    on_confirm: callable receiving list of selected stem_values.
+    """
+    if not items:
+        messagebox.showinfo(t("msg.info"), t("sel.none"))
+        return
+
+    dialog = tk.Toplevel(parent)
+    dialog.title(title)
+    dialog.geometry("780x420")
+    dialog.transient(parent)
+    dialog.grab_set()
+
+    vars_map: dict[str, tk.BooleanVar] = {}
+    all_var = tk.BooleanVar(value=True)
+
+    def toggle_all():
+        val = all_var.get()
+        for v in vars_map.values():
+            v.set(val)
+
+    top_row = ttk.Frame(dialog, padding=5)
+    top_row.pack(fill=tk.X)
+    ttk.Checkbutton(top_row, text=t("sel.select_all"), variable=all_var,
+                    command=toggle_all).pack(side=tk.LEFT)
+
+    canvas = tk.Canvas(dialog, highlightthickness=0)
+    sb = ttk.Scrollbar(dialog, orient=tk.VERTICAL, command=canvas.yview)
+    inner = ttk.Frame(canvas)
+    inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas.create_window((0, 0), window=inner, anchor=tk.NW)
+    canvas.configure(yscrollcommand=sb.set)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(10, 0), pady=5)
+    sb.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 10), pady=5)
+    canvas.bind("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+
+    for display, stem in items:
+        var = tk.BooleanVar(value=True)
+        vars_map[stem] = var
+        ttk.Checkbutton(inner, text=display, variable=var).pack(anchor=tk.W, padx=5, pady=1)
+
+    btn_row = ttk.Frame(dialog, padding=10)
+    btn_row.pack(fill=tk.X)
+
+    def confirm():
+        selected = [stem for stem, var in vars_map.items() if var.get()]
+        dialog.destroy()
+        if not selected:
+            messagebox.showinfo(t("msg.info"), t("sel.none"))
+            return
+        on_confirm(selected)
+
+    ttk.Button(btn_row, text=confirm_label, command=confirm).pack(side=tk.LEFT, padx=5)
+    ttk.Button(btn_row, text=t("btn.cancel"), command=dialog.destroy).pack(side=tk.LEFT, padx=5)
+
+
 def _load_last_params() -> dict:
     """Ostatnie zestawy parametrów per akcja (lista do 3 stringów)."""
     if not LAST_PARAMS_FILE.exists():
@@ -70,7 +132,7 @@ def _save_last_params(action: str, extra: list):
 from flowtaro_monitor._monitor_data import (
     get_dashboard_data,
     get_cost_chart_data,
-    get_mapping_data,
+    get_article_tools_data,
     get_use_case_defaults,
     load_affiliate_tools,
     reset_cost_data,
@@ -108,6 +170,10 @@ def _p_choice(label: str, description: str, choices: list[tuple[str, list[str]]]
     return {"label": label, "type": "choice", "description": description, "choices": choices}
 
 
+def _p_bool(label: str, description: str, on_args: list[str], off_args: list[str] | None = None, default: bool = False) -> dict:
+    return {"label": label, "type": "boolean", "description": description, "on_args": on_args, "off_args": off_args or [], "default": default}
+
+
 def _p_text(label: str, description: str, flag: str, placeholder: str = "") -> dict:
     return {"label": label, "type": "text", "description": description, "flag": flag, "placeholder": placeholder}
 
@@ -132,26 +198,15 @@ WORKFLOW_PARAM_SCHEMA: dict[str, list[dict]] = {
         _p_choice("wf.ga.mode", "wf.ga.mode_desc", [("wf.ga.opt_queue", []), ("wf.ga.opt_backfill", ["--backfill"])]),
     ],
     "fill_articles": [
-        _p_choice("wf.fill.write", "wf.fill.write_desc", [("wf.fill.opt_yes", ["--write"]), ("wf.fill.opt_no", [])]),
-        _p_choice("wf.fill.force", "wf.fill.force_desc", [("wf.fill.opt_no", []), ("wf.fill.opt_yes", ["--force"])]),
-        _p_choice("wf.fill.limit", "wf.fill.limit_desc", [("wf.fill.limit_0", []), ("wf.fill.limit_1", ["--limit", "1"]), ("wf.fill.limit_5", ["--limit", "5"]), ("wf.fill.limit_10", ["--limit", "10"])]),
+        _p_bool("wf.fill.write", "wf.fill.write_desc", ["--write"], default=True),
+        _p_bool("wf.fill.force", "wf.fill.force_desc", ["--force"]),
+        _p_choice("wf.fill.limit", "wf.fill.limit_desc", [("wf.fill.limit_none", []), ("wf.fill.limit_1", ["--limit", "1"]), ("wf.fill.limit_5", ["--limit", "5"]), ("wf.fill.limit_10", ["--limit", "10"]), ("wf.fill.limit_20", ["--limit", "20"]), ("wf.fill.limit_50", ["--limit", "50"])]),
         _p_choice("wf.fill.qa", "wf.fill.qa_desc", [("wf.fill.qa_default", []), ("wf.fill.qa_on", ["--qa"]), ("wf.fill.qa_off", ["--no-qa"])]),
-        _p_choice("wf.fill.quality", "wf.fill.quality_desc", [("wf.fill.opt_no", []), ("wf.fill.opt_yes", ["--quality_gate"])]),
-        _p_choice("wf.fill.style", "wf.fill.style_desc", [("wf.fill.style_default", []), ("wf.fill.style_docs", ["--style", "docs"]), ("wf.fill.style_concise", ["--style", "concise"]), ("wf.fill.style_detailed", ["--style", "detailed"])]),
-        _p_choice("wf.fill.html", "wf.fill.html_desc", [("wf.fill.opt_no", []), ("wf.fill.opt_yes", ["--html"])]),
+        _p_bool("wf.fill.quality", "wf.fill.quality_desc", ["--quality_gate"]),
     ],
     "generate_hubs": [],
     "generate_sitemap": [],
     "render_site": [],
-    "refresh_articles": [
-        _p_choice("wf.refresh.days", "wf.refresh.days_desc", [
-            ("wf.refresh.days_7", ["--days", "7"]), ("wf.refresh.days_14", ["--days", "14"]), ("wf.refresh.days_30", ["--days", "30"]),
-            ("wf.refresh.days_60", ["--days", "60"]), ("wf.refresh.days_90", ["--days", "90"]),
-        ]),
-        _p_choice("wf.refresh.limit", "wf.refresh.limit_desc", [("wf.fill.limit_0", []), ("wf.fill.limit_5", ["--limit", "5"]), ("wf.fill.limit_10", ["--limit", "10"])]),
-        _p_choice("wf.refresh.dryrun", "wf.refresh.dryrun_desc", [("wf.fill.opt_no", []), ("wf.fill.opt_yes", ["--dry-run"])]),
-        _p_choice("wf.refresh.no_render", "wf.refresh.no_render_desc", [("wf.fill.opt_no", []), ("wf.fill.opt_yes", ["--no-render"])]),
-    ],
 }
 
 
@@ -233,6 +288,18 @@ def _build_param_widgets_for_action(container: ttk.Frame, action: str, italic_fo
             widgets.append((p, vars_list))
             _create_tooltip(lbl, desc_text)
             continue
+        if p["type"] == "boolean":
+            var = tk.BooleanVar(value=p.get("default", False))
+            hint_frame = ttk.Frame(row)
+            hint_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+            lbl_hint = tk.Label(hint_frame, text=desc_text, font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
+            lbl_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+            hint_labels.append(lbl_hint)
+            cb = ttk.Checkbutton(row, variable=var)
+            cb.pack(side=tk.LEFT)
+            widgets.append((p, var))
+            _create_tooltip(lbl, desc_text)
+            continue
         if p["type"] == "choice":
             choices = p["choices"]
             disp_vals = [t(c[0]) for c in choices]
@@ -295,6 +362,12 @@ def _collect_extra_from_widgets(param_widgets: list) -> list:
     """Z listy (param_def, widget) zbiera listę argumentów extra (flagi + wartości) do skryptu."""
     extra = []
     for p, w in param_widgets:
+        if p["type"] == "boolean":
+            if w.get():
+                extra.extend(p["on_args"])
+            else:
+                extra.extend(p.get("off_args") or [])
+            continue
         if p["type"] == "choice":
             try:
                 i = w.current()
@@ -327,6 +400,10 @@ def _collect_extra_from_widgets(param_widgets: list) -> list:
                     extra.extend(["--limit", str(n)])
                 except (ValueError, tk.TclError):
                     extra.extend(["--limit", str(p["default"])])
+            else:
+                # R1: use current config batch_size at run time, not widget's frozen default
+                defaults = get_use_case_defaults()
+                extra.extend(["--limit", str(defaults["batch_size"])])
         else:
             val = w.get().strip()
             placeholder = p.get("placeholder", "").strip()
@@ -573,7 +650,20 @@ def build_workflow_tab(parent, last_output_holder: list):
 
     process_holder = []
     sequence_cancelled = [False]
+    preview_mode = [False]
+    preview_remaining_steps = [[]]
     root = parent.winfo_toplevel()
+
+    _generated_re = re.compile(r"^Generated:\s+(.+\.md)\s*$")
+
+    def _parse_generated_articles(output: str) -> list[tuple[str, str]]:
+        items = []
+        for line in output.splitlines():
+            m = _generated_re.match(line)
+            if m:
+                p = Path(m.group(1).strip())
+                items.append((p.name, p.stem))
+        return items
 
     def set_log(out, code, rbtn, cbtn):
         log_area.config(state=tk.NORMAL)
@@ -592,7 +682,9 @@ def build_workflow_tab(parent, last_output_holder: list):
         log_area.see(tk.END)
         log_area.config(state=tk.DISABLED)
 
-    def poll_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn):
+    def poll_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn, fill_total=0, fill_done=None):
+        if fill_done is None:
+            fill_done = [0]
         try:
             item = q.get_nowait()
             if item[1] is not None:
@@ -602,6 +694,8 @@ def build_workflow_tab(parent, last_output_holder: list):
                 if sequence_cancelled[0]:
                     full_text += "\n\n" + t("wf.status_cancelled_msg")
                     code = -1
+                completed_index = len(SEQUENCE_ACTIONS) - len(remaining) - 1
+                failed_action = SEQUENCE_ACTIONS[completed_index] if 0 <= completed_index < len(SEQUENCE_ACTIONS) else None
                 def done():
                     log_area.config(state=tk.NORMAL)
                     log_area.delete("1.0", tk.END)
@@ -609,40 +703,96 @@ def build_workflow_tab(parent, last_output_holder: list):
                     log_area.insert(tk.END, f"\n\n[Kod powrotu: {code}]")
                     log_area.config(state=tk.DISABLED)
                     rbtn.config(state=tk.NORMAL)
+                    try:
+                        preview_btn.config(state=tk.NORMAL)
+                    except Exception:
+                        pass
                     cbtn.config(state=tk.DISABLED)
                     completed = len(SEQUENCE_ACTIONS) - len(remaining)
                     progress_bar["value"] = len(SEQUENCE_ACTIONS) if not remaining else completed
                     if not remaining:
                         step_label.config(text=t("wf.step_done"))
+                    if sequence_cancelled[0]:
+                        status_text = t("wf.status_cancelled")
+                    elif code == 0:
+                        status_text = t("wf.status_ok")
+                    elif code == 2:
+                        status_text = t("wf.status_error_exit2") if failed_action == "generate_use_cases" else t("wf.status_error_exit2_other")
+                    else:
+                        status_text = t("wf.status_error_exit1")
                     status_label.config(
-                        text=t("wf.status_cancelled") if sequence_cancelled[0] else (t("wf.status_ok") if code == 0 else t("wf.status_error")),
+                        text=status_text,
                         foreground="red" if (sequence_cancelled[0] or code != 0) else "green",
                     )
                     process_holder.clear()
                     last_output_holder.clear()
                     last_output_holder.append((full_text, "sequence"))
+                    if preview_mode[0] and code == 0 and not sequence_cancelled[0]:
+                        preview_mode[0] = False
+                        items = _parse_generated_articles(full_text)
+                        if items:
+                            step_label.config(text=t("wf.preview_done"))
+                            status_label.config(text=t("wf.preview_done"), foreground="blue")
+                            root.after(100, lambda: _show_article_selector(
+                                root, t("sel.title_fill"), items,
+                                t("sel.confirm_fill"),
+                                lambda selected: _fill_selected(selected, items, full_text)))
+                        else:
+                            status_label.config(text=t("wf.status_ok"), foreground="green")
                 if sequence_cancelled[0] or code != 0 or not remaining:
                     root.after(0, done)
                     return
                 next_action, next_extra = remaining.pop(0)
                 completed = len(SEQUENCE_ACTIONS) - len(remaining) - 1  # liczba ukończonych kroków
                 progress_bar["value"] = completed
-                step_label.config(text=t("wf.step_progress", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action))))
+                next_fill_total = _parse_fill_limit(next_extra) if next_action == "fill_articles" else 0
+                next_fill_done = [0]
+                progress_bar["value"] = completed
+                if next_fill_total > 0:
+                    step_label.config(text=t("wf.step_progress_fill", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action)), 0, next_fill_total))
+                else:
+                    step_label.config(text=t("wf.step_progress", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action))))
                 next_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(next_action, next_action)) + " ---", ""]
                 for h in next_header:
                     root.after(0, lambda line=h: append_log(line))
                 proc, new_q = run_workflow_streaming(next_action, next_extra)
                 process_holder[0] = (next_action, proc)
                 next_accumulated = new_accumulated + next_header
-                root.after(50, lambda: poll_sequence(remaining, next_accumulated, [], new_q, rbtn, cbtn))
+                root.after(50, lambda: poll_sequence(remaining, next_accumulated, [], new_q, rbtn, cbtn, next_fill_total, next_fill_done))
                 return
             line = item[0]
             if line is not None:
+                current_action = process_holder[0][0] if process_holder else None
+                if current_action == "fill_articles" and fill_total > 0 and "  Filled:" in line:
+                    fill_done[0] += 1
+                    completed = len(SEQUENCE_ACTIONS) - len(remaining) - 1
+                    step_label.config(text=t("wf.step_progress_fill", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get("fill_articles", "fill_articles")), fill_done[0], fill_total))
+                    progress_bar["value"] = completed + (fill_done[0] / fill_total)
                 current_out_lines.append(line)
                 root.after(0, lambda l=line: append_log(l))
         except queue.Empty:
             pass
-        root.after(50, lambda: poll_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn))
+        root.after(50, lambda: poll_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn, fill_total, fill_done))
+
+    def _effective_use_case_limit(extra: list) -> int:
+        """Parse --limit from generate_use_cases extra args, else config default."""
+        for i, x in enumerate(extra):
+            if x == "--limit" and i + 1 < len(extra):
+                try:
+                    return int(extra[i + 1])
+                except ValueError:
+                    pass
+        return get_use_case_defaults()["batch_size"]
+
+    def _parse_fill_limit(extra: list) -> int:
+        """Parse --limit from fill_articles extra args. 0 = no limit."""
+        for i, x in enumerate(extra):
+            if x == "--limit" and i + 1 < len(extra):
+                try:
+                    return int(extra[i + 1])
+                except ValueError:
+                    pass
+        return 0
 
     def run():
         steps = []
@@ -650,8 +800,21 @@ def build_workflow_tab(parent, last_output_holder: list):
             extra = _collect_extra_from_widgets(section_widgets[idx])
             steps.append((action, extra))
             _save_last_params(action, extra)
+        # R2: warn when generate_use_cases limit != pyramid sum
+        if steps and steps[0][0] == "generate_use_cases":
+            limit = _effective_use_case_limit(steps[0][1])
+            defaults = get_use_case_defaults()
+            if limit != defaults["pyramid_sum"]:
+                if not messagebox.askyesno(
+                    t("wf.limit_pyramid_title"),
+                    t("wf.limit_pyramid_mismatch", limit, defaults["pyramid_sum"]),
+                    icon=messagebox.WARNING,
+                ):
+                    return
+        preview_mode[0] = False
         sequence_cancelled[0] = False
         run_btn.config(state=tk.DISABLED)
+        preview_btn.config(state=tk.DISABLED)
         cancel_btn.config(state=tk.NORMAL)
         status_label.config(text=t("wf.running"), foreground="gray")
         progress_bar["value"] = 0
@@ -661,13 +824,113 @@ def build_workflow_tab(parent, last_output_holder: list):
         log_area.config(state=tk.DISABLED)
         process_holder.clear()
         first_action, first_extra = steps.pop(0)
-        step_label.config(text=t("wf.step_progress", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+        first_fill_total = _parse_fill_limit(first_extra) if first_action == "fill_articles" else 0
+        first_fill_done = [0]
+        if first_fill_total > 0:
+            step_label.config(text=t("wf.step_progress_fill", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, first_fill_total))
+        else:
+            step_label.config(text=t("wf.step_progress", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
         first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
         for h in first_header:
             root.after(0, lambda line=h: append_log(line))
         proc, q = run_workflow_streaming(first_action, extra_args=first_extra)
         process_holder.append((first_action, proc))
-        root.after(50, lambda: poll_sequence(steps, first_header, [], q, run_btn, cancel_btn))
+        root.after(50, lambda: poll_sequence(steps, first_header, [], q, run_btn, cancel_btn, first_fill_total, first_fill_done))
+
+    def run_preview():
+        steps = []
+        for idx, action in enumerate(SEQUENCE_ACTIONS):
+            extra = _collect_extra_from_widgets(section_widgets[idx])
+            steps.append((action, extra))
+            _save_last_params(action, extra)
+        # R2: warn when generate_use_cases limit != pyramid sum (first step is same)
+        if steps and steps[0][0] == "generate_use_cases":
+            limit = _effective_use_case_limit(steps[0][1])
+            defaults = get_use_case_defaults()
+            if limit != defaults["pyramid_sum"]:
+                if not messagebox.askyesno(
+                    t("wf.limit_pyramid_title"),
+                    t("wf.limit_pyramid_mismatch", limit, defaults["pyramid_sum"]),
+                    icon=messagebox.WARNING,
+                ):
+                    return
+        preview_remaining_steps[0] = steps[3:]
+        preview_steps = steps[:3]
+        preview_mode[0] = True
+        sequence_cancelled[0] = False
+        run_btn.config(state=tk.DISABLED)
+        preview_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("wf.running"), foreground="gray")
+        progress_bar["value"] = 0
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, t("wf.running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        process_holder.clear()
+        first_action, first_extra = preview_steps.pop(0)
+        first_fill_total = _parse_fill_limit(first_extra) if first_action == "fill_articles" else 0
+        first_fill_done = [0]
+        if first_fill_total > 0:
+            step_label.config(text=t("wf.step_progress_fill", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, first_fill_total))
+        else:
+            step_label.config(text=t("wf.step_progress", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+        first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
+        for h in first_header:
+            root.after(0, lambda line=h: append_log(line))
+        proc, q = run_workflow_streaming(first_action, extra_args=first_extra)
+        process_holder.append((first_action, proc))
+        root.after(50, lambda: poll_sequence(preview_steps, first_header, [], q, run_btn, cancel_btn, first_fill_total, first_fill_done))
+
+    def _fill_selected(selected_stems: list[str], all_items: list[tuple[str, str]], prev_output: str):
+        articles_dir = get_project_root() / "content" / "articles"
+        all_stems = {stem for _, stem in all_items}
+        rejected = all_stems - set(selected_stems)
+        deleted = 0
+        for stem in rejected:
+            p = articles_dir / (stem + ".md")
+            if p.exists():
+                try:
+                    p.unlink()
+                    deleted += 1
+                except OSError:
+                    pass
+        remaining_steps = list(preview_remaining_steps[0])
+        sequence_cancelled[0] = False
+        run_btn.config(state=tk.DISABLED)
+        preview_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("wf.fill_selected_running"), foreground="gray")
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, prev_output + "\n")
+        if deleted:
+            log_area.insert(tk.END, "\n" + t("sel.deleted_skeletons", deleted) + "\n")
+        log_area.insert(tk.END, "\n" + t("wf.fill_selected_running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        process_holder.clear()
+        if not remaining_steps:
+            return
+        first_action, first_extra = remaining_steps.pop(0)
+        completed = len(SEQUENCE_ACTIONS) - len(remaining_steps) - 1
+        progress_bar["value"] = completed
+        fill_total = _parse_fill_limit(first_extra) if first_action == "fill_articles" else 0
+        fill_done = [0]
+        if fill_total > 0:
+            step_label.config(text=t("wf.step_progress_fill", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, fill_total))
+        else:
+            step_label.config(text=t("wf.step_progress", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+        first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
+        accumulated = prev_output.splitlines()
+        if deleted:
+            accumulated.append(t("sel.deleted_skeletons", deleted))
+        accumulated += ["", t("wf.fill_selected_running")]
+        for h in first_header:
+            root.after(0, lambda line=h: append_log(line))
+        accumulated += first_header
+        proc, q = run_workflow_streaming(first_action, extra_args=first_extra)
+        process_holder.append((first_action, proc))
+        root.after(50, lambda: poll_sequence(remaining_steps, accumulated, [], q, run_btn, cancel_btn, fill_total, fill_done))
 
     def cancel_run():
         sequence_cancelled[0] = True
@@ -680,7 +943,9 @@ def build_workflow_tab(parent, last_output_holder: list):
                     pass
 
     run_btn = ttk.Button(row_btn, text=t("btn.run"), command=run)
-    run_btn.pack(side=tk.LEFT, padx=(0, 10))
+    run_btn.pack(side=tk.LEFT, padx=(0, 5))
+    preview_btn = ttk.Button(row_btn, text=t("wf.preview_btn"), command=run_preview)
+    preview_btn.pack(side=tk.LEFT, padx=(0, 5))
     cancel_btn = ttk.Button(row_btn, text=t("btn.cancel"), command=cancel_run, state=tk.DISABLED)
     cancel_btn.pack(side=tk.LEFT, padx=5)
 
@@ -723,7 +988,7 @@ def build_workflow_tab(parent, last_output_holder: list):
 
 
 def build_refresh_tab(parent, last_output_holder: list):
-    """Zakładka Odśwież artykuły: listy rozwijane (dni, limit) z opisami w jednej linii, dry-run, no-render, Uruchom, log po prawej."""
+    """Zakładka Odśwież artykuły — sekcjonowany layout z Canvas+Scrollbar, progress bar."""
     f = ttk.Frame(parent, padding=10)
     f.pack(fill=tk.BOTH, expand=True)
 
@@ -733,11 +998,40 @@ def build_refresh_tab(parent, last_output_holder: list):
         return f
 
     italic_font = ("TkDefaultFont", 9, "italic")
+    refresh_hint_labels: list = []
+
+    def _hint(parent_row, key):
+        hf = ttk.Frame(parent_row)
+        hf.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        lbl = tk.Label(hf, text=t(key), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=400)
+        lbl.pack(anchor=tk.W, fill=tk.X, expand=True)
+        refresh_hint_labels.append(lbl)
+
     paned_h = ttk.PanedWindow(f, orient=tk.HORIZONTAL)
     paned_h.pack(fill=tk.BOTH, expand=True)
 
-    left_frame = ttk.Frame(paned_h)
-    paned_h.add(left_frame, weight=2)
+    left_outer = ttk.Frame(paned_h)
+    paned_h.add(left_outer, weight=2)
+
+    # R8: Canvas + Scrollbar
+    canvas = tk.Canvas(left_outer, highlightthickness=0)
+    scrollbar = ttk.Scrollbar(left_outer, orient=tk.VERTICAL, command=canvas.yview)
+    inner = ttk.Frame(canvas)
+    inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas_window = canvas.create_window((0, 0), window=inner, anchor=tk.NW)
+
+    def _on_canvas_cfg(ev):
+        canvas.itemconfig(canvas_window, width=ev.width)
+        wrap_w = max(80, ev.width - 260)
+        for lbl in refresh_hint_labels:
+            try:
+                lbl.configure(wraplength=wrap_w)
+            except tk.TclError:
+                pass
+    canvas.bind("<Configure>", _on_canvas_cfg)
+    canvas.bind("<MouseWheel>", lambda ev: canvas.yview_scroll(int(-1 * (ev.delta / 120)), "units"))
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     def _set_initial_sash_refresh():
         paned_h.update_idletasks()
@@ -747,56 +1041,93 @@ def build_refresh_tab(parent, last_output_holder: list):
     f.after(400, _set_initial_sash_refresh)
     f.bind("<Map>", lambda e: f.after(100, _set_initial_sash_refresh))
 
-    row = ttk.Frame(left_frame)
-    row.pack(fill=tk.X)
+    # --- R4: sekcja „Zakres" ---
+    lf_scope = ttk.LabelFrame(inner, text=t("refresh.section_scope"))
+    lf_scope.pack(fill=tk.X, pady=(0, 10))
+    scope_inner = ttk.Frame(lf_scope, padding=5)
+    scope_inner.pack(fill=tk.X)
+
+    row = ttk.Frame(scope_inner); row.pack(fill=tk.X)
     ttk.Label(row, text=t("refresh.days_label")).pack(side=tk.LEFT, padx=(0, 5))
     days_combo = ttk.Combobox(row, values=("7", "14", "30", "60", "90"), width=8, state="readonly")
-    days_combo.pack(side=tk.LEFT, padx=5)
-    days_combo.set("90")
-    hint_days = ttk.Frame(row)
-    hint_days.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    tk.Label(hint_days, text=t("refresh.days_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450).pack(anchor=tk.W, fill=tk.X, expand=True)
-    row_max = ttk.Frame(left_frame)
-    row_max.pack(fill=tk.X, pady=(6, 0))
+    days_combo.pack(side=tk.LEFT, padx=5); days_combo.set("90")
+    _hint(row, "refresh.days_desc")
+
+    row_max = ttk.Frame(scope_inner); row_max.pack(fill=tk.X, pady=(6, 0))
     ttk.Label(row_max, text=t("refresh.max_days_label")).pack(side=tk.LEFT, padx=(0, 5))
     max_days_combo = ttk.Combobox(row_max, values=(t("refresh.max_days_off"), "0", "1", "2", "3", "4", "5", "6"), width=8, state="readonly")
-    max_days_combo.pack(side=tk.LEFT, padx=5)
-    max_days_combo.set(t("refresh.max_days_off"))
-    hint_max = ttk.Frame(row_max)
-    hint_max.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    tk.Label(hint_max, text=t("refresh.max_days_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450).pack(anchor=tk.W, fill=tk.X, expand=True)
-    row2 = ttk.Frame(left_frame)
-    row2.pack(fill=tk.X, pady=(6, 0))
-    ttk.Label(row2, text=t("refresh.limit_label")).pack(side=tk.LEFT, padx=(0, 5))
-    limit_combo = ttk.Combobox(row2, values=("0", "5", "10", "20", "50"), width=8, state="readonly")
-    limit_combo.pack(side=tk.LEFT, padx=5)
-    limit_combo.set("0")
-    hint_limit = ttk.Frame(row2)
-    hint_limit.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    tk.Label(hint_limit, text=t("refresh.limit_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450).pack(anchor=tk.W, fill=tk.X, expand=True)
-    row3 = ttk.Frame(left_frame)
-    row3.pack(fill=tk.X, pady=(6, 0))
-    dry_run_var = tk.BooleanVar(value=False)
-    cb_dry = ttk.Checkbutton(row3, text=t("refresh.dry_run"), variable=dry_run_var)
-    cb_dry.pack(side=tk.LEFT, padx=(0, 5))
-    hint_dry = ttk.Frame(row3)
-    hint_dry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    tk.Label(hint_dry, text=t("refresh.dry_run_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450).pack(anchor=tk.W, fill=tk.X, expand=True)
-    row4 = ttk.Frame(left_frame)
-    row4.pack(fill=tk.X, pady=(6, 0))
-    no_render_var = tk.BooleanVar(value=False)
-    cb_no_render = ttk.Checkbutton(row4, text=t("refresh.no_render"), variable=no_render_var)
-    cb_no_render.pack(side=tk.LEFT, padx=(0, 5))
-    hint_no_render = ttk.Frame(row4)
-    hint_no_render.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    tk.Label(hint_no_render, text=t("wf.refresh.no_render_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450).pack(anchor=tk.W, fill=tk.X, expand=True)
+    max_days_combo.pack(side=tk.LEFT, padx=5); max_days_combo.set(t("refresh.max_days_off"))
+    _hint(row_max, "refresh.max_days_desc")
 
-    refresh_btn_row = ttk.Frame(left_frame)
+    # Zakres dat (od – do); gdy oba ustawione, ma pierwszenstwo nad „starsze/młodsze niż”
+    row_range = ttk.Frame(scope_inner); row_range.pack(fill=tk.X, pady=(6, 0))
+    ttk.Label(row_range, text=t("refresh.from_date_label")).pack(side=tk.LEFT, padx=(0, 5))
+    from_date_entry = ttk.Entry(row_range, width=12)
+    from_date_entry.pack(side=tk.LEFT, padx=2)
+    ttk.Label(row_range, text=t("refresh.to_date_label")).pack(side=tk.LEFT, padx=(8, 5))
+    to_date_entry = ttk.Entry(row_range, width=12)
+    to_date_entry.pack(side=tk.LEFT, padx=2)
+    _hint(row_range, "refresh.date_range_desc")
+
+    # R3+R9: Limit — „Bez limitu" zamiast „0", unified values
+    limit_values = (t("refresh.limit_none"), "1", "5", "10", "20", "50")
+    row_lim = ttk.Frame(scope_inner); row_lim.pack(fill=tk.X, pady=(6, 0))
+    ttk.Label(row_lim, text=t("refresh.limit_label")).pack(side=tk.LEFT, padx=(0, 5))
+    limit_combo = ttk.Combobox(row_lim, values=limit_values, width=12, state="readonly")
+    limit_combo.pack(side=tk.LEFT, padx=5); limit_combo.set(t("refresh.limit_none"))
+    _hint(row_lim, "refresh.limit_desc")
+
+    row_dry = ttk.Frame(scope_inner); row_dry.pack(fill=tk.X, pady=(6, 0))
+    dry_run_var = tk.BooleanVar(value=False)
+    ttk.Checkbutton(row_dry, text=t("refresh.dry_run"), variable=dry_run_var).pack(side=tk.LEFT, padx=(0, 5))
+    _hint(row_dry, "refresh.dry_run_desc")
+
+    # --- R4: sekcja „Opcje AI" ---
+    lf_ai = ttk.LabelFrame(inner, text=t("refresh.section_ai_options"))
+    lf_ai.pack(fill=tk.X, pady=(0, 10))
+    ai_inner = ttk.Frame(lf_ai, padding=5)
+    ai_inner.pack(fill=tk.X)
+
+    row_nr = ttk.Frame(ai_inner); row_nr.pack(fill=tk.X)
+    no_render_var = tk.BooleanVar(value=False)
+    ttk.Checkbutton(row_nr, text=t("refresh.no_render"), variable=no_render_var).pack(side=tk.LEFT, padx=(0, 5))
+    _hint(row_nr, "refresh.no_render_desc")
+
+    row_block = ttk.Frame(ai_inner); row_block.pack(fill=tk.X, pady=(6, 0))
+    block_on_fail_var = tk.BooleanVar(value=False)
+    ttk.Checkbutton(row_block, text=t("refresh.block_on_fail"), variable=block_on_fail_var).pack(side=tk.LEFT, padx=(0, 5))
+    _hint(row_block, "refresh.block_on_fail_desc")
+
+    row_remap = ttk.Frame(ai_inner); row_remap.pack(fill=tk.X, pady=(6, 0))
+    remap_var = tk.BooleanVar(value=False)
+    ttk.Checkbutton(row_remap, text=t("refresh.remap"), variable=remap_var).pack(side=tk.LEFT, padx=(0, 5))
+    _hint(row_remap, "refresh.remap_desc")
+
+    row_re_skeleton = ttk.Frame(ai_inner); row_re_skeleton.pack(fill=tk.X, pady=(6, 0))
+    re_skeleton_var = tk.BooleanVar(value=False)
+    ttk.Checkbutton(row_re_skeleton, text=t("refresh.re_skeleton"), variable=re_skeleton_var).pack(side=tk.LEFT, padx=(0, 5))
+    _hint(row_re_skeleton, "refresh.re_skeleton_desc")
+
+    row_retries = ttk.Frame(ai_inner); row_retries.pack(fill=tk.X, pady=(6, 0))
+    ttk.Label(row_retries, text=t("refresh.quality_retries_label")).pack(side=tk.LEFT, padx=(0, 5))
+    retries_combo = ttk.Combobox(row_retries, values=(t("refresh.retries_1"), t("refresh.retries_2"), t("refresh.retries_3")), width=14, state="readonly")
+    retries_combo.pack(side=tk.LEFT, padx=5); retries_combo.set(t("refresh.retries_2"))
+    _hint(row_retries, "refresh.quality_retries_desc")
+
+    # R6: info o hardcoded parametrach
+    row_info = ttk.Frame(ai_inner); row_info.pack(fill=tk.X, pady=(8, 0))
+    tk.Label(row_info, text=t("refresh.hardcoded_info"), font=italic_font, fg="#888", anchor=tk.W).pack(anchor=tk.W)
+
+    refresh_btn_row = ttk.Frame(inner)
     refresh_btn_row.pack(fill=tk.X, pady=(8, 0))
 
     right_frame = ttk.Frame(paned_h)
     paned_h.add(right_frame, weight=1)
     ttk.Label(right_frame, text=t("wf.log")).pack(anchor=tk.W, pady=(0, 2))
+    progress_label = ttk.Label(right_frame, text="", foreground="gray")
+    progress_label.pack(anchor=tk.W, pady=(0, 2))
+    progress_bar = ttk.Progressbar(right_frame, mode="determinate", maximum=1, value=0, length=280)
+    progress_bar.pack(fill=tk.X, pady=(0, 5))
     log_area = scrolledtext.ScrolledText(right_frame, height=14, wrap=tk.WORD, state=tk.DISABLED)
     log_area.pack(fill=tk.BOTH, expand=True, pady=5)
     status_label = ttk.Label(right_frame, text="", foreground="gray")
@@ -839,7 +1170,95 @@ def build_refresh_tab(parent, last_output_holder: list):
         log_area.see(tk.END)
         log_area.config(state=tk.DISABLED)
 
+    def handle_refresh_progress_line(line: str) -> bool:
+        """If line is FLOWTARO_PROGRESS_TOTAL or FLOWTARO_PROGRESS, update progress bar/label and return True (do not log)."""
+        s = (line or "").strip()
+        if s.startswith("FLOWTARO_PROGRESS_TOTAL:"):
+            try:
+                n = int(s.split(":", 1)[1].strip())
+                progress_bar["maximum"] = max(1, n)
+                progress_bar["value"] = 0
+                progress_label.config(text=t("refresh.progress_step", 0, n))
+            except (ValueError, IndexError):
+                pass
+            return True
+        if s.startswith("FLOWTARO_PROGRESS:"):
+            try:
+                m = int(s.split(":", 1)[1].strip())
+                total = progress_bar["maximum"]
+                if total < 1:
+                    total = 1
+                progress_bar["value"] = min(m, total)
+                progress_label.config(text=t("refresh.progress_step", m, total))
+            except (ValueError, IndexError):
+                pass
+            return True
+        return False
+
+    _refresh_article_re = re.compile(r"^\s+(\S+\.md)\s+last_updated:")
+
+    def _parse_dry_run_articles(output: str) -> list[tuple[str, str]]:
+        items = []
+        for line in output.splitlines():
+            m = _refresh_article_re.match(line)
+            if m:
+                fname = m.group(1).strip()
+                stem = fname.removesuffix(".md")
+                items.append((fname, stem))
+        return items
+
+    def _get_limit_value() -> str:
+        raw = (limit_combo.get() or "").strip()
+        if not raw or raw == t("refresh.limit_none"):
+            return "0"
+        return raw
+
+    def _run_selective_refresh(stems: list[str]):
+        import tempfile
+        tmp = Path(tempfile.mktemp(suffix=".txt", prefix="flowtaro_refresh_"))
+        tmp.write_text("\n".join(stems), encoding="utf-8")
+        from_str = (from_date_entry.get() or "").strip()
+        to_str = (to_date_entry.get() or "").strip()
+        if from_str and to_str:
+            try:
+                from_d = datetime.strptime(from_str, "%Y-%m-%d").date()
+                to_d = datetime.strptime(to_str, "%Y-%m-%d").date()
+            except ValueError:
+                messagebox.showerror(t("msg.error"), t("refresh.date_invalid_format"))
+                return
+            if from_d > to_d:
+                messagebox.showerror(t("msg.error"), t("refresh.date_range_invalid"))
+                return
+            extra = ["--from-date", from_str, "--to-date", to_str, "--include-file", str(tmp)]
+        else:
+            max_days_val = (max_days_combo.get() or "").strip()
+            if max_days_val and max_days_val != t("refresh.max_days_off"):
+                extra = ["--max-days", max_days_val]
+            else:
+                extra = ["--days", (days_combo.get() or "90").strip()]
+            extra += ["--include-file", str(tmp)]
+        if no_render_var.get():
+            extra.append("--no-render")
+        _append_common_extra(extra)
+        run_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("refresh.running"), foreground="gray")
+        progress_bar["maximum"] = 1
+        progress_bar["value"] = 0
+        progress_label.config(text="")
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, t("refresh.running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        out_lines = []
+        process_holder.clear()
+        proc, q = run_workflow_streaming("refresh_articles", extra_args=extra)
+        process_holder.append(("refresh_articles", proc))
+        root_w = parent.winfo_toplevel()
+        root_w.after(50, lambda: poll(q, run_btn, cancel_btn, out_lines))
+
     def set_done(out, code, rbtn, cbtn):
+        progress_label.config(text="")
         log_area.config(state=tk.NORMAL)
         if out:
             log_area.delete("1.0", tk.END)
@@ -851,6 +1270,13 @@ def build_refresh_tab(parent, last_output_holder: list):
         status_label.config(text=t("refresh.status_ok") if code == 0 else t("refresh.status_error"), foreground="green" if code == 0 else "red")
         last_output_holder.clear()
         last_output_holder.append((out or "", "refresh_articles"))
+        if code == 0 and dry_run_var.get() and out:
+            items = _parse_dry_run_articles(out)
+            if items:
+                root_w = parent.winfo_toplevel()
+                root_w.after(100, lambda: _show_article_selector(
+                    root_w, t("sel.title_refresh"), items,
+                    t("sel.confirm_refresh"), _run_selective_refresh))
 
     def poll(q, run_btn, cancel_btn, out_lines):
         try:
@@ -861,26 +1287,93 @@ def build_refresh_tab(parent, last_output_holder: list):
                     root.after(0, lambda: set_done("\n".join(out_lines), item[1], run_btn, cancel_btn))
                     return
                 if item[0] is not None:
-                    out_lines.append(item[0])
-                    root = parent.winfo_toplevel()
-                    root.after(0, lambda l=item[0]: append_log(l))
+                    line = item[0]
+                    if not handle_refresh_progress_line(line):
+                        out_lines.append(line)
+                        root = parent.winfo_toplevel()
+                        root.after(0, lambda l=line: append_log(l))
         except queue.Empty:
             root = parent.winfo_toplevel()
             root.after(50, lambda: poll(q, run_btn, cancel_btn, out_lines))
 
+    def _append_common_extra(extra: list[str], include_re_skeleton: bool = True):
+        if block_on_fail_var.get():
+            extra.append("--block_on_fail")
+        if remap_var.get():
+            extra.append("--remap")
+        if include_re_skeleton and re_skeleton_var.get():
+            extra.append("--re-skeleton")
+        retries_raw = (retries_combo.get() or "").strip()
+        retries_val = retries_raw[0] if retries_raw and retries_raw[0].isdigit() else "2"
+        if retries_val != "2":
+            extra += ["--quality_retries", retries_val]
+
+    def _run_retry_failed():
+        failed_file = get_project_root() / "logs" / "last_refresh_failed.txt"
+        if not failed_file.exists():
+            messagebox.showinfo(t("msg.info"), t("refresh.retry_failed_no_list"))
+            return
+        try:
+            content = failed_file.read_text(encoding="utf-8").strip()
+        except OSError:
+            messagebox.showwarning(t("msg.warning"), t("refresh.retry_failed_no_list"))
+            return
+        if not content:
+            messagebox.showinfo(t("msg.info"), t("refresh.retry_failed_no_list"))
+            return
+        extra = ["--include-file", str(failed_file)]
+        if no_render_var.get():
+            extra.append("--no-render")
+        _append_common_extra(extra, include_re_skeleton=False)
+        run_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("refresh.running"), foreground="gray")
+        progress_bar["maximum"] = 1
+        progress_bar["value"] = 0
+        progress_label.config(text="")
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, t("refresh.running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        out_lines = []
+        process_holder.clear()
+        proc, q = run_workflow_streaming("refresh_articles", extra_args=extra)
+        process_holder.append(("refresh_articles", proc))
+        root = parent.winfo_toplevel()
+        root.after(50, lambda: poll(q, run_btn, cancel_btn, out_lines))
+
     def run():
-        max_days_val = (max_days_combo.get() or "").strip()
-        if max_days_val and max_days_val != t("refresh.max_days_off"):
-            extra = ["--max-days", max_days_val, "--limit", (limit_combo.get() or "0").strip()]
+        limit_val = _get_limit_value()
+        from_str = (from_date_entry.get() or "").strip()
+        to_str = (to_date_entry.get() or "").strip()
+        if from_str and to_str:
+            try:
+                from_d = datetime.strptime(from_str, "%Y-%m-%d").date()
+                to_d = datetime.strptime(to_str, "%Y-%m-%d").date()
+            except ValueError:
+                messagebox.showerror(t("msg.error"), t("refresh.date_invalid_format"))
+                return
+            if from_d > to_d:
+                messagebox.showerror(t("msg.error"), t("refresh.date_range_invalid"))
+                return
+            extra = ["--from-date", from_str, "--to-date", to_str, "--limit", limit_val]
         else:
-            extra = ["--days", (days_combo.get() or "90").strip(), "--limit", (limit_combo.get() or "0").strip()]
+            max_days_val = (max_days_combo.get() or "").strip()
+            if max_days_val and max_days_val != t("refresh.max_days_off"):
+                extra = ["--max-days", max_days_val, "--limit", limit_val]
+            else:
+                extra = ["--days", (days_combo.get() or "90").strip(), "--limit", limit_val]
         if dry_run_var.get():
             extra.append("--dry-run")
         if no_render_var.get():
             extra.append("--no-render")
+        _append_common_extra(extra)
         run_btn.config(state=tk.DISABLED)
         cancel_btn.config(state=tk.NORMAL)
         status_label.config(text=t("refresh.running"), foreground="gray")
+        progress_bar["maximum"] = 1
+        progress_bar["value"] = 0
+        progress_label.config(text="")
         log_area.config(state=tk.NORMAL)
         log_area.delete("1.0", tk.END)
         log_area.insert(tk.END, t("refresh.running") + "\n")
@@ -905,6 +1398,236 @@ def build_refresh_tab(parent, last_output_holder: list):
     run_btn.pack(side=tk.LEFT, padx=5)
     cancel_btn = ttk.Button(refresh_btn_row, text=t("refresh.run_cancel"), command=cancel_run, state=tk.DISABLED)
     cancel_btn.pack(side=tk.LEFT, padx=5)
+    retry_failed_btn = ttk.Button(refresh_btn_row, text=t("refresh.retry_failed"), command=_run_retry_failed)
+    retry_failed_btn.pack(side=tk.LEFT, padx=5)
+    _create_tooltip(retry_failed_btn, t("refresh.retry_failed_desc"))
+    return f
+
+
+def build_git_tab(parent):
+    """Zakładka Git: add content/articles/, commit z komunikatem, push (bez force). Status, walidacje repo i PATH."""
+    f = ttk.Frame(parent, padding=10)
+    f.pack(fill=tk.BOTH, expand=True)
+
+    ok, err = validate_project_root()
+    if not ok:
+        ttk.Label(f, text=f"Błąd: {err}", foreground="red").pack(anchor=tk.W)
+        return f
+
+    root_dir = get_project_root()
+    articles_dir = root_dir / "content" / "articles"
+    if not articles_dir.is_dir():
+        ttk.Label(f, text="Błąd: brak content/articles/", foreground="red").pack(anchor=tk.W)
+        return f
+
+    italic_font = ("TkDefaultFont", 9, "italic")
+    GIT_PUSH_SKIP_FILE = PREFS_DIR / "git_push_confirm_skip.txt"
+
+    def _run_git(args: list[str]) -> tuple[str, int]:
+        """Uruchamia git w katalogu projektu. Zwraca (stdout+stderr, kod)."""
+        env = {**os.environ}
+        for k in ("LANG", "LC_ALL", "PYTHONIOENCODING"):
+            env.setdefault(k, "utf-8")
+        try:
+            r = subprocess.run(
+                ["git"] + args,
+                cwd=root_dir,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                env=env,
+            )
+            out = (r.stdout or "") + (r.stderr or "")
+            return (out.strip() if out else "", r.returncode)
+        except FileNotFoundError:
+            return (t("git.err_no_git"), 128)
+        except subprocess.TimeoutExpired:
+            return ("Git: timeout.", 124)
+
+    def _is_repo() -> tuple[bool, str]:
+        if not (root_dir / ".git").exists():
+            return False, t("git.err_not_repo")
+        return True, ""
+
+    def _git_available() -> bool:
+        out, code = _run_git(["--version"])
+        return code == 0
+
+    def _get_branch() -> str:
+        out, code = _run_git(["branch", "--show-current"])
+        return out.strip() if code == 0 else ""
+
+    def _get_remote() -> str:
+        out, code = _run_git(["remote", "get-url", "origin"])
+        return out.strip() if code == 0 else ""
+
+    def _append_log(text: str):
+        log_area.config(state=tk.NORMAL)
+        log_area.insert(tk.END, text + "\n")
+        log_area.see(tk.END)
+        log_area.config(state=tk.DISABLED)
+
+    def _update_branch_remote_label():
+        branch = _get_branch() or "—"
+        remote = _get_remote() or "—"
+        branch_remote_var.set(t("git.branch_remote", branch, remote))
+
+    paned_h = ttk.PanedWindow(f, orient=tk.HORIZONTAL)
+    paned_h.pack(fill=tk.BOTH, expand=True)
+
+    left_outer = ttk.Frame(paned_h)
+    paned_h.add(left_outer, weight=1)
+
+    inner = ttk.Frame(left_outer, padding=5)
+    inner.pack(fill=tk.X)
+
+    lf_status = ttk.LabelFrame(inner, text=t("git.section_status"))
+    lf_status.pack(fill=tk.X, pady=(0, 8))
+    status_inner = ttk.Frame(lf_status, padding=5)
+    status_inner.pack(fill=tk.X)
+    ttk.Button(status_inner, text=t("git.btn_status"), command=lambda: _do_status()).pack(side=tk.LEFT, padx=(0, 5))
+    tk.Label(status_inner, text=t("git.btn_status_desc"), font=italic_font, fg="gray", wraplength=320).pack(anchor=tk.W)
+
+    lf_add = ttk.LabelFrame(inner, text=t("git.section_add"))
+    lf_add.pack(fill=tk.X, pady=(0, 8))
+    add_inner = ttk.Frame(lf_add, padding=5)
+    add_inner.pack(fill=tk.X)
+    ttk.Button(add_inner, text=t("git.btn_add"), command=lambda: _do_add()).pack(side=tk.LEFT, padx=(0, 5))
+    tk.Label(add_inner, text=t("git.btn_add_desc"), font=italic_font, fg="gray", wraplength=320).pack(anchor=tk.W)
+
+    lf_commit = ttk.LabelFrame(inner, text=t("git.section_commit"))
+    lf_commit.pack(fill=tk.X, pady=(0, 8))
+    commit_inner = ttk.Frame(lf_commit, padding=5)
+    commit_inner.pack(fill=tk.X)
+    ttk.Label(commit_inner, text=t("git.commit_message")).pack(side=tk.LEFT, padx=(0, 5))
+    commit_entry = ttk.Entry(commit_inner, width=36)
+    commit_entry.pack(side=tk.LEFT, padx=2, fill=tk.X, expand=True)
+    ttk.Button(commit_inner, text=t("git.btn_commit"), command=lambda: _do_commit()).pack(side=tk.LEFT, padx=5)
+    commit_inner.pack(fill=tk.X)
+    tk.Label(lf_commit, text=t("git.btn_commit_desc"), font=italic_font, fg="gray", wraplength=320).pack(anchor=tk.W, padx=5, pady=(0, 5))
+
+    branch_remote_var = tk.StringVar(value="")
+    _update_branch_remote_label()
+    lf_push = ttk.LabelFrame(inner, text=t("git.section_push"))
+    lf_push.pack(fill=tk.X, pady=(0, 8))
+    push_inner = ttk.Frame(lf_push, padding=5)
+    push_inner.pack(fill=tk.X)
+    tk.Label(push_inner, textvariable=branch_remote_var, font=italic_font, fg="gray").pack(anchor=tk.W)
+    ttk.Button(push_inner, text=t("git.btn_push"), command=lambda: _do_push()).pack(anchor=tk.W, pady=(4, 0))
+    tk.Label(lf_push, text=t("git.btn_push_desc"), font=italic_font, fg="gray", wraplength=320).pack(anchor=tk.W, padx=5, pady=(0, 5))
+
+    right_frame = ttk.Frame(paned_h)
+    paned_h.add(right_frame, weight=1)
+    ttk.Label(right_frame, text=t("git.log_title")).pack(anchor=tk.W, pady=(0, 2))
+    log_area = scrolledtext.ScrolledText(right_frame, height=18, wrap=tk.WORD, state=tk.DISABLED)
+    log_area.pack(fill=tk.BOTH, expand=True, pady=5)
+
+    def _do_status():
+        repo_ok, repo_err = _is_repo()
+        if not repo_ok:
+            _append_log(repo_err)
+            return
+        if not _git_available():
+            _append_log(t("git.err_no_git"))
+            return
+        out, code = _run_git(["status", "--short"])
+        _append_log("git status --short\n" + ("---\n" + out if out else "(pusty)"))
+        if code == 0:
+            _update_branch_remote_label()
+
+    def _do_add():
+        repo_ok, repo_err = _is_repo()
+        if not repo_ok:
+            messagebox.showerror(t("msg.error"), repo_err)
+            return
+        if not _git_available():
+            messagebox.showerror(t("msg.error"), t("git.err_no_git"))
+            return
+        rel = "content/articles/"
+        out, code = _run_git(["add", rel])
+        _append_log(f"git add {rel}\n---\n" + (out if out else "(OK)"))
+        if code == 0:
+            _update_branch_remote_label()
+
+    def _do_commit():
+        repo_ok, repo_err = _is_repo()
+        if not repo_ok:
+            messagebox.showerror(t("msg.error"), repo_err)
+            return
+        if not _git_available():
+            messagebox.showerror(t("msg.error"), t("git.err_no_git"))
+            return
+        msg = (commit_entry.get() or "").strip()
+        if not msg:
+            messagebox.showwarning(t("msg.warning"), t("git.err_commit_empty"))
+            return
+        out, code = _run_git(["commit", "-m", msg])
+        _append_log("git commit -m \"...\"\n---\n" + (out if out else "(OK)"))
+        if code == 0:
+            commit_entry.delete(0, tk.END)
+            _update_branch_remote_label()
+
+    def _do_push():
+        repo_ok, repo_err = _is_repo()
+        if not repo_ok:
+            messagebox.showerror(t("msg.error"), repo_err)
+            return
+        if not _git_available():
+            messagebox.showerror(t("msg.error"), t("git.err_no_git"))
+            return
+        remote = _get_remote()
+        if not remote:
+            messagebox.showerror(t("msg.error"), t("git.err_no_remote"))
+            return
+        skip_confirm = GIT_PUSH_SKIP_FILE.exists() and (GIT_PUSH_SKIP_FILE.read_text(encoding="utf-8").strip() == "1")
+        if not skip_confirm:
+            dialog = tk.Toplevel(parent.winfo_toplevel())
+            dialog.title(t("git.confirm_push_title"))
+            dialog.transient(parent.winfo_toplevel())
+            dialog.grab_set()
+            dialog.geometry("380x120")
+            var_skip = tk.BooleanVar(value=False)
+            ttk.Label(dialog, text=t("git.confirm_push")).pack(pady=(15, 10), padx=15, anchor=tk.W)
+            ttk.Checkbutton(dialog, text=t("git.confirm_push_skip"), variable=var_skip).pack(anchor=tk.W, padx=15)
+            btn_row = ttk.Frame(dialog)
+            btn_row.pack(pady=10, padx=15)
+
+            def on_yes():
+                if var_skip.get():
+                    PREFS_DIR.mkdir(parents=True, exist_ok=True)
+                    GIT_PUSH_SKIP_FILE.write_text("1", encoding="utf-8")
+                dialog.destroy()
+                _run_push()
+
+            def on_no():
+                dialog.destroy()
+
+            ttk.Button(btn_row, text=t("btn.run"), command=on_yes).pack(side=tk.LEFT, padx=5)
+            ttk.Button(btn_row, text=t("btn.cancel"), command=on_no).pack(side=tk.LEFT, padx=5)
+            dialog.focus_set()
+            return
+        _run_push()
+
+    def _run_push():
+        out, code = _run_git(["push"])
+        if code != 0 and "has no upstream" in out:
+            branch = _get_branch()
+            if branch:
+                out2, code2 = _run_git(["push", "-u", "origin", branch])
+                out = out + "\n---\n(git push -u origin " + branch + ")\n" + out2
+                code = code2
+        _append_log("git push\n---\n" + (out if out else "(OK)"))
+        if code == 0:
+            _update_branch_remote_label()
+
+    def _set_initial_sash():
+        paned_h.update_idletasks()
+        w = paned_h.winfo_width()
+        if w > 100:
+            paned_h.sashpos(0, min(320, int(0.4 * w)))
+    f.after(300, _set_initial_sash)
+    f.bind("<Map>", lambda e: f.after(100, _set_initial_sash))
+
     return f
 
 
@@ -963,6 +1686,9 @@ def build_config_tab(parent):
         hub = (cfg.get("hub_slug") or "").strip()
         sandbox = cfg.get("sandbox_categories") or []
         suggested = cfg.get("suggested_problems") or []
+        category_mode = (cfg.get("category_mode") or "production_only").strip().lower()
+        if category_mode not in {"production_only", "preserve_sandbox"}:
+            category_mode = "production_only"
         batch = str(cfg.get("use_case_batch_size") or 9)
         pyramid = cfg.get("use_case_audience_pyramid") or [3, 3]
         pyramid_str = ", ".join(str(x) for x in pyramid)
@@ -984,6 +1710,15 @@ def build_config_tab(parent):
         hub_vals = list(dict.fromkeys([hub, prod] + [s for s in sandbox if isinstance(s, str) and s.strip()]))
         e_hub["values"] = hub_vals
         e_hub.set(hub or "")
+        mode_vals = {
+            "production_only": t("config.category_mode_production_only"),
+            "preserve_sandbox": t("config.category_mode_preserve_sandbox"),
+        }
+        e_category_mode["values"] = [
+            t("config.category_mode_production_only"),
+            t("config.category_mode_preserve_sandbox"),
+        ]
+        e_category_mode.set(mode_vals.get(category_mode, t("config.category_mode_production_only")))
         lb_sandbox.delete(0, tk.END)
         for s in sandbox:
             lb_sandbox.insert(tk.END, s if isinstance(s, str) else str(s))
@@ -993,7 +1728,16 @@ def build_config_tab(parent):
             lb_suggested.insert(tk.END, s if isinstance(s, str) else str(s))
         e_suggested_new.delete(0, tk.END)
         e_batch.set(batch)
-        e_pyramid.set(pyramid_str)
+        batch_int = int(batch)
+        inter_count = pyramid[0] if len(pyramid) >= 1 else 3
+        pro_count = pyramid[1] if len(pyramid) >= 2 else 0
+        beg_count = batch_int - inter_count - pro_count
+        if beg_count < 0:
+            beg_count = 0
+        sp_beg.set(beg_count)
+        sp_int.set(inter_count)
+        sp_pro.set(pro_count)
+        _pyr_update_sum()
 
     def save_ui():
         try:
@@ -1006,13 +1750,21 @@ def build_config_tab(parent):
             hub = e_hub.get().strip()
             sandbox = [lb_sandbox.get(i) for i in range(lb_sandbox.size()) if lb_sandbox.get(i).strip()]
             suggested = [lb_suggested.get(i) for i in range(lb_suggested.size()) if lb_suggested.get(i).strip()]
+            mode_display = (e_category_mode.get() or "").strip()
+            category_mode = "preserve_sandbox" if mode_display == t("config.category_mode_preserve_sandbox") else "production_only"
             batch = int(e_batch.get().strip() or 9)
-            pyramid_raw = e_pyramid.get().strip() or "3, 3"
-            pyramid = [int(x.strip()) for x in pyramid_raw.split(",") if x.strip()]
-            if not pyramid:
-                pyramid = [3, 3]
+            pyramid = [sp_int.get(), sp_pro.get()]
             config_path = get_project_root() / "content" / "config.yaml"
-            write_config(config_path, prod, hub, sandbox, use_case_batch_size=batch, use_case_audience_pyramid=pyramid, suggested_problems=suggested)
+            write_config(
+                config_path,
+                prod,
+                hub,
+                sandbox,
+                use_case_batch_size=batch,
+                use_case_audience_pyramid=pyramid,
+                suggested_problems=suggested,
+                category_mode=category_mode,
+            )
             messagebox.showinfo(t("msg.saved"), f"{t('config.saved')}\n\n{config_path}")
         except Exception as e:
             messagebox.showerror(t("msg.error"), str(e))
@@ -1065,6 +1817,30 @@ def build_config_tab(parent):
     e_hub.bind("<KeyRelease>", lambda e: _validate_hub())
     e_hub.bind("<<ComboboxSelected>>", lambda e: _validate_hub())
 
+    row2b = ttk.Frame(lf_hub)
+    row2b.pack(fill=tk.X, pady=(0, 6))
+    ttk.Label(row2b, text=t("config.category_mode"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    hint_mode = ttk.Frame(row2b)
+    hint_mode.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+    lbl_mode_hint = tk.Label(
+        hint_mode,
+        text=t("config.category_mode_desc"),
+        font=italic_font,
+        fg="gray",
+        anchor=tk.W,
+        justify=tk.LEFT,
+        wraplength=450,
+    )
+    lbl_mode_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+    config_hint_labels.append(lbl_mode_hint)
+    e_category_mode = ttk.Combobox(
+        row2b,
+        values=(t("config.category_mode_production_only"), t("config.category_mode_preserve_sandbox")),
+        width=combo_width,
+        state="readonly",
+    )
+    e_category_mode.pack(side=tk.LEFT)
+
     # Use case'y
     lf_uc = ttk.LabelFrame(inner, text=t("config.section_use_cases"), padding=5)
     lf_uc.pack(fill=tk.X, pady=(0, 10))
@@ -1076,18 +1852,78 @@ def build_config_tab(parent):
     lbl_batch_hint = tk.Label(hint_batch, text=t("config.batch_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
     lbl_batch_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_batch_hint)
-    e_batch = ttk.Combobox(row_batch, values=("3", "5", "9", "12"), width=8)
+    e_batch = ttk.Spinbox(row_batch, from_=1, to=12, width=5, increment=1)
     e_batch.pack(side=tk.LEFT)
+
     row_pyr = ttk.Frame(lf_uc)
     row_pyr.pack(fill=tk.X, pady=(0, 6))
-    ttk.Label(row_pyr, text=t("config.pyramid_friendly") + " (" + t("config.pyramid") + ")", width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    ttk.Label(row_pyr, text=t("config.pyramid_friendly"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
     hint_pyr = ttk.Frame(row_pyr)
     hint_pyr.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
     lbl_pyr_hint = tk.Label(hint_pyr, text=t("config.pyramid_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
     lbl_pyr_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_pyr_hint)
-    e_pyramid = ttk.Combobox(row_pyr, values=("3, 3", "5, 5", "3, 5", "4, 4"), width=12)
-    e_pyramid.pack(side=tk.LEFT)
+
+    pyr_frame = ttk.Frame(lf_uc)
+    pyr_frame.pack(fill=tk.X, pady=(0, 6), padx=(0, 0))
+    sp_beg = tk.IntVar(value=3)
+    sp_int = tk.IntVar(value=3)
+    sp_pro = tk.IntVar(value=3)
+    lbl_sum = tk.StringVar(value="")
+
+    def _pyr_update_sum(*_args):
+        try:
+            total = int(e_batch.get())
+        except (ValueError, TypeError):
+            total = 9
+        b, i, p = sp_beg.get(), sp_int.get(), sp_pro.get()
+        s = b + i + p
+        lbl_sum.set(f"{t('config.pyr_sum')}: {s} / {total}")
+        color = "green" if s == total else ("red" if s > total else "orange")
+        sum_label.config(fg=color)
+
+    def _pyr_clamp(var: tk.IntVar, *_args):
+        try:
+            total = int(e_batch.get())
+        except (ValueError, TypeError):
+            total = 9
+        val = var.get()
+        others = sum(v.get() for v in (sp_beg, sp_int, sp_pro) if v is not var)
+        max_allowed = total - others
+        if val > max_allowed:
+            var.set(max(0, max_allowed))
+        _pyr_update_sum()
+
+    pad_lbl = 32
+    row_beg = ttk.Frame(pyr_frame)
+    row_beg.pack(fill=tk.X, pady=1)
+    ttk.Label(row_beg, text="", width=pad_lbl).pack(side=tk.LEFT)
+    ttk.Label(row_beg, text=t("config.pyr_beginner"), width=14, anchor=tk.W).pack(side=tk.LEFT)
+    ttk.Spinbox(row_beg, from_=0, to=12, width=5, textvariable=sp_beg, command=lambda: _pyr_clamp(sp_beg)).pack(side=tk.LEFT)
+
+    row_inter = ttk.Frame(pyr_frame)
+    row_inter.pack(fill=tk.X, pady=1)
+    ttk.Label(row_inter, text="", width=pad_lbl).pack(side=tk.LEFT)
+    ttk.Label(row_inter, text=t("config.pyr_intermediate"), width=14, anchor=tk.W).pack(side=tk.LEFT)
+    ttk.Spinbox(row_inter, from_=0, to=12, width=5, textvariable=sp_int, command=lambda: _pyr_clamp(sp_int)).pack(side=tk.LEFT)
+
+    row_pro = ttk.Frame(pyr_frame)
+    row_pro.pack(fill=tk.X, pady=1)
+    ttk.Label(row_pro, text="", width=pad_lbl).pack(side=tk.LEFT)
+    ttk.Label(row_pro, text=t("config.pyr_professional"), width=14, anchor=tk.W).pack(side=tk.LEFT)
+    ttk.Spinbox(row_pro, from_=0, to=12, width=5, textvariable=sp_pro, command=lambda: _pyr_clamp(sp_pro)).pack(side=tk.LEFT)
+
+    row_sum = ttk.Frame(pyr_frame)
+    row_sum.pack(fill=tk.X, pady=(2, 0))
+    ttk.Label(row_sum, text="", width=pad_lbl).pack(side=tk.LEFT)
+    ttk.Label(row_sum, text="", width=14).pack(side=tk.LEFT)
+    sum_label = tk.Label(row_sum, textvariable=lbl_sum, font=italic_font, anchor=tk.W)
+    sum_label.pack(side=tk.LEFT)
+
+    sp_beg.trace_add("write", lambda *a: _pyr_clamp(sp_beg))
+    sp_int.trace_add("write", lambda *a: _pyr_clamp(sp_int))
+    sp_pro.trace_add("write", lambda *a: _pyr_clamp(sp_pro))
+    e_batch.config(command=lambda: _pyr_update_sum())
 
     # Sandbox / problemy
     lf_sand = ttk.LabelFrame(inner, text=t("config.section_sandbox"), padding=5)
@@ -1558,7 +2394,7 @@ def build_affiliate_tab(parent):
 
 
 def build_mapping_tab(parent):
-    """Zakładka Mapowanie problem → narzędzia (odczyt use_case_tools_mapping.yaml)."""
+    """Zakładka Narzędzia w artykułach – odczyt pola tools z frontmatter artykułów."""
     f = ttk.Frame(parent, padding=10)
     f.pack(fill=tk.BOTH, expand=True)
 
@@ -1567,21 +2403,21 @@ def build_mapping_tab(parent):
         ttk.Label(f, text=f"Błąd: {err}", foreground="red").pack(anchor=tk.W)
         return f
 
-    ttk.Label(f, text="Mapowanie problem → narzędzia (tylko odczyt)").pack(anchor=tk.W)
-    tree = ttk.Treeview(f, columns=("problem", "tools"), show="headings", height=20)
-    tree.heading("problem", text="Problem")
-    tree.heading("tools", text="Narzędzia")
-    tree.column("problem", width=280)
-    tree.column("tools", width=400)
+    ttk.Label(f, text=t("mapping.title")).pack(anchor=tk.W)
+    tree = ttk.Treeview(f, columns=("slug", "tools"), show="headings", height=20)
+    tree.heading("slug", text=t("mapping.col_slug"))
+    tree.heading("tools", text=t("mapping.col_tools"))
+    tree.column("slug", width=380)
+    tree.column("tools", width=320)
     tree.pack(fill=tk.BOTH, expand=True, pady=5)
 
     def refresh():
         for i in tree.get_children():
             tree.delete(i)
-        for problem, tools_str in get_mapping_data():
-            tree.insert("", tk.END, values=(problem, tools_str))
+        for slug, tools_str in get_article_tools_data():
+            tree.insert("", tk.END, values=(slug, tools_str))
 
-    ttk.Button(f, text="Odśwież", command=refresh).pack(anchor=tk.W, pady=5)
+    ttk.Button(f, text=t("btn.refresh"), command=refresh).pack(anchor=tk.W, pady=5)
     refresh()
     return f
 
@@ -1684,6 +2520,8 @@ def main():
         nb.add(tab_work, text=t("tab.workflow"))
         tab_refresh = build_refresh_tab(nb, last_output_holder)
         nb.add(tab_refresh, text=t("tab.refresh"))
+        tab_git = build_git_tab(nb)
+        nb.add(tab_git, text=t("tab.git"))
         tab_mapping = build_mapping_tab(nb)
         nb.add(tab_mapping, text=t("tab.mapping"))
         tab_affiliate = build_affiliate_tab(nb)

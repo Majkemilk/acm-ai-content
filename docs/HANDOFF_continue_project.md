@@ -45,6 +45,8 @@ Obecny stan i znaczenie pól (szczegóły w `docs/config_yaml_reference.md`):
 
 Zasada: **production_category** = który plik huba; **hub_slug** = pod jakim adresem; **sandbox_categories** = z jakich kategorii model może wybierać przy use case’ach.
 
+**Kategoria w Konfiguracji vs w zakładce Generuj artykuły:** W Konfiguracji ustawiasz **listę kategorii na stałe** (kategoria główna huba + kategorie sandbox) oraz tryb (production_only / preserve_sandbox). Ta lista jest używana w całym workflow i **źródłem opcji** w zakładce Generuj artykuły. Pole **„Kategoria (to uruchomienie)”** w tej zakładce to **filtr na jedno uruchomienie**: „dowolna” = model może przypisać use case’om dowolną z listy z config; wybór konkretnej kategorii = w tym runie wszystkie use case’y dostaną tylko ten jeden category_slug. Domyślnie pozostaje „— dowolna”.
+
 ---
 
 ## 4. Główne skrypty i workflow
@@ -59,10 +61,12 @@ Kolejność typowa:
 python scripts/generate_use_cases.py [--limit N] [--category SLUG] [--content-type TYPE]
 ```
 
-- Czyta `content/config.yaml` (kategorie), `content/use_cases.yaml` (istniejące), `content/articles/*.md` (słowa kluczowe, max 50).
+- Czyta `content/config.yaml` (kategorie, **suggested_problems**, use_case_batch_size, use_case_audience_pyramid), `content/use_cases.yaml` (istniejące), `content/articles/*.md` (słowa kluczowe, max 50).
 - Wysyła do OpenAI Responses API prompt (instructions + user message); odpowiedź = JSON array z polami: problem, suggested_content_type, category_slug.
-- Dopisuje nowe wpisy do `content/use_cases.yaml` ze statusem `todo`, cap listy (domyślnie 12).
-- Opcjonalnie: `--category` (tylko ta kategoria), `--content-type` (tylko ten typ: how-to, guide, best, comparison).
+- **Opcja A (replace mode):** Gdy w config jest niepuste **suggested_problems**, skrypt traktuje pierwszy wpis jako „hard lock” – wszystkie wygenerowane use case’y muszą być semantycznie związane z tym problemem. W tym trybie zapis do `use_cases.yaml` **zastępuje** całą listę nową partią (do `limit`), zamiast dopisywać i capować.
+- **Opcja C (fail-fast):** Jeśli po deduplikacji nie ma żadnego nowego use case’a do zapisania, skrypt kończy z **kodem 2** (pipeline może przerwać dalsze kroki). Również exit 2, gdy pod hard lock zostało mniej niż `limit` nie-duplikatów.
+- Bez hard lock: dopisuje nowe wpisy ze statusem `todo`, cap listy na `limit`.
+- Opcjonalnie: `--category`, `--content-type` (how-to, guide, best, comparison).
 - Szczegóły promptu: `docs/generate_use_cases_prompt_reference.md`.
 
 ### 4.2 Kolejka z use case’ów
@@ -161,14 +165,24 @@ python scripts/generate_sitemap.py
 
 ---
 
-## 8. Szybki checklist przy kontynuacji
+## 8. Ostatnie wdrożenia (dla nowego wątku Agenta)
+
+- **generate_use_cases.py – Opcja A + C (wdrożone):**
+  - **Opcja A (replace mode):** Gdy w `config.yaml` jest `suggested_problems` z co najmniej jednym wpisem, skrypt używa pierwszego jako „hard lock” – generowane use case’y muszą być semantycznie zgodne z tym problemem (walidacja `_is_locked_to_problem`). W tym trybie **zapis do use_cases.yaml zastępuje całą listę** nową partią (`new_use_cases[:limit]`), zamiast dopisywać do istniejących i capować. Dzięki temu przy limit=3 i hard lock zawsze zapisane są 3 nowe use case’y, a nie 0 (gdy stara logika „existing + new” odcinała nowe przy pełnym pliku).
+  - **Opcja C (fail-fast):** Gdy po deduplikacji nie ma żadnego nowego use case’a, skrypt kończy z **exit 2**. Również exit 2, gdy pod hard lock liczba nie-duplikatów &lt; limit. Aplikacja/orchestracja może sprawdzać kod powrotu i nie uruchamiać dalszych kroków (kolejka, szkielety, fill).
+- **Pozostały kontekst:** fill_articles (Prompt #1/#2, QA, tools w frontmatter), refresh_articles (--html, prompt2-only), category_mode (production_only / preserve_sandbox), audience badges w render_site – szczegóły w poprzednich sekcjach i w docs.
+
+---
+
+## 9. Szybki checklist przy kontynuacji
 
 - [ ] Przeczytać **config.yaml** i **docs/config_yaml_reference.md** – żeby nie pomylić production_category z hub_slug.
 - [ ] Pamiętać, że **get_production_articles() nie filtruje po kategorii** – wszystkie nie-blocked idą do jednego huba i sitemapy.
 - [ ] Przy zmianach w promptach use case’ów – **docs/generate_use_cases_prompt_reference.md** ma pełną specyfikację i miejsca do parametryzacji.
 - [ ] Przy pracy nad wieloma hubami – **docs/recommendation_multi_hub_structure.md** (kolejność wdrożenia, pliki do zmiany).
 - [ ] Środowisko: **OPENAI_API_KEY** (obligatoryjne przy generate_use_cases i fill_articles); opcjonalnie OPENAI_BASE_URL, OPENAI_MODEL.
+- [ ] **generate_use_cases:** przy hard lock (suggested_problems) działa tryb replace + fail-fast (exit 2 przy 0 nowych lub &lt; limit). Pipeline powinien sprawdzać kod powrotu.
 
 ---
 
-*Ostatnia aktualizacja handoffu: stan projektu i docs po wdrożeniu hub_slug, production_category = ai-marketing-automation, usunięciu „Start here” z huba, dodaniu --category/--content-type do generate_use_cases oraz dokumentacji config i promptu use case’ów.*
+*Ostatnia aktualizacja handoffu: wdrożenie Opcji A + C w generate_use_cases.py (replace mode przy hard lock, fail-fast przy 0 nowych / &lt; limit). Stan docs i config jak wyżej.*

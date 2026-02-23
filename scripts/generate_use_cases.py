@@ -40,6 +40,62 @@ USE_CASES_HEADER = """# List of business problems / use cases for content genera
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 """
 
+_TOKEN_RE = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+_STOPWORDS = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "over", "under", "your", "you",
+    "are", "was", "were", "how", "what", "when", "why", "who", "will", "can", "could", "should",
+    "using", "use", "based", "across", "through", "into", "without", "about", "their", "them",
+    "oraz", "or", "i", "w", "na", "do", "z", "dla", "bez", "przez", "jak", "czy", "to", "ten",
+}
+
+# Suffixes to strip for stem-like normalization (longest first). Min stem length 3.
+_STEM_SUFFIXES = (
+    "ibility", "ability", "ation", "tion", "ness", "ity", "able", "ible",
+    "abil", "ibil", "ing", "ement", "ment", "ly", "ed", "es", "s",
+)
+
+
+def _stem_token(word: str) -> str:
+    """Reduce word to a common stem by stripping typical suffixes iteratively (no external deps)."""
+    w = (word or "").lower()
+    if len(w) <= 3:
+        return w
+    while True:
+        prev = w
+        for suf in _STEM_SUFFIXES:
+            if len(suf) < len(w) and w.endswith(suf):
+                candidate = w[: -len(suf)]
+                if len(candidate) >= 3:
+                    w = candidate
+                    break
+        if w == prev:
+            break
+    return w
+
+
+def _norm_tokens(text: str) -> set[str]:
+    """Tokenize text and return set of stemmed tokens (stopwords and len<=2 excluded)."""
+    raw = {t.lower() for t in _TOKEN_RE.findall((text or "").lower())}
+    return {_stem_token(t) for t in raw if len(t) > 2 and t not in _STOPWORDS}
+
+
+def _is_locked_to_problem(problem: str, anchor_problem: str) -> bool:
+    """Semantic-ish lock check: overlap against anchor problem must be strong."""
+    p = (problem or "").strip().lower()
+    a = (anchor_problem or "").strip().lower()
+    if not p or not a:
+        return False
+    if a in p:
+        return True
+    p_tokens = _norm_tokens(p)
+    a_tokens = _norm_tokens(a)
+    if not p_tokens or not a_tokens:
+        return False
+    overlap = len(p_tokens & a_tokens)
+    ratio_to_anchor = overlap / max(1, len(a_tokens))
+    ratio_to_problem = overlap / max(1, len(p_tokens))
+    return ratio_to_anchor >= 0.35 or (ratio_to_anchor >= 0.25 and ratio_to_problem >= 0.25)
+
 
 def _strip_comments(text: str) -> str:
     """Remove lines that are entirely comments."""
@@ -242,6 +298,8 @@ def build_prompt(
     count: int,
     content_type_filter: str | None = None,
     suggested_problems: list[str] | None = None,
+    hard_lock_problem: str | None = None,
+    quality_feedback: list[str] | None = None,
 ) -> tuple[str, str]:
     """Build (instructions, user_message) for the model. count = how many use cases to ask for.
     If content_type_filter is set, prompt restricts suggested_content_type to that value.
@@ -254,6 +312,11 @@ Output ONLY a valid JSON array of objects. Each object must have exactly these k
 - "category_slug": string, one of the allowed categories provided in the user message
 
 Do not output any markdown, explanation, or text outside the JSON array. The response must be parseable as JSON."""
+    if hard_lock_problem:
+        instructions += (
+            "\n\nHARD LOCK (MUST FOLLOW): Every generated use case must stay on the same base problem domain provided by the user. "
+            "Do not drift to adjacent/general topics."
+        )
 
     # Existing use cases (problems) to avoid duplicating
     existing_problems = [
@@ -281,6 +344,19 @@ Existing article keywords/topics we already cover (suggest complementary or new 
         user += f"""Optionally consider these problems (if not already covered); prefer turning them into use cases: {json.dumps(suggested_list)}
 
 """
+    if hard_lock_problem:
+        user += f"""BASE PROBLEM LOCK (mandatory): {json.dumps(hard_lock_problem)}
+All generated use cases must be direct variants of this base problem.
+For exactly 3 use cases, enforce distinct angles:
+- Use case #1: implementation / setup angle
+- Use case #2: monitoring / troubleshooting / optimization angle
+- Use case #3: scaling / governance / reliability angle
+"""
+    if quality_feedback:
+        user += "QUALITY FEEDBACK (previous attempt failed; fix all):\n"
+        for reason in quality_feedback:
+            user += f"- {reason}\n"
+        user += "\n"
     user += f"""Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
 
 Structure by audience (follow this order strictly):
@@ -435,37 +511,96 @@ def main() -> None:
     # Build prompt and call API (ask for exactly limit use cases)
     suggested_problems = list(config.get("suggested_problems") or [])
     content_type_filter = (args.content_type[0].strip().lower() if args.content_type else None)
-    instructions, user_message = build_prompt(
-        existing,
-        article_keywords,
-        categories,
-        limit,
-        content_type_filter=content_type_filter,
-        suggested_problems=suggested_problems,
-    )
-    try:
-        response_text = call_responses_api(
-            instructions,
-            user_message,
-            model=model,
-            base_url=base_url,
-            api_key=api_key,
+    raw_first = (suggested_problems[0].strip() if suggested_problems and suggested_problems[0].strip() else None)
+    # Use only first line or first 200 chars as anchor so a pasted paragraph doesn't flood logs or break lock
+    if raw_first and len(raw_first) > 200:
+        first_line = raw_first.split("\n")[0].strip()
+        hard_lock_problem = first_line[:200].strip() if len(first_line) > 200 else first_line
+        print("Note: suggested_problems[0] is long; using first line (max 200 chars) as hard lock. Prefer a short phrase in config.")
+    else:
+        hard_lock_problem = raw_first
+    max_attempts = 3 if hard_lock_problem else 1
+    candidates: list[dict] = []
+    last_issues: list[str] = []
+
+    for attempt in range(1, max_attempts + 1):
+        instructions, user_message = build_prompt(
+            existing,
+            article_keywords,
+            categories,
+            limit,
+            content_type_filter=content_type_filter,
+            suggested_problems=suggested_problems,
+            hard_lock_problem=hard_lock_problem,
+            quality_feedback=last_issues if attempt > 1 else None,
         )
-    except RuntimeError as e:
-        print(f"API error: {e}")
-        sys.exit(1)
+        try:
+            response_text = call_responses_api(
+                instructions,
+                user_message,
+                model=model,
+                base_url=base_url,
+                api_key=api_key,
+            )
+        except RuntimeError as e:
+            print(f"API error: {e}")
+            sys.exit(1)
 
-    # Parse JSON and validate (use restricted types/categories when --content-type/--category were set)
-    candidates = parse_ai_use_cases(response_text, allowed_types, categories)
-    if not candidates:
-        print("No valid use cases in API response (invalid or empty JSON).")
-        sys.exit(0)
+        # Parse JSON and validate (use restricted types/categories when --content-type/--category were set)
+        candidates = parse_ai_use_cases(response_text, allowed_types, categories)
+        if not candidates:
+            last_issues = ["API returned empty or invalid JSON array of use cases."]
+            if attempt < max_attempts:
+                print(f"Attempt {attempt}/{max_attempts} failed: invalid or empty JSON. Retrying...")
+                continue
+            print("No valid use cases in API response (invalid or empty JSON).")
+            sys.exit(2)
 
-    # Assign audience_type by position (1–3 beginner, 4–6 intermediate, 7+ professional) and batch_id
+        # Tag each candidate with original position (for audience assignment after optional reorder)
+        for i, uc in enumerate(candidates):
+            uc["_orig_i"] = i
+
+        # Cap candidates to requested limit BEFORE lock checks/audience assignment
+        n_returned = len(candidates)
+        if n_returned > limit:
+            if hard_lock_problem:
+                locked = [c for c in candidates if _is_locked_to_problem(c.get("problem", ""), hard_lock_problem)]
+                rest = [c for c in candidates if c not in locked]
+                candidates = (locked + rest)[:limit]
+                print(f"  AI returned {n_returned} candidates, preferring {len(locked)} locked to problem; capped to {limit}.")
+            else:
+                candidates = candidates[:limit]
+                print(f"  AI returned {n_returned} candidates, capping to {limit}.")
+
+        if hard_lock_problem:
+            mismatched = [
+                uc.get("problem", "")
+                for uc in candidates
+                if not _is_locked_to_problem(uc.get("problem", ""), hard_lock_problem)
+            ]
+            if mismatched:
+                last_issues = [
+                    f"Hard lock mismatch against base problem: {hard_lock_problem}",
+                    *[f"Mismatched candidate: {m}" for m in mismatched[:5]],
+                ]
+                if attempt < max_attempts:
+                    print(f"Attempt {attempt}/{max_attempts} failed: {len(mismatched)} use case(s) drifted from hard-locked problem. Retrying...")
+                    continue
+                print("Fail-fast: generated use cases do not stay on the hard-locked suggested problem.")
+                for m in mismatched[:5]:
+                    print(f"  - Drifted: {m}")
+                sys.exit(2)
+
+        # Success path
+        break
+
+    # Assign audience_type by original position in API response (preserves beginner/intermediate/professional order after locked-first capping)
     batch_id = datetime.now().strftime("%Y-%m-%dT%H%M%S")
     for i, uc in enumerate(candidates):
-        uc["audience_type"] = audience_type_for_position(i + 1, pyramid)
+        orig_1based = uc.get("_orig_i", i) + 1
+        uc["audience_type"] = audience_type_for_position(orig_1based, pyramid)
         uc["batch_id"] = batch_id
+        uc.pop("_orig_i", None)
 
     # Deduplicate against existing
     new_use_cases = [
@@ -473,15 +608,39 @@ def main() -> None:
         if not is_duplicate(uc.get("problem") or "", existing)
     ]
 
+    # Option C: fail-fast when nothing new would be saved (exit 2 so pipeline can stop)
     if not new_use_cases:
         print("All generated use cases were duplicates or too similar to existing ones. Nothing added.")
-        sys.exit(0)
+        sys.exit(2)
+    if hard_lock_problem and len(new_use_cases) < limit:
+        print(
+            f"Fail-fast: only {len(new_use_cases)} non-duplicate use case(s) remained, below requested {limit} under hard lock."
+        )
+        print(f"Base locked problem: {hard_lock_problem}")
+        sys.exit(2)
 
-    # Append new to existing; keep last limit so new use cases appear in file
-    combined = (existing + new_use_cases)[-limit:]
-    save_use_cases(USE_CASES_PATH, combined)
-    print(f"Added {len(new_use_cases)} new use case(s) to {USE_CASES_PATH}. Total: {len(combined)} (capped at {limit}).")
-    for uc in new_use_cases:
+    # Option A: replace mode when hard lock — save only the new batch (overwrite). Otherwise append and cap.
+    if hard_lock_problem:
+        combined = new_use_cases[:limit]
+        save_use_cases(USE_CASES_PATH, combined)
+        kept = len(combined)
+        msg = f"Saved {kept} use case(s) to {USE_CASES_PATH} (replace mode). Total in file: {len(combined)} (limit: {limit})."
+    else:
+        combined = (existing + new_use_cases)[:limit]
+        save_use_cases(USE_CASES_PATH, combined)
+        kept = len(combined) - len(existing)
+        kept = max(0, kept)
+        dropped = len(new_use_cases) - kept
+        msg = f"Saved {kept} new use case(s) to {USE_CASES_PATH}. Total in file: {len(combined)} (limit: {limit})."
+        if dropped > 0:
+            msg += f" Dropped {dropped} (exceeded limit)."
+        print(msg)
+        for uc in new_use_cases[:kept]:
+            print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")
+        if not hard_lock_problem:
+            return  # avoid double-print below
+    print(msg)
+    for uc in combined:
         print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")
 
 

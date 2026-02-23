@@ -9,6 +9,7 @@ public/assets/*
 
 *.bak
 *_backup_*/
+content/backups/
 logs/
 screen*.png
 *.pyc

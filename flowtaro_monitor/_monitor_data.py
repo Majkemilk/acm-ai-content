@@ -10,7 +10,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from content_index import load_config  # noqa: E402
-from generate_queue import load_tools, load_use_case_tools_mapping  # noqa: E402
+from generate_queue import load_tools  # noqa: E402
 from monitor import (  # noqa: E402
     API_COSTS_PATH,
     ARTICLES_DIR,
@@ -75,12 +75,16 @@ def validate_project_root() -> tuple[bool, str | None]:
 
 
 def get_use_case_defaults() -> dict:
-    """Dla akcji Generuj use case'y: batch_size (domyślny limit) i lista kategorii z config (production + sandbox)."""
-    out = {"batch_size": 9, "categories": []}
+    """Dla akcji Generuj use case'y: batch_size, pyramid (lista int), suma piramidy i lista kategorii z config (production + sandbox)."""
+    out = {"batch_size": 9, "pyramid": [3, 3], "categories": []}
     if not CONFIG_PATH.exists():
+        out["pyramid_sum"] = sum(out["pyramid"])
         return out
     cfg = load_config(CONFIG_PATH)
     out["batch_size"] = int(cfg.get("use_case_batch_size") or 9)
+    p = cfg.get("use_case_audience_pyramid")
+    out["pyramid"] = [int(x) for x in p] if isinstance(p, list) and p else [3, 3]
+    out["pyramid_sum"] = sum(out["pyramid"])
     prod = (cfg.get("production_category") or "").strip()
     sandbox = cfg.get("sandbox_categories") or []
     cats = [prod] if prod else []
@@ -91,15 +95,36 @@ def get_use_case_defaults() -> dict:
     return out
 
 
-MAPPING_PATH = CONTENT_DIR / "use_case_tools_mapping.yaml"
-
-
-def get_mapping_data() -> list[tuple[str, str]]:
-    """Zwraca listę (problem, tools_str) z use_case_tools_mapping.yaml."""
-    if not MAPPING_PATH.exists():
-        return []
-    data = load_use_case_tools_mapping(MAPPING_PATH)
-    return [(k, ", ".join(v)) for k, v in sorted(data.items())]
+def get_article_tools_data() -> list[tuple[str, str]]:
+    """Read (slug, tools) from all article frontmatters.
+    Returns sorted by slug."""
+    import re as _re
+    results: list[tuple[str, str]] = []
+    if not ARTICLES_DIR.exists():
+        return results
+    for path in sorted(ARTICLES_DIR.glob("*.md")):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if not text.startswith("---"):
+            continue
+        end = text.find("\n---", 3)
+        if end == -1:
+            continue
+        block = text[3:end]
+        meta: dict[str, str] = {}
+        for line in block.split("\n"):
+            m = _re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", line.strip())
+            if m:
+                key, val = m.group(1), m.group(2).strip()
+                if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                    val = val[1:-1]
+                meta[key] = val
+        tools = (meta.get("tools") or "").strip()
+        if tools:
+            results.append((path.stem, tools))
+    return results
 
 
 def _quote_yaml(s: str) -> str:

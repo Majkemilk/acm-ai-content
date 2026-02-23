@@ -20,10 +20,10 @@ def load_config(path: Path | None = None) -> dict:
     """
     p = path or CONFIG_PATH
     if not p.exists() or p.stat().st_size == 0:
-        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3], "suggested_problems": []}
+        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3], "suggested_problems": [], "category_mode": "production_only"}
     text = p.read_text(encoding="utf-8").strip()
     if not text:
-        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3], "suggested_problems": []}
+        return {"production_category": "ai-marketing-automation", "hub_slug": "ai-marketing-automation", "sandbox_categories": [], "use_case_batch_size": 9, "use_case_audience_pyramid": [3, 3], "suggested_problems": [], "category_mode": "production_only"}
     try:
         data = json.loads(text)
         if isinstance(data, dict):
@@ -38,6 +38,9 @@ def load_config(path: Path | None = None) -> dict:
                 suggested = []
             else:
                 suggested = [str(x).strip() for x in suggested if str(x).strip()]
+            category_mode = str(data.get("category_mode") or "production_only").strip().lower()
+            if category_mode not in {"production_only", "preserve_sandbox"}:
+                category_mode = "production_only"
             return {
                 "production_category": data.get("production_category") or "ai-marketing-automation",
                 "hub_slug": (data.get("hub_slug") or "ai-marketing-automation").strip(),
@@ -45,6 +48,7 @@ def load_config(path: Path | None = None) -> dict:
                 "use_case_batch_size": int(data["use_case_batch_size"]) if isinstance(data.get("use_case_batch_size"), (int, float)) else 9,
                 "use_case_audience_pyramid": pyramid,
                 "suggested_problems": suggested,
+                "category_mode": category_mode,
             }
     except (json.JSONDecodeError, ValueError):
         pass
@@ -56,6 +60,7 @@ def load_config(path: Path | None = None) -> dict:
         "use_case_batch_size": 9,
         "use_case_audience_pyramid": [3, 3],
         "suggested_problems": [],
+        "category_mode": "production_only",
     }
     in_list = False
     list_key: str | None = None
@@ -122,6 +127,9 @@ def load_config(path: Path | None = None) -> dict:
                         first = first[1:].strip().strip('"\'')
                     if first and first != "[]":
                         out["suggested_problems"].append(first)
+            elif key == "category_mode":
+                mode = rest.strip('"\'').strip().lower()
+                out["category_mode"] = mode if mode in {"production_only", "preserve_sandbox"} else "production_only"
     return out
 
 
@@ -176,9 +184,9 @@ def get_production_articles(
     config_path: Path | None = None,
 ) -> list[tuple[dict, Path]]:
     """
-    Load all article metadata from articles_dir and return all articles that are
-    not blocked (status != "blocked"). Category is not used; all non-blocked
-    articles are treated as production. Returns list of (meta, path).
+    Load all article metadata from articles_dir and return only articles with
+    status "filled" (production-ready). Blocked and draft/skeleton articles
+    are excluded so they are not rendered to public. Returns list of (meta, path).
     """
     dir_path = articles_dir or ARTICLES_DIR
     if not dir_path.exists():
@@ -207,7 +215,10 @@ def get_production_articles(
             meta = _parse_frontmatter(path)
             if not meta:
                 continue
-        if (meta.get("status") or "").strip().lower() == "blocked":
+        status = (meta.get("status") or "").strip().lower()
+        if status == "blocked":
+            continue
+        if status != "filled":
             continue
         out.append((meta, path))
     return out

@@ -3,18 +3,19 @@ title: "Guide to use ai to optimize video length for different platforms"
 content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to use ai to optimize video length for different platforms"
-primary_tool: "{{PRIMARY_TOOL}}"
-secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-20"
+tools: "Opus Clip"
+last_updated: "2026-02-23"
 status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-20T225029"
----# Guide to use ai to optimize video length for different platforms
+---
+
+# Guide to use ai to optimize video length for different platforms
 
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to use ai to optimize video length for different platforms
-**Last updated:** 2026-02-20
+**Last updated:** 2026-02-23
 
 ---
 
@@ -24,7 +25,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of {{PRIMARY_TOOL}} (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of all tools mentioned in this article must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -74,6 +75,10 @@ Before publishing, verify the following:
 -
 -
 
+### Try it yourself: Build your own AI prompt
+
+[If this article involves creating or processing content with AI tools, generate Prompt #1 and Prompt #2 following the Try-it-yourself rules. If this article is purely strategic or analytical, replace this subsection with a single sentence: "This topic does not lend itself to a prompt-building exercise." and keep the heading.]
+
 ---
 
 ## When NOT to use this
@@ -92,7 +97,7 @@ Before publishing, verify the following:
 
 ## Tools mentioned
 
-- {{TOOLS_MENTIONED}}
+{{TOOLS_MENTIONED}}
 
 ---
 
@@ -104,6 +109,8 @@ Before publishing, verify the following:
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
 - [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
 - [Guide to leverage ai to enhance collaborative video editing workflows](/articles/2026-02-20-guide-to-leverage-ai-to-enhance-collaborative-video-editing-workflows.audience_professional/)
+
+---
 
 ## CTA
 

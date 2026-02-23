@@ -13,7 +13,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of {{PRIMARY_TOOL}} (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of all tools mentioned in this article must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---

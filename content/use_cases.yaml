@@ -5,21 +5,57 @@
 # - category_slug: string (e.g., "ai-marketing-automation")
 # - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
 use_cases:
-  - problem: develop AI-driven workflows for optimizing re-engagement campaigns
+  - problem: how to set up predictable workflows using agentic automations
     suggested_content_type: how-to
     category_slug: ai-marketing-automation
-    audience_type: intermediate
-    batch_id: 2026-02-22T123900
+    audience_type: beginner
+    batch_id: 2026-02-23T185219
     status: generated
-  - problem: monitor downtime and performance issues in AI marketing tools effectively
-    suggested_content_type: how-to
+  - problem: how to monitor and troubleshoot unexpected behaviors in agentic automation processes
+    suggested_content_type: guide
+    category_slug: automation workflows
+    audience_type: intermediate
+    batch_id: 2026-02-23T185219
+    status: generated
+  - problem: how to scale and govern agentic automations to reduce unpredictability
+    suggested_content_type: best
     category_slug: ai-marketing-automation
     audience_type: intermediate
-    batch_id: 2026-02-22T123900
+    batch_id: 2026-02-23T185219
     status: generated
-  - problem: integrate multiple AI tools for advanced customer journey mapping analysis
+  - problem: how to implement agentic automations with consistent outputs in marketing tasks
     suggested_content_type: how-to
     category_slug: ai-marketing-automation
     audience_type: professional
-    batch_id: 2026-02-22T123900
+    batch_id: 2026-02-23T185219
+    status: generated
+  - problem: how to troubleshoot unpredictable responses from agentic automations during campaigns
+    suggested_content_type: guide
+    category_slug: automation workflows
+    audience_type: professional
+    batch_id: 2026-02-23T185219
+    status: generated
+  - problem: how to optimize agentic automations to align with marketing goals and reduce risks
+    suggested_content_type: best
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-23T185219
+    status: generated
+  - problem: how to govern and ensure reliability in complex agentic automation systems
+    suggested_content_type: how-to
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-23T185219
+    status: generated
+  - problem: how to develop troubleshooting processes for unexpected agentic automation failures
+    suggested_content_type: guide
+    category_slug: automation workflows
+    audience_type: professional
+    batch_id: 2026-02-23T185219
+    status: generated
+  - problem: how to integrate governance models for high-reliability in agentic automations
+    suggested_content_type: best
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-23T185219
     status: generated

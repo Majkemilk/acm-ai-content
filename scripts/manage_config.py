@@ -46,7 +46,7 @@ def _main() -> None:
         "--get",
         choices=list(CONFIG_KEYS),
         metavar="KEY",
-        help="Odczytaj wartość: production_category, hub_slug, sandbox_categories, suggested_problems",
+        help="Odczytaj wartość: production_category, hub_slug, sandbox_categories, suggested_problems, category_mode",
     )
     # Set
     parser.add_argument(
@@ -85,6 +85,13 @@ def _main() -> None:
         type=str,
         metavar="A,B,C",
         help="Nadpisz sugerowane problemy (lista po przecinku; dla generowania use case’ów)",
+    )
+    parser.add_argument(
+        "--category-mode",
+        type=str,
+        choices=("production_only", "preserve_sandbox"),
+        metavar="MODE",
+        help="Tryb kategorii artykułów: production_only | preserve_sandbox",
     )
     # Init
     parser.add_argument(
@@ -135,6 +142,7 @@ def _main() -> None:
         args.add_sandbox_category is not None,
         args.remove_sandbox_category is not None,
         args.suggested_problems is not None,
+        args.category_mode is not None,
     ])
     if not has_change:
         parser.print_help()
@@ -154,6 +162,7 @@ def _main() -> None:
             add_sandbox=args.add_sandbox_category,
             remove_sandbox=args.remove_sandbox_category,
             suggested_problems=suggested_list,
+            category_mode=args.category_mode,
         )
         if not args.json:
             print("Zaktualizowano config.", file=sys.stderr)

@@ -357,8 +357,16 @@ def _article_title_h1(title: str) -> str:
     return f'<h1 class="text-2xl font-bold mb-6 text-[#17266B]">{_escape(title)}</h1>\n'
 
 
-def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str) -> str:
-    """HTML for meta block under H1 (articles only). Styled badge row with category, date, reading time."""
+_AUDIENCE_BADGE: dict[str, tuple[str, str]] = {
+    "beginner": ("Beginner", "bg-green-50 text-green-700"),
+    "intermediate": ("Intermediate", "bg-blue-50 text-blue-700"),
+    "professional": ("Advanced", "bg-purple-50 text-purple-700"),
+}
+
+
+def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str,
+                        audience_type: str | None = None) -> str:
+    """HTML for meta block under H1 (articles only). Styled badge row with category, audience, date, reading time."""
     parts: list[str] = []
     if category_slug:
         slug_esc = _escape(category_slug)
@@ -368,6 +376,12 @@ def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str |
             f'<span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded">'
             f'<a href="/hubs/{slug_esc}/" class="hover:underline">{display_esc}</a></span>'
         )
+        parts.append("<span>&bull;</span>")
+    at = (audience_type or "").strip().lower()
+    badge = _AUDIENCE_BADGE.get(at)
+    if badge:
+        label, css = badge
+        parts.append(f'<span class="{css} px-2 py-1 rounded">{_escape(label)}</span>')
         parts.append("<span>&bull;</span>")
     parts.append(f"<span>Updated: {_escape(updated_iso)}</span>")
     parts.append("<span>&bull;</span>")
@@ -708,7 +722,8 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     lead = _extract_lead(meta, body_html)
     # Title (H1) at top, then meta block (category, date, reading time, lead), then body
     title_h1 = _article_title_h1(title)
-    meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead)
+    audience_type = (meta.get("audience_type") or "").strip() or None
+    meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead, audience_type)
     full_body_html = title_h1 + meta_html + body_html
 
     # Generate "Read Next" section

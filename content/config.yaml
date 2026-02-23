@@ -1,13 +1,11 @@
 production_category: "ai-marketing-automation"
 hub_slug: "ai-marketing-automation"
+category_mode: "preserve_sandbox"
 sandbox_categories:
-  - "LLM SEO"
-  - "Visual automation and integrations"
-  - "ai video"
   - "automation workflows"
-use_case_batch_size: 9
+use_case_batch_size: 3
 use_case_audience_pyramid:
-  - 3
-  - 3
+  - 1
+  - 2
 suggested_problems:
-  - "Downtime i błędy. Użytkownicy płacą za narzędzia, które regularnie padają, a support nie reaguje. Potrzeba monitorowania czasu działania stron i narzędzi.  Konieczność alertów, gdy narzędzie przestaje działać"
+  - "agentic automations are unpredictable"

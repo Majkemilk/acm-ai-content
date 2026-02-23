@@ -52,6 +52,11 @@ SCRIPT_MAP = {
     "refresh_articles": "refresh_articles.py",
 }
 
+# Flagi zawsze dołączane do danej akcji (nie widoczne w UI)
+DEFAULT_ARGS: dict[str, list[str]] = {
+    "fill_articles": ["--html"],
+}
+
 
 def run_workflow_script(
     action: str,
@@ -62,7 +67,7 @@ def run_workflow_script(
     script_name = SCRIPT_MAP.get(action)
     if not script_name:
         return f"Nieznana akcja: {action}. Dozwolone: {list(SCRIPT_MAP)}", -1
-    args = list(extra_args) if extra_args else []
+    args = list(DEFAULT_ARGS.get(action, [])) + (list(extra_args) if extra_args else [])
     return run_script(script_name, args, timeout_seconds=timeout_seconds)
 
 
@@ -122,4 +127,5 @@ def run_workflow_streaming(
         q.put((f"Nieznana akcja: {action}", None))
         q.put((None, -1))
         return None, q
-    return start_script_streaming(script_name, extra_args or [])
+    args = list(DEFAULT_ARGS.get(action, [])) + (list(extra_args) if extra_args else [])
+    return start_script_streaming(script_name, args)

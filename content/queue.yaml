@@ -2,15 +2,14 @@
   primary_keyword: choose seo tool
   content_type: guide
   category_slug: seo
-  primary_tool: Tool A
-  secondary_tool: 
+  tools: Tool A
   status: generated
   last_updated: 2025-02-14
 - title: SEO Tools Compared
   primary_keyword: seo tools comparison
   content_type: comparison
   category_slug: seo
-  primary_tool: Tool A
+  tools: Tool A
   status: generated
   last_updated: 2026-02-14
 - title: AI Marketing Tools Overview
@@ -23,840 +22,727 @@
   primary_keyword: ai content repurposing workflow
   content_type: guide
   category: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: Pictory
+  tools: Descript, Pictory
   status: generated
 - title: Best AI Tools for Content Repurposing
   primary_keyword: best ai tools for content repurposing
   content_type: best
   category: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: Opus Clip
+  tools: Descript, Opus Clip
   status: generated
 - title: How to Repurpose YouTube Videos into Blog Articles with AI
   primary_keyword: repurpose youtube videos into blog articles with ai
   content_type: how-to
   category: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: Pictory
+  tools: Descript, Pictory
   status: generated
 - title: How to Turn Podcasts into Written Content Using AI
   primary_keyword: turn podcasts into written content using ai
   content_type: how-to
   category: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: Otter
+  tools: Descript, Otter
   status: generated
 - title: How to Repurpose Webinars into Blog Posts Using AI
   primary_keyword: repurpose webinars into blog posts using ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: Pictory
+  tools: Descript, Pictory
   status: generated
   last_updated: 2026-02-16
 - title: How to turn podcasts into written content with Descript
   primary_keyword: how to turn podcasts into written content with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
   last_updated: 2026-02-15
 - title: How to automate social media posting schedules with AI with Descript
   primary_keyword: how to automate social media posting schedules with ai with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
   last_updated: 2026-02-15
 - title: Best AI Tools for Social Media Management
   primary_keyword: best ai tools for social media management
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to implement AI chatbots to enhance customer engagement with Descript
   primary_keyword: guide to implement ai chatbots to enhance customer engagement with descript
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Descript
   primary_keyword: guide to personalize email marketing campaigns using ai insights with descript
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Otter
   primary_keyword: guide to personalize email marketing campaigns using ai insights with otter
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Pictory
   primary_keyword: guide to personalize email marketing campaigns using ai insights with pictory
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: How to automate social media posting schedules with AI with Pictory
   primary_keyword: how to automate social media posting schedules with ai with pictory
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: How to integrate AI tools for better lead scoring in sales with Descript
   primary_keyword: how to integrate ai tools for better lead scoring in sales with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to integrate AI tools for better lead scoring in sales with Otter
   primary_keyword: how to integrate ai tools for better lead scoring in sales with otter
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: How to integrate AI tools for better lead scoring in sales with Pictory
   primary_keyword: how to integrate ai tools for better lead scoring in sales with pictory
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: How to turn podcasts into written content with Descript
   primary_keyword: how to turn podcasts into written content with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to use AI to analyze customer feedback and improve products with Descript
   primary_keyword: how to use ai to analyze customer feedback and improve products with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to use AI to analyze customer feedback and improve products with Otter
   primary_keyword: how to use ai to analyze customer feedback and improve products with otter
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: How to use AI to analyze customer feedback and improve products with Pictory
   primary_keyword: how to use ai to analyze customer feedback and improve products with pictory
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: Jasper vs CopyAI for Content Creation
   primary_keyword: jasper vs copyai for content creation
   content_type: comparison
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Repurpose webinars into blog posts using AI
   primary_keyword: repurpose webinars into blog posts using ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Repurpose YouTube videos into blog articles with AI
   primary_keyword: repurpose youtube videos into blog articles with ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Turn podcasts into written content using AI
   primary_keyword: turn podcasts into written content using ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Use AI for competitor analysis
   primary_keyword: use ai for competitor analysis
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Use AI for sentiment analysis in marketing
   primary_keyword: use ai for sentiment analysis in marketing
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: AI Content Repurposing Workflow
   primary_keyword: ai content repurposing workflow
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: AI Marketing Tools
   primary_keyword: ai marketing tools
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Best AI Tools for Content Repurposing
   primary_keyword: best ai tools for content repurposing
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Choose an SEO Tool
   primary_keyword: choose seo tool
   content_type: guide
   category_slug: seo
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to implement AI chatbots to enhance customer engagement with Descript
   primary_keyword: guide to implement ai chatbots to enhance customer engagement with descript
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: Guide to implement AI chatbots to enhance customer engagement with Otter
   primary_keyword: guide to implement ai chatbots to enhance customer engagement with otter
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: Guide to implement AI chatbots to enhance customer engagement with Pictory
   primary_keyword: guide to implement ai chatbots to enhance customer engagement with pictory
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Descript
   primary_keyword: guide to personalize email marketing campaigns using ai insights with descript
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Otter
   primary_keyword: guide to personalize email marketing campaigns using ai insights with otter
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Pictory
   primary_keyword: guide to personalize email marketing campaigns using ai insights with pictory
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: How to automate social media posting schedules with AI with Descript
   primary_keyword: how to automate social media posting schedules with ai with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to automate social media posting schedules with AI with Otter
   primary_keyword: how to automate social media posting schedules with ai with otter
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: How to automate social media posting schedules with AI with Pictory
   primary_keyword: how to automate social media posting schedules with ai with pictory
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: How to integrate AI tools for better lead scoring in sales with Descript
   primary_keyword: how to integrate ai tools for better lead scoring in sales with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to integrate AI tools for better lead scoring in sales with Otter
   primary_keyword: how to integrate ai tools for better lead scoring in sales with otter
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: How to integrate AI tools for better lead scoring in sales with Pictory
   primary_keyword: how to integrate ai tools for better lead scoring in sales with pictory
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: How to turn podcasts into written content with Descript
   primary_keyword: how to turn podcasts into written content with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to use AI to analyze customer feedback and improve products with Descript
   primary_keyword: how to use ai to analyze customer feedback and improve products with descript
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: How to use AI to analyze customer feedback and improve products with Otter
   primary_keyword: how to use ai to analyze customer feedback and improve products with otter
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: How to use AI to analyze customer feedback and improve products with Pictory
   primary_keyword: how to use ai to analyze customer feedback and improve products with pictory
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Pictory
-  secondary_tool: 
+  tools: Pictory
   status: generated
 - title: Repurpose webinars into blog posts using AI
   primary_keyword: repurpose webinars into blog posts using ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Repurpose YouTube videos into blog articles with AI
   primary_keyword: repurpose youtube videos into blog articles with ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: SEO Tools Comparison
   primary_keyword: seo tools comparison
   content_type: comparison
   category_slug: seo
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Turn blog posts into social media posts with AI
   primary_keyword: turn blog posts into social media posts with ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Turn podcasts into written content using AI
   primary_keyword: turn podcasts into written content using ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Use AI for competitor analysis
   primary_keyword: use ai for competitor analysis
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Use AI for sentiment analysis in marketing
   primary_keyword: use ai for sentiment analysis in marketing
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: AI Marketing Tools
   primary_keyword: ai marketing tools
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Descript
   primary_keyword: guide to personalize email marketing campaigns using ai insights with descript
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Descript
-  secondary_tool: 
+  tools: Descript
   status: generated
 - title: Guide to personalize email marketing campaigns using AI insights with Otter
   primary_keyword: guide to personalize email marketing campaigns using ai insights with otter
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: Otter
-  secondary_tool: 
+  tools: Otter
   status: generated
 - title: Turn blog posts into social media posts with AI
   primary_keyword: turn blog posts into social media posts with ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: How to automate social media posting schedules with AI
   primary_keyword: how to automate social media posting schedules with ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: Guide to personalize email marketing campaigns using AI insights
   primary_keyword: guide to personalize email marketing campaigns using ai insights
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: How to use AI to analyze customer feedback and improve products
   primary_keyword: how to use ai to analyze customer feedback and improve products
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: Guide to implement AI chatbots to enhance customer engagement
   primary_keyword: guide to implement ai chatbots to enhance customer engagement
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: How to integrate AI tools for better lead scoring in sales
   primary_keyword: how to integrate ai tools for better lead scoring in sales
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: How to leverage AI to optimize ad spending and campaign performance
   primary_keyword: how to leverage ai to optimize ad spending and campaign performance
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: Guide to automate customer segmentation for targeted marketing with AI
   primary_keyword: guide to automate customer segmentation for targeted marketing with ai
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: How to use AI to create dynamic landing pages that adapt to user behavior
   primary_keyword: how to use ai to create dynamic landing pages that adapt to user behavior
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: Guide to enhance A/B testing strategies using AI-driven insights
   primary_keyword: guide to enhance a/b testing strategies using ai-driven insights
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: How to utilize AI for predictive analytics in customer purchasing behavior
   primary_keyword: how to utilize ai for predictive analytics in customer purchasing behavior
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-19
 - title: How to automate the generation of personalized content across multiple platforms using AI
   primary_keyword: automate the generation of personalized content across multiple platforms using ai
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to utilize AI for content curation and distribution strategies
   primary_keyword: utilize ai for content curation and distribution strategies
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: How to implement AI-driven loyalty programs to increase customer retention
   primary_keyword: implement ai-driven loyalty programs to increase customer retention
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: How to leverage AI for real-time personalization of website content
   primary_keyword: leverage ai for real-time personalization of website content
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to use AI to enhance video marketing strategies for better engagement
   primary_keyword: use ai to enhance video marketing strategies for better engagement
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: How to create automated reporting systems using AI for marketing metrics
   primary_keyword: create automated reporting systems using ai for marketing metrics
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: How to develop AI-powered recommendations for upselling and cross-selling
   primary_keyword: develop ai-powered recommendations for upselling and cross-selling
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to apply AI to manage and optimize influencer marketing campaigns
   primary_keyword: apply ai to manage and optimize influencer marketing campaigns
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: How to integrate AI for smarter customer journey mapping
   primary_keyword: integrate ai for smarter customer journey mapping
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Guide to use AI to analyze social listening data for brand insights
   primary_keyword: use ai to analyze social listening data for brand insights
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
 - title: Comparison of Make vs Zapier vs n8n — choose the right automation platform
   primary_keyword: comparison of make vs zapier vs n8n — choose the right automation platform
   content_type: comparison
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate the creation of social media influencer match reports using AI
   primary_keyword: how to automate the creation of social media influencer match reports using ai
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to use AI to streamline multi-channel customer feedback aggregation
   primary_keyword: guide to use ai to streamline multi-channel customer feedback aggregation
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to implement AI-driven chatbot analytics to measure engagement effectiveness
   primary_keyword: how to implement ai-driven chatbot analytics to measure engagement effectiveness
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to leverage AI for sentiment analysis in brand campaigns
   primary_keyword: guide to leverage ai for sentiment analysis in brand campaigns
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate the identification of emerging consumer trends using AI
   primary_keyword: how to automate the identification of emerging consumer trends using ai
   content_type: how-to
   category_slug: LLM SEO
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to use AI for automated content gap analysis in SEO strategies
   primary_keyword: guide to use ai for automated content gap analysis in seo strategies
   content_type: guide
   category_slug: LLM SEO
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to apply AI to optimize content distribution timing for maximum engagement
   primary_keyword: how to apply ai to optimize content distribution timing for maximum engagement
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate image optimization for website and social media using AI
   primary_keyword: how to automate image optimization for website and social media using ai
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to leverage AI for generating personalized video messaging in marketing
   primary_keyword: guide to leverage ai for generating personalized video messaging in marketing
   content_type: guide
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to create AI-driven workflows for integrating offline and online marketing data
   primary_keyword: how to create ai-driven workflows for integrating offline and online marketing data
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate customer onboarding processes using AI
   primary_keyword: how to automate customer onboarding processes using ai
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to develop AI-driven loyalty rewards systems based on purchasing behavior
   primary_keyword: guide to develop ai-driven loyalty rewards systems based on purchasing behavior
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to use AI to predict customer churn and implement retention strategies
   primary_keyword: how to use ai to predict customer churn and implement retention strategies
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to automate event-triggered marketing messages with AI insights
   primary_keyword: guide to automate event-triggered marketing messages with ai insights
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to implement AI to streamline the creation of promotional content based on real-time trends
   primary_keyword: how to implement ai to streamline the creation of promotional content based on real-time trends
   content_type: how-to
   category_slug: LLM SEO
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to leverage AI for effective upselling during the checkout process
   primary_keyword: how to leverage ai for effective upselling during the checkout process
   content_type: how-to
   category_slug: LLM SEO
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to automate cross-channel customer engagement insights with AI
   primary_keyword: guide to automate cross-channel customer engagement insights with ai
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to use AI to enhance visual content strategies for better audience engagement
   primary_keyword: how to use ai to enhance visual content strategies for better audience engagement
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to integrate AI for automating influencer performance tracking and analytics
   primary_keyword: guide to integrate ai for automating influencer performance tracking and analytics
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to utilize AI to create interactive content experiences tailored to user preferences
   primary_keyword: how to utilize ai to create interactive content experiences tailored to user preferences
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate the analysis of competitor marketing strategies using AI
   primary_keyword: how to automate the analysis of competitor marketing strategies using ai
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to use AI to prioritize leads based on engagement metrics for sales teams
   primary_keyword: guide to use ai to prioritize leads based on engagement metrics for sales teams
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to implement AI for automating customer feedback response systems
   primary_keyword: how to implement ai for automating customer feedback response systems
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to streamline budget allocation for marketing campaigns using AI insights
   primary_keyword: guide to streamline budget allocation for marketing campaigns using ai insights
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to leverage AI to automate the segmentation of email list for targeted campaigns
   primary_keyword: how to leverage ai to automate the segmentation of email list for targeted campaigns
   content_type: how-to
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to create AI-driven systems for measuring the effectiveness of different marketing channels
   primary_keyword: guide to create ai-driven systems for measuring the effectiveness of different marketing channels
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate the generation of personalized video content based on user data with AI
   primary_keyword: how to automate the generation of personalized video content based on user data with ai
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: Guide to use AI to analyze customer journey data to identify drop-off points
   primary_keyword: guide to use ai to analyze customer journey data to identify drop-off points
   content_type: guide
   category_slug: AI Automation & AI Agents
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to implement AI tools to enhance visual asset management for marketing campaigns
   primary_keyword: how to implement ai tools to enhance visual asset management for marketing campaigns
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: How to automate the curation of user-generated content for brand promotion using AI
   primary_keyword: how to automate the curation of user-generated content for brand promotion using ai
   content_type: how-to
   category_slug: Visual automation and integrations
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
 - title: VEED vs Submagic vs Opus Clip – which short-form video tool to choose
   primary_keyword: VEED vs Submagic vs Opus Clip comparison
   content_type: comparison
   category_slug: ai-marketing-automation
-  primary_tool: VEED
-  secondary_tool: Submagic
+  tools: VEED, Submagic
   status: generated
   last_updated: 2026-02-14
 - title: How to add auto-generated captions and subtitles to videos with VEED
   primary_keyword: add auto captions subtitles to videos with VEED
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: VEED
-  secondary_tool: 
+  tools: VEED
   status: generated
   last_updated: 2026-02-14
 - title: How to create viral short-form clips from long videos with Submagic
   primary_keyword: create viral short clips with Submagic
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Submagic
-  secondary_tool: 
+  tools: Submagic
   status: generated
   last_updated: 2026-02-14
 - title: How to turn long-form videos into short clips with Opus Clip
   primary_keyword: turn long form videos into short clips with Opus Clip
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: Opus Clip
-  secondary_tool: 
+  tools: Opus Clip
   status: generated
   last_updated: 2026-02-14
 - title: How to automate video thumbnails creation for social media
   primary_keyword: how to automate video thumbnails creation for social media
   content_type: how-to
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: beginner
@@ -865,8 +751,7 @@
   primary_keyword: guide to use ai to optimize video length for different platforms
   content_type: guide
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: beginner
@@ -875,8 +760,7 @@
   primary_keyword: how to implement ai tools to personalize video marketing content
   content_type: how-to
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: beginner
@@ -885,8 +769,7 @@
   primary_keyword: guide to create ai-driven video content strategies for engagement
   content_type: guide
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: intermediate
@@ -895,8 +778,7 @@
   primary_keyword: how to automate a/b testing for video ads using ai
   content_type: how-to
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: intermediate
@@ -905,8 +787,7 @@
   primary_keyword: guide to integrate ai tools to analyze video performance metrics
   content_type: guide
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: intermediate
@@ -915,8 +796,7 @@
   primary_keyword: how to scale content production by integrating ai with video platforms
   content_type: how-to
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: professional
@@ -925,8 +805,7 @@
   primary_keyword: guide to leverage ai to enhance collaborative video editing workflows
   content_type: guide
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: professional
@@ -935,8 +814,7 @@
   primary_keyword: how to utilize ai for video marketing analytics and insights
   content_type: how-to
   category_slug: ai video
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-20
   audience_type: professional
@@ -945,8 +823,7 @@
   primary_keyword: best automate social media content posting with ai
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: beginner
@@ -955,8 +832,7 @@
   primary_keyword: best use ai to improve email subject lines for higher open rates
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: beginner
@@ -965,8 +841,7 @@
   primary_keyword: best implement chatbots for customer support automation with ai
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: beginner
@@ -975,8 +850,7 @@
   primary_keyword: best leverage ai to create personalized marketing campaigns
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -985,8 +859,7 @@
   primary_keyword: best utilize ai for real-time customer behavior analysis
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -995,8 +868,7 @@
   primary_keyword: best automate report generation using ai insights on marketing performance
   content_type: best
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -1005,8 +877,7 @@
   primary_keyword: best integrate ai to streamline multi-channel marketing efforts
   content_type: best
   category_slug: automation workflows
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
@@ -1015,8 +886,7 @@
   primary_keyword: best utilize ai for predictive analytics in customer retention strategies
   content_type: best
   category_slug: automation workflows
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
@@ -1025,8 +895,7 @@
   primary_keyword: best develop seamless ai-driven cross-platform advertising strategies
   content_type: best
   category_slug: automation workflows
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
@@ -1035,8 +904,7 @@
   primary_keyword: how to automate customer feedback collection with ai tools
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: beginner
@@ -1045,8 +913,7 @@
   primary_keyword: how to use ai to automate the creation of targeted audience profiles
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: beginner
@@ -1055,8 +922,7 @@
   primary_keyword: guide to leverage ai for basic social media listening and sentiment analysis
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: beginner
@@ -1065,8 +931,7 @@
   primary_keyword: guide to integrate ai tools for enhancing online customer journey mapping
   content_type: guide
   category_slug: automation workflows
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -1075,8 +940,7 @@
   primary_keyword: how to create automated workflows for cross-channel marketing campaigns
   content_type: how-to
   category_slug: automation workflows
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -1085,8 +949,7 @@
   primary_keyword: guide to utilize ai for automating targeted ad placements based on user behavior
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -1095,8 +958,7 @@
   primary_keyword: guide to implement ai-driven analytics to optimize marketing budgets in real-time
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
@@ -1105,8 +967,7 @@
   primary_keyword: how to scale personalized content recommendations using ai algorithms
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
@@ -1115,8 +976,7 @@
   primary_keyword: guide to develop an ai-integrated platform for tracking influencer marketing effectiveness
   content_type: guide
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
@@ -1125,8 +985,7 @@
   primary_keyword: how to develop ai-driven workflows for optimizing re-engagement campaigns
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -1135,8 +994,7 @@
   primary_keyword: how to monitor downtime and performance issues in ai marketing tools effectively
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: intermediate
@@ -1145,9 +1003,170 @@
   primary_keyword: how to integrate multiple ai tools for advanced customer journey mapping analysis
   content_type: how-to
   category_slug: ai-marketing-automation
-  primary_tool: 
-  secondary_tool: 
+  tools: 
   status: generated
   last_updated: 2026-02-22
   audience_type: professional
   batch_id: 2026-02-22T123900
+- title: How to streamline content approval processes using AI tools to reduce bottlenecks
+  primary_keyword: how to streamline content approval processes using ai tools to reduce bottlenecks
+  content_type: how-to
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-22
+  audience_type: intermediate
+  batch_id: 2026-02-22T224952
+- title: How to integrate AI tools for automating multi-channel marketing reporting
+  primary_keyword: how to integrate ai tools for automating multi-channel marketing reporting
+  content_type: how-to
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-22
+  audience_type: intermediate
+  batch_id: 2026-02-22T224952
+- title: How to automate troubleshooting workflows for API error handling in marketing tools
+  primary_keyword: how to automate troubleshooting workflows for api error handling in marketing tools
+  content_type: how-to
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-22
+  audience_type: professional
+  batch_id: 2026-02-22T224952
+- title: How to create a unified customer profile through AI tools to enhance marketing effectiveness
+  primary_keyword: how to create a unified customer profile through ai tools to enhance marketing effectiveness
+  content_type: how-to
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: intermediate
+  batch_id: 2026-02-23T100422
+- title: Guide to automate the analysis of customer behaviors across multiple platforms for more effective ad targeting
+  primary_keyword: guide to automate the analysis of customer behaviors across multiple platforms for more effective ad targeting
+  content_type: guide
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: intermediate
+  batch_id: 2026-02-23T100422
+- title: How to implement robust AI systems for real-time error monitoring and adjustments in marketing automation processes
+  primary_keyword: how to implement robust ai systems for real-time error monitoring and adjustments in marketing automation processes
+  content_type: how-to
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T100422
+- title: Guide to develop a framework for integrating multiple AI tools into existing marketing infrastructures
+  primary_keyword: guide to develop a framework for integrating multiple ai tools into existing marketing infrastructures
+  content_type: guide
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T101855
+- title: How to how to effectively train AI models with minimal data for marketing purposes
+  primary_keyword: how to how to effectively train ai models with minimal data for marketing purposes
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: beginner
+  batch_id: 2026-02-23T151154
+- title: Guide to how to easily set up AI-driven customer segmentation without advanced technical skills
+  primary_keyword: guide to how to easily set up ai-driven customer segmentation without advanced technical skills
+  content_type: guide
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: intermediate
+  batch_id: 2026-02-23T151154
+- title: How to how to set up predictable workflows using agentic automations
+  primary_keyword: how to how to set up predictable workflows using agentic automations
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: beginner
+  batch_id: 2026-02-23T185219
+- title: Guide to how to monitor and troubleshoot unexpected behaviors in agentic automation processes
+  primary_keyword: guide to how to monitor and troubleshoot unexpected behaviors in agentic automation processes
+  content_type: guide
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: intermediate
+  batch_id: 2026-02-23T185219
+- title: Best how to scale and govern agentic automations to reduce unpredictability
+  primary_keyword: best how to scale and govern agentic automations to reduce unpredictability
+  content_type: best
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: intermediate
+  batch_id: 2026-02-23T185219
+- title: How to how to implement agentic automations with consistent outputs in marketing tasks
+  primary_keyword: how to how to implement agentic automations with consistent outputs in marketing tasks
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T185219
+- title: Guide to how to troubleshoot unpredictable responses from agentic automations during campaigns
+  primary_keyword: guide to how to troubleshoot unpredictable responses from agentic automations during campaigns
+  content_type: guide
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T185219
+- title: Best how to optimize agentic automations to align with marketing goals and reduce risks
+  primary_keyword: best how to optimize agentic automations to align with marketing goals and reduce risks
+  content_type: best
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T185219
+- title: How to how to govern and ensure reliability in complex agentic automation systems
+  primary_keyword: how to how to govern and ensure reliability in complex agentic automation systems
+  content_type: how-to
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T185219
+- title: Guide to how to develop troubleshooting processes for unexpected agentic automation failures
+  primary_keyword: guide to how to develop troubleshooting processes for unexpected agentic automation failures
+  content_type: guide
+  category_slug: automation workflows
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T185219
+- title: Best how to integrate governance models for high-reliability in agentic automations
+  primary_keyword: best how to integrate governance models for high-reliability in agentic automations
+  content_type: best
+  category_slug: ai-marketing-automation
+  tools: 
+  status: generated
+  last_updated: 2026-02-23
+  audience_type: professional
+  batch_id: 2026-02-23T185219

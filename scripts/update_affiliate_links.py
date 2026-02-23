@@ -7,6 +7,7 @@ Default: dry-run (report only). Use --write to modify files (with optional .bak 
 See docs/proposal_affiliate_links_update_script.md for workflow and design.
 """
 
+import html
 import re
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
@@ -134,6 +135,26 @@ def _apply_replacements(content: str, replacements: list[tuple[str, str, str]]) 
     return content
 
 
+# "ready to use with X (AI tool)." — link plain tool name to affiliate URL (HTML only)
+_READY_TO_USE_PREFIX = "ready to use with "
+_READY_TO_USE_SUFFIX = " (AI tool)."
+
+
+def _link_ready_to_use_tools(content: str, tools: list[tuple[str, str]]) -> str:
+    """In HTML, replace 'ready to use with ToolName (AI tool).' with linked ToolName when in tools list.
+    Longer names first to avoid partial matches (e.g. 'Lately AI' before 'Lately')."""
+    for name, url in sorted(tools, key=lambda x: -len(x[0])):
+        if not name or not url:
+            continue
+        old = _READY_TO_USE_PREFIX + name + _READY_TO_USE_SUFFIX
+        if old not in content:
+            continue
+        link = f'<a href="{html.escape(url, quote=True)}">{html.escape(name)}</a>'
+        new = _READY_TO_USE_PREFIX + link + _READY_TO_USE_SUFFIX
+        content = content.replace(old, new)
+    return content
+
+
 def scan_and_report(
     articles_dir: Path, affiliate_path: Path, write: bool = False, backup: bool = True
 ) -> list[tuple[Path, list[tuple[str, str, str]]]]:
@@ -156,17 +177,20 @@ def scan_and_report(
                 content = path.read_text(encoding="utf-8")
             except OSError:
                 continue
+            original = content
             is_html = path.suffix.lower() == ".html"
             replacements = _find_replacements_in_text(content, base_to_affiliate, is_html)
-            if not replacements:
+            content = _apply_replacements(content, replacements) if replacements else content
+            if is_html:
+                content = _link_ready_to_use_tools(content, tools)
+            if content == original:
                 continue
             updated.append((path, replacements))
             if write:
-                new_content = _apply_replacements(content, replacements)
                 if backup:
                     backup_path = path.with_suffix(path.suffix + ".bak")
-                    backup_path.write_text(content, encoding="utf-8")
-                path.write_text(new_content, encoding="utf-8")
+                    backup_path.write_text(original, encoding="utf-8")
+                path.write_text(content, encoding="utf-8")
     return updated
 
 

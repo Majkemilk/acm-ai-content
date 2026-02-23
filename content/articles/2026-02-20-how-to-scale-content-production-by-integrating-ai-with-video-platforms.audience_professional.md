@@ -3,18 +3,19 @@ title: "How to scale content production by integrating ai with video platforms"
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to scale content production by integrating ai with video platforms"
-primary_tool: "{{PRIMARY_TOOL}}"
-secondary_tool: "{{SECONDARY_TOOL}}"
-last_updated: "2026-02-20"
+tools: "Descript, Opus Clip"
+last_updated: "2026-02-23"
 status: "filled"
 audience_type: "professional"
 batch_id: "2026-02-20T225029"
----# How to scale content production by integrating ai with video platforms
+---
+
+# How to scale content production by integrating ai with video platforms
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to scale content production by integrating ai with video platforms
-**Last updated:** 2026-02-20
+**Last updated:** 2026-02-23
 
 ---
 
@@ -24,7 +25,7 @@ Before publishing, verify the following:
 
 - **No unverified factual claims:** Do not state specific pricing, exact feature limits, release dates, or "best"/"#1" claims unless a cited source is provided.
 - **Attribution:** Any statistic, quote, or comparative claim must have a clear source (URL or named study).
-- **Tool accuracy:** Descriptions of {{PRIMARY_TOOL}} (and {{SECONDARY_TOOL}}, if used) must match current product documentation or official sources; remove or flag anything that cannot be verified.
+- **Tool accuracy:** Descriptions of all tools mentioned in this article must match current product documentation or official sources; remove or flag anything that cannot be verified.
 - **Legal/compliance:** Affiliate and disclosure language has been reviewed and is accurate.
 
 ---
@@ -74,6 +75,10 @@ Before publishing, verify the following:
 -
 -
 
+### Try it yourself: Build your own AI prompt
+
+[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+
 ---
 
 ## When NOT to use this
@@ -92,7 +97,7 @@ Before publishing, verify the following:
 
 ## Tools mentioned
 
-- {{TOOLS_MENTIONED}}
+{{TOOLS_MENTIONED}}
 
 ---
 
@@ -104,6 +109,8 @@ Before publishing, verify the following:
 - [Guide to use ai to optimize video length for different platforms](/articles/2026-02-20-guide-to-use-ai-to-optimize-video-length-for-different-platforms.audience_beginner/)
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
 - [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
+
+---
 
 ## CTA
 

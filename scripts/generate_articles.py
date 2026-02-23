@@ -9,10 +9,11 @@ Fills {{INTERNAL_LINKS}} from existing articles (same category/tool/content_type
 import argparse
 import json
 import re
+import sys
 from datetime import date, datetime
 from pathlib import Path
 
-from content_index import get_production_articles
+from content_index import get_production_articles, load_config
 
 # Pattern: markdown link using our internal URL convention (already has links)
 INTERNAL_LINK_PATTERN = re.compile(r"\]\s*\(\s*/articles/[^)]+\)")
@@ -21,8 +22,10 @@ INTERNAL_LINK_PATTERN = re.compile(r"\]\s*\(\s*/articles/[^)]+\)")
 INTERNAL_LINK_PREFIX = "/articles/"
 INTERNAL_LINK_SUFFIX = "/"
 
-# Taxonomy: enforced category and content_type to prevent drift (niche: ai-marketing-automation)
-ALLOWED_CATEGORIES = ["ai-marketing-automation"]
+# Taxonomy mode:
+# - production_only: all final article categories forced to production_category
+# - preserve_sandbox: keep category_slug when it is in whitelist (production + sandbox), else fallback to production
+CATEGORY_MODE_VALUES = {"production_only", "preserve_sandbox"}
 ALLOWED_CONTENT_TYPES = ["review", "comparison", "best", "how-to", "guide"]
 CATEGORY_ALIASES = {
     "seo": "ai-marketing-automation",
@@ -36,7 +39,7 @@ DEFAULT_CONTENT_TYPE = "guide"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 QUEUE_PATH = PROJECT_ROOT / "content" / "queue.yaml"
 CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
-AFFILIATE_TOOLS_PATH = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
+
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 
@@ -72,8 +75,7 @@ FRONTMATTER_KEYS = [
     "content_type",
     "category",
     "primary_keyword",
-    "primary_tool",
-    "secondary_tool",
+    "tools",
     "last_updated",
     "status",
     "audience_type",
@@ -136,12 +138,23 @@ def save_queue(path: Path, items: list[dict]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def normalize_category(raw: str) -> str:
-    """Normalize category to allowed value; map aliases to ai-marketing-automation."""
+def normalize_category(
+    raw: str,
+    *,
+    category_mode: str,
+    production_category: str,
+    allowed_categories: set[str],
+) -> str:
+    """Normalize category according to category_mode and allowed whitelist."""
+    mode = (category_mode or "production_only").strip().lower()
+    prod = (production_category or "ai-marketing-automation").strip() or "ai-marketing-automation"
     r = (raw or "").strip().lower()
-    if not r:
-        return ALLOWED_CATEGORIES[0]
-    return CATEGORY_ALIASES.get(r, ALLOWED_CATEGORIES[0])
+    mapped = CATEGORY_ALIASES.get(r, r)
+    if mode != "preserve_sandbox":
+        return prod
+    if not mapped:
+        return prod
+    return mapped if mapped in allowed_categories else prod
 
 
 def normalize_content_type(raw: str) -> str:
@@ -166,7 +179,7 @@ def slug_from_keyword(primary_keyword: str) -> str:
 
 
 def parse_article_frontmatter(path: Path) -> dict | None:
-    """Parse frontmatter from a markdown file. Returns dict with title, category, content_type, primary_tool, slug (filename stem)."""
+    """Parse frontmatter from a markdown file. Returns dict with title, category, content_type, tools, slug (filename stem)."""
     try:
         text = path.read_text(encoding="utf-8")
     except OSError:
@@ -222,10 +235,18 @@ def _adjacent_audiences(current: str) -> list[str]:
     return []
 
 
+def _parse_tools_set(meta: dict) -> set[str]:
+    """Extract a set of lowercased tool names from meta['tools'] (comma-separated string)."""
+    raw = (meta.get("tools") or "").strip()
+    if not raw:
+        return set()
+    return {t.strip().lower() for t in raw.split(",") if t.strip()}
+
+
 def select_internal_links(
     existing: list[dict],
     current_category: str,
-    current_primary_tool: str,
+    current_tools: set[str],
     current_content_type: str,
     max_category: int = 3,
     max_tool: int = 2,
@@ -233,9 +254,8 @@ def select_internal_links(
     current_batch_id: str | None = None,
     current_audience_type: str | None = None,
 ) -> list[tuple[str, str]]:
-    """Select up to 6 internal links. Priority 1: same batch_id, adjacent audience. Priority 2: same category (3), same tool (2), same content_type (1)."""
+    """Select up to 6 internal links. Priority 1: same batch_id, adjacent audience. Priority 2: same category (3), overlapping tools (2), same content_type (1)."""
     current_category = (current_category or "").strip().lower()
-    current_primary_tool = (current_primary_tool or "").strip().lower()
     current_content_type = (current_content_type or "").strip().lower()
 
     def url_for(slug: str) -> str:
@@ -257,7 +277,6 @@ def select_internal_links(
             and (m.get("slug") or "").strip() not in used_slugs
         ]
         preferred = _adjacent_audiences(current_audience_type or "")
-        # First: adjacent audience, then rest of same batch (by audience order)
         for aud in preferred:
             for meta in same_batch:
                 slug = (meta.get("slug") or "").strip()
@@ -276,7 +295,7 @@ def select_internal_links(
                 if len(chosen) >= MAX_INTERNAL_LINKS:
                     return chosen
 
-    # Priority 2: same category, then tool, then content_type
+    # Priority 2: same category
     for meta in existing:
         slug = meta.get("slug") or ""
         if not slug or slug in used_slugs:
@@ -287,16 +306,19 @@ def select_internal_links(
             used_slugs.add(slug)
             if len(chosen) >= MAX_INTERNAL_LINKS:
                 return chosen
-    for meta in existing:
-        slug = meta.get("slug") or ""
-        if not slug or slug in used_slugs:
-            continue
-        tool = (meta.get("primary_tool") or "").strip().lower()
-        if tool and tool == current_primary_tool:
-            chosen.append((title_for(meta), url_for(slug)))
-            used_slugs.add(slug)
-            if len(chosen) >= MAX_INTERNAL_LINKS:
-                return chosen
+    # Priority 3: overlapping tools (any tool in common)
+    if current_tools:
+        for meta in existing:
+            slug = meta.get("slug") or ""
+            if not slug or slug in used_slugs:
+                continue
+            other_tools = _parse_tools_set(meta)
+            if other_tools & current_tools:
+                chosen.append((title_for(meta), url_for(slug)))
+                used_slugs.add(slug)
+                if len(chosen) >= MAX_INTERNAL_LINKS:
+                    return chosen
+    # Priority 4: same content_type
     for meta in existing:
         slug = meta.get("slug") or ""
         if not slug or slug in used_slugs:
@@ -365,14 +387,14 @@ def backfill_internal_links_in_file(
     production_pairs = get_production_articles(articles_dir, CONFIG_PATH)
     existing = [m for m, p in production_pairs if (m.get("slug") or p.stem) != slug]
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
-    primary_tool = (meta.get("primary_tool") or "").strip()
+    tools_set = _parse_tools_set(meta)
     content_type = (meta.get("content_type") or "").strip()
     batch_id = (meta.get("batch_id") or "").strip() or None
     audience_type = (meta.get("audience_type") or "").strip() or None
     links = select_internal_links(
         existing,
         current_category=category,
-        current_primary_tool=primary_tool,
+        current_tools=tools_set,
         current_content_type=content_type,
         current_batch_id=batch_id,
         current_audience_type=audience_type,
@@ -395,6 +417,94 @@ def backfill_internal_links_in_file(
     return "updated"
 
 
+def run_re_skeleton(path: Path) -> bool:
+    """Regenerate skeleton for one existing .md from its frontmatter and current templates.
+    Overwrites the file with a new template body (same slug). Internal links recomputed.
+    Returns True on success, False on error. Does not touch queue."""
+    if not path.exists() or path.suffix.lower() != ".md":
+        print(f"Error: not an existing .md file: {path}")
+        return False
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError as e:
+        print(f"Error reading {path}: {e}")
+        return False
+    if not content.startswith("---"):
+        print(f"Error: {path} has no frontmatter.")
+        return False
+    meta = parse_article_frontmatter(path)
+    if not meta:
+        print(f"Error: could not parse frontmatter: {path}")
+        return False
+    today = date.today().isoformat()
+    item = {
+        "title": (meta.get("title") or "").strip() or path.stem,
+        "primary_keyword": (meta.get("primary_keyword") or "").strip() or path.stem,
+        "content_type": (meta.get("content_type") or "guide").strip(),
+        "category_slug": (meta.get("category") or meta.get("category_slug") or "").strip(),
+        "tools": (meta.get("tools") or "").strip(),
+        "last_updated": today,
+    }
+    if meta.get("audience_type"):
+        item["audience_type"] = (meta.get("audience_type") or "").strip()
+    if meta.get("batch_id"):
+        item["batch_id"] = (meta.get("batch_id") or "").strip()
+
+    cfg = load_config(CONFIG_PATH)
+    category_mode = str(cfg.get("category_mode") or "production_only").strip().lower()
+    if category_mode not in CATEGORY_MODE_VALUES:
+        category_mode = "production_only"
+    production_category = (cfg.get("production_category") or "ai-marketing-automation").strip() or "ai-marketing-automation"
+    sandbox = [str(s).strip() for s in (cfg.get("sandbox_categories") or []) if str(s).strip()]
+    allowed_categories = {production_category, *sandbox}
+
+    content_type = normalize_content_type((item.get("content_type") or "").strip())
+    try:
+        template_path = get_template_path(content_type)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False
+    template = template_path.read_text(encoding="utf-8")
+
+    production_pairs = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+    existing = [m for m, p in production_pairs if (m.get("slug") or p.stem) != path.stem]
+    category = normalize_category(
+        (item.get("category_slug") or item.get("category") or "").strip(),
+        category_mode=category_mode,
+        production_category=production_category,
+        allowed_categories=allowed_categories,
+    )
+    tools_set = _parse_tools_set(item)
+    batch_id = (item.get("batch_id") or "").strip() or None
+    audience_type = (item.get("audience_type") or "").strip() or None
+    links = select_internal_links(
+        existing,
+        current_category=category,
+        current_tools=tools_set,
+        current_content_type=content_type,
+        current_batch_id=batch_id,
+        current_audience_type=audience_type,
+    )
+    internal_links_str = format_internal_links_bullets(links) if links else None
+
+    new_content = render_article(
+        template,
+        item,
+        today,
+        internal_links_override=internal_links_str,
+        category_mode=category_mode,
+        production_category=production_category,
+        allowed_categories=allowed_categories,
+    )
+    try:
+        path.write_text(new_content, encoding="utf-8")
+    except OSError as e:
+        print(f"Error writing {path}: {e}")
+        return False
+    print(f"Re-skeletoned: {path}")
+    return True
+
+
 def run_backfill(articles_dir: Path) -> None:
     """Backfill internal links in all .md files in articles_dir. No queue, no new generation."""
     if not articles_dir.exists():
@@ -413,17 +523,28 @@ def run_backfill(articles_dir: Path) -> None:
     print(f"\nSummary: {updated} updated, {skipped} skipped (already have links), {unchanged} unchanged.")
 
 
-def build_frontmatter(item: dict, today: str) -> str:
+def build_frontmatter(
+    item: dict,
+    today: str,
+    *,
+    category_mode: str,
+    production_category: str,
+    allowed_categories: set[str],
+) -> str:
     """Build YAML frontmatter from queue item; use placeholders for missing required fields. Category and content_type are normalized."""
     raw_cat = (item.get("category_slug") or item.get("category") or "").strip()
     raw_ct = (item.get("content_type") or "").strip()
     fm = {
         "title": item.get("title") or "{{TITLE}}",
         "content_type": normalize_content_type(raw_ct),
-        "category": normalize_category(raw_cat),
+        "category": normalize_category(
+            raw_cat,
+            category_mode=category_mode,
+            production_category=production_category,
+            allowed_categories=allowed_categories,
+        ),
         "primary_keyword": item.get("primary_keyword") or "{{PRIMARY_KEYWORD}}",
-        "primary_tool": item.get("primary_tool") or "{{PRIMARY_TOOL}}",
-        "secondary_tool": item.get("secondary_tool") or "{{SECONDARY_TOOL}}",
+        "tools": item.get("tools", ""),
         "last_updated": item.get("last_updated") or today,
         "status": "draft",
     }
@@ -441,81 +562,18 @@ def build_frontmatter(item: dict, today: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _load_affiliate_tools_name_to_url() -> dict[str, str]:
-    """Load name -> affiliate_link from content/affiliate_tools.yaml. Stdlib only. Cached per process."""
-    if not AFFILIATE_TOOLS_PATH.exists():
-        return {}
-    text = AFFILIATE_TOOLS_PATH.read_text(encoding="utf-8")
-
-    def _val(s: str) -> str:
-        s = (s or "").strip()
-        if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
-            return s[1:-1].replace('\\"', '"').strip()
-        return s
-
-    result: dict[str, str] = {}
-    in_tools = False
-    current_name = ""
-    current_url = ""
-    for line in text.split("\n"):
-        stripped = line.strip()
-        if stripped.startswith("#"):
-            continue
-        if stripped == "tools:":
-            in_tools = True
-            continue
-        if not in_tools:
-            continue
-        if stripped.startswith("- "):
-            if current_name:
-                result[current_name] = current_url or current_name
-            current_name = ""
-            current_url = ""
-            part = stripped[2:].strip()
-            kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", part)
-            if kv:
-                k, v = kv.group(1), _val(kv.group(2))
-                if k == "name":
-                    current_name = v
-                elif k == "affiliate_link":
-                    current_url = v
-            continue
-        kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", stripped)
-        if kv:
-            k, v = kv.group(1), _val(kv.group(2))
-            if k == "name":
-                current_name = v
-            elif k == "affiliate_link":
-                current_url = v
-    if current_name:
-        result[current_name] = current_url or current_name
-    return result
-
-
-def _build_tools_mentioned_from_queue_item(
-    item: dict, name_to_url: dict[str, str]
-) -> str:
-    """Build markdown list for {{TOOLS_MENTIONED}} from primary_tool and secondary_tool."""
-    tools: list[str] = []
-    for key in ("primary_tool", "secondary_tool"):
-        name = (item.get(key) or "").strip()
-        if not name:
-            continue
-        url = name_to_url.get(name)
-        if url:
-            tools.append(f"- [{name}]({url})")
-        else:
-            tools.append(f"- {name}")
-    return "\n".join(tools) if tools else ""
-
-
 def get_replacements(
     item: dict,
     today: str,
     internal_links_override: str | None = None,
+    *,
+    category_mode: str,
+    production_category: str,
+    allowed_categories: set[str],
 ) -> dict[str, str]:
     """Map queue item to template variables. Missing values stay as placeholder {{VAR}}.
     If internal_links_override is set, use it for {{INTERNAL_LINKS}}; else use queue value or placeholder."""
+    tools_list = [t.strip() for t in (item.get("tools") or "").split(",") if t.strip()]
     def val_for(var: str) -> str | None:
         if var == "TITLE":
             return (item.get("title") or "").strip() or None
@@ -524,19 +582,18 @@ def get_replacements(
         if var == "CONTENT_TYPE":
             return normalize_content_type((item.get("content_type") or "").strip())
         if var == "CATEGORY_SLUG":
-            return normalize_category((item.get("category_slug") or item.get("category") or "").strip())
-        if var == "PRIMARY_TOOL":
-            return (item.get("primary_tool") or "").strip() or None
-        if var == "SECONDARY_TOOL":
-            return (item.get("secondary_tool") or "").strip() or None
-        if var == "TOOLS_MENTIONED":
-            explicit = (item.get("tools_mentioned") or "").strip()
-            if explicit:
-                return explicit
-            built = _build_tools_mentioned_from_queue_item(
-                item, _load_affiliate_tools_name_to_url()
+            return normalize_category(
+                (item.get("category_slug") or item.get("category") or "").strip(),
+                category_mode=category_mode,
+                production_category=production_category,
+                allowed_categories=allowed_categories,
             )
-            return built if built else None
+        if var == "PRIMARY_TOOL":
+            return tools_list[0] if tools_list else None
+        if var == "SECONDARY_TOOL":
+            return tools_list[1] if len(tools_list) > 1 else (tools_list[0] if tools_list else None)
+        if var == "TOOLS_MENTIONED":
+            return ", ".join(tools_list) if tools_list else None
         if var == "INTERNAL_LINKS":
             if internal_links_override is not None:
                 return internal_links_override
@@ -563,12 +620,27 @@ def render_article(
     item: dict,
     today: str,
     internal_links_override: str | None = None,
+    *,
+    category_mode: str,
+    production_category: str,
+    allowed_categories: set[str],
 ) -> str:
     """Produce article body: frontmatter + template with variables replaced."""
-    front = build_frontmatter(item, today)
+    front = build_frontmatter(
+        item,
+        today,
+        category_mode=category_mode,
+        production_category=production_category,
+        allowed_categories=allowed_categories,
+    )
     body = template
     for placeholder, value in get_replacements(
-        item, today, internal_links_override=internal_links_override
+        item,
+        today,
+        internal_links_override=internal_links_override,
+        category_mode=category_mode,
+        production_category=production_category,
+        allowed_categories=allowed_categories,
     ).items():
         body = body.replace(placeholder, value)
     return front + body
@@ -577,10 +649,16 @@ def render_article(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate articles from queue or backfill internal links.")
     parser.add_argument("--backfill", action="store_true", help="Update existing articles with internal links; do not generate from queue.")
+    parser.add_argument("--re-skeleton", metavar="PATH", type=Path, default=None, help="Regenerate skeleton for one .md from its frontmatter (overwrites file; same slug).")
     args = parser.parse_args()
 
     articles_dir = ARTICLES_DIR
     articles_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.re_skeleton is not None:
+        path = args.re_skeleton if args.re_skeleton.is_absolute() else (PROJECT_ROOT / args.re_skeleton)
+        ok = run_re_skeleton(path)
+        sys.exit(0 if ok else 1)
 
     if args.backfill:
         run_backfill(articles_dir)
@@ -592,6 +670,13 @@ def main() -> None:
         return
 
     today = date.today().isoformat()
+    cfg = load_config(CONFIG_PATH)
+    category_mode = str(cfg.get("category_mode") or "production_only").strip().lower()
+    if category_mode not in CATEGORY_MODE_VALUES:
+        category_mode = "production_only"
+    production_category = (cfg.get("production_category") or "ai-marketing-automation").strip() or "ai-marketing-automation"
+    sandbox = [str(s).strip() for s in (cfg.get("sandbox_categories") or []) if str(s).strip()]
+    allowed_categories = {production_category, *sandbox}
     if not QUEUE_PATH.exists():
         print(f"Queue not found: {QUEUE_PATH}")
         return
@@ -626,14 +711,19 @@ def main() -> None:
 
         production_pairs = get_production_articles(articles_dir, CONFIG_PATH)
         existing = [m for m, p in production_pairs if (m.get("slug") or p.stem) != out_slug]
-        category = normalize_category((item.get("category_slug") or item.get("category") or "").strip())
-        primary_tool = (item.get("primary_tool") or "").strip()
+        category = normalize_category(
+            (item.get("category_slug") or item.get("category") or "").strip(),
+            category_mode=category_mode,
+            production_category=production_category,
+            allowed_categories=allowed_categories,
+        )
+        tools_set = _parse_tools_set(item)
         batch_id = (item.get("batch_id") or "").strip() or None
         audience_type = (item.get("audience_type") or "").strip() or None
         links = select_internal_links(
             existing,
             current_category=category,
-            current_primary_tool=primary_tool,
+            current_tools=tools_set,
             current_content_type=content_type,
             current_batch_id=batch_id,
             current_audience_type=audience_type,
@@ -641,7 +731,13 @@ def main() -> None:
         internal_links_str = format_internal_links_bullets(links) if links else None
 
         content = render_article(
-            template, item, today, internal_links_override=internal_links_str
+            template,
+            item,
+            today,
+            internal_links_override=internal_links_str,
+            category_mode=category_mode,
+            production_category=production_category,
+            allowed_categories=allowed_categories,
         )
         out_path.write_text(content, encoding="utf-8")
         print(f"Generated: {out_path}")
