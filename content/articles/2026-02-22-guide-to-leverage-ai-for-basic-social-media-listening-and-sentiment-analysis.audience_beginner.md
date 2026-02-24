@@ -3,18 +3,19 @@ title: "Guide to leverage AI for basic social media listening and sentiment anal
 content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to leverage ai for basic social media listening and sentiment analysis"
-tools: ""
-last_updated: "2026-02-23"
-status: "draft"
+tools: "Opus Clip, Descript"
+last_updated: "2026-02-24"
+status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-22T122331"
 ---
+
 # Guide to leverage AI for basic social media listening and sentiment analysis
 
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to leverage ai for basic social media listening and sentiment analysis
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-24
 
 ---
 
@@ -103,11 +104,11 @@ Before publishing, verify the following:
 ## Internal links
 
 - [Guide to integrate AI tools for enhancing online customer journey mapping](/articles/2026-02-22-guide-to-integrate-ai-tools-for-enhancing-online-customer-journey-mapping.audience_intermediate/)
+- [Guide to utilize AI for automating targeted ad placements based on user behavior](/articles/2026-02-22-guide-to-utilize-ai-for-automating-targeted-ad-placements-based-on-user-behavior.audience_intermediate/)
+- [How to create automated workflows for cross-channel marketing campaigns](/articles/2026-02-22-how-to-create-automated-workflows-for-cross-channel-marketing-campaigns.audience_intermediate/)
+- [How to automate customer feedback collection with AI tools](/articles/2026-02-22-how-to-automate-customer-feedback-collection-with-ai-tools.audience_beginner/)
+- [How to use AI to automate the creation of targeted audience profiles](/articles/2026-02-22-how-to-use-ai-to-automate-the-creation-of-targeted-audience-profiles.audience_beginner/)
 - [Guide to develop an AI-integrated platform for tracking influencer marketing effectiveness](/articles/2026-02-22-guide-to-develop-an-ai-integrated-platform-for-tracking-influencer-marketing-effectiveness.audience_professional/)
-- [Guide to implement AI-driven analytics to optimize marketing budgets in real-time](/articles/2026-02-22-guide-to-implement-ai-driven-analytics-to-optimize-marketing-budgets-in-real-time.audience_professional/)
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
 
 ---
 

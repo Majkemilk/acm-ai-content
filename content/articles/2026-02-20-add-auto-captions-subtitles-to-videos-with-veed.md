@@ -4,15 +4,16 @@ content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "add auto captions subtitles to videos with VEED"
 tools: "VEED"
-last_updated: "2026-02-23"
-status: "draft"
+last_updated: "2026-02-24"
+status: "filled"
 ---
+
 # How to add auto-generated captions and subtitles to videos with VEED
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** add auto captions subtitles to videos with VEED
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-24
 
 ---
 

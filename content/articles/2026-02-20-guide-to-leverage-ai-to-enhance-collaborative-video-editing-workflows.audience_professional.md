@@ -3,18 +3,19 @@ title: "Guide to leverage ai to enhance collaborative video editing workflows"
 content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to leverage ai to enhance collaborative video editing workflows"
-tools: ""
-last_updated: "2026-02-23"
-status: "draft"
+tools: "Opus Clip, Descript"
+last_updated: "2026-02-24"
+status: "filled"
 audience_type: "professional"
 batch_id: "2026-02-20T225029"
 ---
+
 # Guide to leverage ai to enhance collaborative video editing workflows
 
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to leverage ai to enhance collaborative video editing workflows
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-24
 
 ---
 

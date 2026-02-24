@@ -3,16 +3,17 @@ title: "VEED vs Submagic vs Opus Clip – which short-form video tool to choose"
 content_type: "comparison"
 category: "ai-marketing-automation"
 primary_keyword: "VEED vs Submagic vs Opus Clip comparison"
-tools: "VEED, Submagic"
-last_updated: "2026-02-23"
-status: "draft"
+tools: "VEED, Opus Clip"
+last_updated: "2026-02-24"
+status: "filled"
 ---
+
 # VEED vs Submagic vs Opus Clip – which short-form video tool to choose
 
 **Content type:** comparison
 **Category:** ai-marketing-automation
 **Primary keyword:** VEED vs Submagic vs Opus Clip comparison
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-24
 
 ---
 

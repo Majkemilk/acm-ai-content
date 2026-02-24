@@ -3,16 +3,17 @@ title: "How to automate the curation of user-generated content for brand promoti
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to automate the curation of user-generated content for brand promotion using ai"
-tools: ""
-last_updated: "2026-02-23"
-status: "draft"
+tools: "Opus Clip"
+last_updated: "2026-02-24"
+status: "filled"
 ---
+
 # How to automate the curation of user-generated content for brand promotion using AI
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to automate the curation of user-generated content for brand promotion using ai
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-24
 
 ---
 

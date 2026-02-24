@@ -3,18 +3,19 @@ title: "How to implement ai tools to personalize video marketing content"
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to implement ai tools to personalize video marketing content"
-tools: ""
-last_updated: "2026-02-23"
-status: "draft"
+tools: "Opus Clip"
+last_updated: "2026-02-24"
+status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-20T225029"
 ---
+
 # How to implement ai tools to personalize video marketing content
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to implement ai tools to personalize video marketing content
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-24
 
 ---
 
