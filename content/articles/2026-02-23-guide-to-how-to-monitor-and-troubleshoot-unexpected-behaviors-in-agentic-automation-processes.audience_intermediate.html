@@ -3,48 +3,50 @@ title: "Guide to how to monitor and troubleshoot unexpected behaviors in agentic
 content_type: "guide"
 category: "automation workflows"
 primary_keyword: "guide to how to monitor and troubleshoot unexpected behaviors in agentic automation processes"
-tools: "Descript, UptimeRobot, Make"
-last_updated: "2026-02-23"
+tools: "Make, Descript, ChatGPT"
+last_updated: "2026-02-26"
 status: "filled"
 audience_type: "intermediate"
 batch_id: "2026-02-23T185219"
 -->
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Introduction</h2>
-<p class="text-lg text-gray-700 mb-4">In today's fast-paced automation landscape, unexpected behaviors in agentic automation processes can hinder efficiency and productivity. This guide aims to equip you with the essential skills needed to monitor and troubleshoot these issues effectively. You will learn key concepts, decision-making rules, trade-offs, failure modes, and practical checklists to ensure your automated processes run smoothly.</p>
+<p class="text-lg text-gray-700 mb-4">In today's world of automation, agentic processes are being used to streamline workflows and enhance productivity. However, unexpected behaviors can arise, creating potential disruptions. This guide will help you understand how to monitor and troubleshoot these anomalies in agentic automation processes. You'll learn essential monitoring techniques, practical troubleshooting steps, decision rules, and checklists to effectively manage these challenges.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">What you need to know first</h2>
-<p class="text-lg text-gray-700 mb-4">Before diving into monitoring and troubleshooting, it's essential to have a grasp of the foundational elements involved in agentic automation processes. Understanding the following key concepts will enhance your ability to effectively manage automation:</p>
+<p class="text-lg text-gray-700 mb-4">Before diving into the nuances of monitoring and troubleshooting agentic automation, it's essential to grasp a few key concepts:</p>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li>**Agentic Automation**: Automation that incorporates decision-making capabilities, enabling systems to act autonomously based on predefined parameters.</li>
-    <li>**Behavior Monitoring Tools**: Software used to analyze the performance of automated workflows by tracking variances and anomalies in execution.</li>
-    <li>**Feedback Loops**: Systems in place that allow for continuous monitoring and adjustments based on the performance of the automation processes.</li>
+    <li><strong>Agentic Automation:</strong> This refers to automated processes that operate independently to make decisions based on predefined parameters. Understanding their structure is crucial for effective monitoring.</li>
+    <li><strong>Workflows:</strong> Familiarize yourself with the flows that the automation follows, as knowing the different paths can help identify where issues occur.</li>
+    <li><strong>Metrics and KPIs:</strong> Recognizing the metrics you need to track success and failures. These could include execution time, error rates, and user feedback.</li>
 </ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Decision rules:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">Decision rules:</h3>
+    <h3 class="text-xl font-semibold mb-3">When to use this approach:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li>Use agentic automation for tasks that involve complex decision-making processes where human intervention is minimal.</li>
-        <li>Implement monitoring tools when the automation process has high variability in outcomes or when it interfaces with critical systems.</li>
-        <li>Employ feedback loops if the task's outcome impacts subsequent tasks, allowing adjustments based on performance analysis.</li>
+        <li>Use monitoring techniques when implementing new agentic processes to catch anomalies early.</li>
+        <li>Employ troubleshooting when users report issues, as user feedback often highlights significant unseen issues.</li>
+        <li>Monitor consistently, especially during critical business periods or high-load scenarios to ensure the automation behaves as expected.</li>
     </ul>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Tradeoffs:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">Tradeoffs:</h3>
+    <h3 class="text-xl font-semibold mb-3">Pros and Cons:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">
         <li><strong>Pros:</strong>
             <ul class="list-disc list-inside space-y-2 text-gray-700">
-                <li>Increased efficiency through reduced human oversight.</li>
-                <li>Ability to perform complex calculations and analyses quickly.</li>
+                <li>Proactive identification of inefficiencies leads to improved process reliability.</li>
+                <li>Allows for the ongoing optimization of workflows based on real-time data.</li>
+                <li>Enhanced user trust and satisfaction from regular monitoring and prompt troubleshooting.</li>
             </ul>
         </li>
         <li><strong>Cons:</strong>
             <ul class="list-disc list-inside space-y-2 text-gray-700">
-                <li>Potential for unexpected behaviors that could disrupt business processes.</li>
-                <li>Complex troubleshooting can require a deep understanding of both the technology and workflows involved.</li>
+                <li>Time and resource-intensive setup processes can deter initial implementation.</li>
+                <li>Requires skilled personnel for ongoing analysis and adjustments.</li>
+                <li>Potential for information overload if metrics aren’t properly prioritized.</li>
             </ul>
         </li>
     </ul>
@@ -52,138 +54,167 @@ batch_id: "2026-02-23T185219"
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Failure modes:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">Failure modes:</h3>
+    <h3 class="text-xl font-semibold mb-3">What can go wrong and how to avoid it:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li>Misconfigurations in the automation settings leading to incorrect task executions.</li>
-        <li>Inadequate feedback mechanisms preventing real-time performance insights.</li>
-        <li>Dependency on external resources that may become unavailable or inconsistent.</li>
+        <li><strong>Misconfiguration:</strong> Always double-check parameters and settings before deploying an automation. Create a rollback plan if the automation fails.</li>
+        <li><strong>Scalability Issues:</strong> Ensure your infrastructure can handle increased loads. Performance testing in controlled scenarios can help.</li>
+        <li><strong>Insufficient Data Capture:</strong> Failing to monitor key metrics can lead to blind spots. Regularly revisit what data is necessary for effective monitoring.</li>
     </ul>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">SOP checklist:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">SOP checklist:</h3>
+    <h3 class="text-xl font-semibold mb-3">Step-by-step checklist:</h3>
     <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li>Identify key performance indicators (KPIs) for your automation process.</li>
-        <li>Set up monitoring tools to capture data related to these KPIs.</li>
-        <li>Establish regular intervals for reviewing performance data and diagnosing issues.</li>
-        <li>Document any unexpected behaviors thoroughly for future reference.</li>
-        <li>Test adjustments in controlled environments before full implementation.</li>
+        <li>Identify critical processes in your automation workflow.</li>
+        <li>Select appropriate monitoring tools to capture necessary metrics.</li>
+        <li>Establish baseline performance metrics for comparison.</li>
+        <li>Set up alerts for anomalies and performance drops.</li>
+        <li>Review logs and data regularly for unexpected patterns.</li>
+        <li>Engage with user feedback to identify unreported issues.</li>
+        <li>Implement iterative changes based on gathered data and feedback.</li>
+        <li>Document changes and results for future reference.</li>
     </ol>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Template 1:</h2>
 <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Template 1:</h3>
-    <p class="text-lg text-gray-700 mb-2">Use this monitoring report template to analyze the performance of your automation.</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-Automation Process: Invoice Generation
-KPIs: Time to generate invoice, number of errors
-Last Monitoring Date: 10/05/2023
-Key Insights:
-- Average time: 2 minutes
-- Errors detected: 15 invoices out of 1000
-Actions Required:
-- Review invoice template for formatting issues
-- Update error handling protocols
-    </pre>
+    <h3 class="text-xl font-semibold mb-3">Monitoring Automation Processes</h3>
+    <p class="text-lg text-gray-700 mb-2">Use this template to monitor an automated invoicing system:</p>
+    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Process: Automated Invoice Generation
+Metrics to Monitor:
+- Error Rate: % of invoices generated with errors
+- Execution Time: Average time taken to generate an invoice
+Alerts:
+- Set alerts for execution times exceeding 2 minutes
+- Immediate notification for any invoice generation errors
+...</pre>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Template 2:</h2>
 <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Template 2:</h3>
-    <p class="text-lg text-gray-700 mb-2">This troubleshooting template outlines steps for addressing specific issues detected during monitoring.</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-Issue Detected: Delayed response in user query handling
-Detected On: 10/08/2023
-Root Cause Analysis:
-- Check for API timeout settings
-- Review server load at peak times
-Recommended Actions:
--Increase timeout settings
--Monitor server load during critical usage periods
-    </pre>
+    <h3 class="text-xl font-semibold mb-3">Troubleshooting Automation Issues</h3>
+    <p class="text-lg text-gray-700 mb-2">Use this template for troubleshooting a defective order fulfillment automation:</p>
+    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Process: Order Fulfillment Automation
+Common Issues:
+- Delayed Order Processing: Check integration points with inventory systems.
+- Incorrect Shipping Labels: Validate end-user inputs or data extraction methods.
+Troubleshooting Steps:
+1. Review logs from the last 30 days for error patterns.
+2. Conduct user interviews to gather insights on missed orders.
+3. Prioritize critical issues affecting customer satisfaction urgently.
+...</pre>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Step-by-step workflow</h2>
+<p class="text-lg text-gray-700 mb-4">Follow this workflow to effectively monitor and troubleshoot agentic automation processes:</p>
 <ol class="list-decimal list-inside space-y-2 text-gray-700">
-    <li>Establish baseline performance metrics using monitoring tools.</li>
-    <li>Implement automation processes while keeping monitoring active.</li>
-    <li>Analyze performance data regularly and record deviations.</li>
-    <li>Diagnose identified issues by revisiting rules or configurations.</li>
-    <li>Make informed adjustments and closely monitor their impact.</li>
+    <li>Human → Prompt #1 (to a general AI) → AI returns Prompt #2 (ready-to-paste prompt for the specific tool) → Use Prompt #2 in the tool.</li>
+    <li><strong>Identify the automation target:</strong> Determine what specific automated process needs monitoring.</li>
+    <li><strong>Gather metrics:</strong> Select key performance indicators for effective tracking.</li>
+    <li><strong>Set baseline:</strong> Establish normal operational parameters.</li>
+    <li><strong>Implement monitoring tools:</strong> Integrate software for real-time analysis and feedback.</li>
+    <li><strong>Analyze data:</strong> Consistently review data collected for anomalies.</li>
+    <li><strong>Take Action:</strong> Respond promptly to identified issues and adapt workflows accordingly.</li>
+    <li><strong>Engage Users:</strong> Be proactive in gathering user feedback for continuous improvement.</li>
+    
+    <h3 class="text-xl font-semibold mt-6 mb-3">Try it yourself: Build your own AI prompt</h3>
+    <p class="text-lg text-gray-700 mb-4">You can leverage AI to enhance your monitoring capabilities. Follow this structured meta-prompt:</p>
+    <p class="text-lg text-gray-700 mb-4">This is the input (Prompt #1), ready to use with <a href="https://claude.ai/">Claude</a> (Claude is an AI chatbot designed to engage in conversations and assist users with various queries.).</p>
+<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">**Role:** You are a workflow analyst with experience in agentic automation processes.
+**Goal:** To improve monitoring effectiveness in automated workflows within a logistics company.
+**Task:** Please create a prompt that will assume achieving the Goal using the tools listed in the Recommended tools section, to enhance real-time troubleshooting for automated logistics systems.
+**Output specification:** Format the output as a detailed checklist including key metrics to track, monitoring tool recommendations, and troubleshooting steps.
+**Recommended tools:** Make, Descript, ChatGPT.
+**Uncertainty:** If unsure about the exact parameters, please ask for clarification.
+**Permission:** If more details are needed related to the systems or processes, please indicate what is required.
+    </pre>
+
+    <p class="text-lg text-gray-700 mb-4">Your AI will then create Prompt #2 tailored for the specific monitoring tools.</p>
+    <p class="text-lg text-gray-700 mb-4">Below is the output (Prompt #2) the AI returns, which is ready to use with Claude in the same or a new thread, or in another tool of the same type (Claude is an AI chatbot designed to engage in conversations and assist users with various queries.).</p>
+<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">### Checklist for Enhancing Monitoring Effectiveness in Automated Logistics Workflows
+
+#### 1. Define Key Metrics to Track
+   - **Process Efficiency**: Measure the time taken for each automated task.
+   - **Error Rate**: Track the number of failed automated processes.
+   - **Response Time**: Monitor the speed of response for each automated system.
+   - **Throughput**: Measure the number of transactions or orders processed in a given time.
+   - **Customer Feedback**: Analyze customer satisfaction scores related to automated logistics processes.
+   - **System Availability**: Measure uptime vs. downtime for automated workflows.
+   - **Data Accuracy**: Evaluate the accuracy of information processed within workflows.
+
+#### 2. Recommended Monitoring Tools
+   - **Make (formerly Integromat)**:
+     - Set up scenarios to automate monitoring notifications.
+     - Use webhooks to trigger alerts on workflow failures or delays.
+   - **Descript**:
+     - Utilize Descript for documenting processes and creating video tutorials for troubleshooting visual guides.
+     - Record system behaviors during errors for better understanding and improvement.
+   - **ChatGPT**:
+     - Deploy ChatGPT to automate responses for common queries related to workflow issues.
+     - Use it for generating real-time troubleshooting guides based on specific error codes or scenarios.
+
+#### 3. Troubleshooting Steps
+   - **Identify the Issue**:
+     - Review system logs and error reports generated by monitoring tools.
+     - Use Make to pull data related to recent failures or inefficiencies.
+
+   - **Analyze the Impact**:
+     - Determine which processes are impacted by the identified issue, focusing on key metrics, such as process efficiency and error rates.
+
+   - **Consult Documentation**:
+     - Reference documentation in Descript for workflows and previous incident responses.
+  
+   - **Execute Standard Fixes**:
+     - Apply standardized troubleshooting protocols based on common issues (e.g., resetting connections, verifying configurations).
+
+   - **Engage ChatGPT**:
+     - If further assistance is needed, query ChatGPT with specifics of the error to generate tailored troubleshooting steps.
+
+   - **Test the Solution**:
+     - Run test cases to ensure that the fix has resolved the issue without introducing new problems.
+
+   - **Document the Resolution**:
+     - Create a new entry in Descript to update the troubleshooting guide with the resolved issue and its solution for future reference.
+
+#### 4. Review and Iterate
+   - **Regularly Review Key Metrics**:
+     - Schedule weekly or monthly dashboards to analyze the tracked metrics and adjust workflow configurations as necessary.
+
+   - **Continuous Improvement**:
+     - Collect feedback from users and stakeholders to refine and optimize the monitoring and troubleshooting processes.
+
+#### 5. Seek Inputs and Clarifications
+   - **Process Complexity**: What are the specific automated processes currently in place that require monitoring?
+   - **Error Types**: Are there particular error types or failure patterns you’ve encountered frequently?
+   - **Metric Prioritization**: Which metrics are most critical for you to track right now?
+   - **System Integration**: What other systems or tools are integrated with your logistics workflows?
+
+By following this checklist, your logistics company can enhance its monitoring effectiveness, enabling proactive real-time troubleshooting and continuous improvement in automated workflows.</pre>
+<p class="text-lg text-gray-700 mb-4">Push this one level higher by using Prompt #2 in <a href="https://claude.ai/">Claude</a>.</p>
 </ol>
 
-<h3 class="text-xl font-semibold mt-6 mb-3">Try it yourself: Build your own AI prompt</h3>
-<p class="text-lg text-gray-700 mb-4">In this scenario, your workflow will be as follows: Human → Prompt #1 (to a general AI) → AI returns Prompt #2 (ready-to-paste prompt for the specific tool) → Use Prompt #2 in the tool.</p>
-<p class="text-lg text-gray-700 mb-4">This is the input (Prompt #1), ready to use with <a href="https://www.descript.com">Descript</a> (AI tool).</p>
-<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-**Role:** You are an automation consultant tasked with refining reporting processes.
-**Goal:** Enhance the efficiency of the reporting automation workflow.
-**Task:** Please create a prompt that will generate suggestions for optimizing an invoice processing automation workflow.
-**Uncertainty:** If specific metrics are unclear, please state so and ask for clarification.
-**Permission:** If more context is needed, please request additional details.
-</pre>
-<p class="text-lg text-gray-700 mb-4">The AI returns the following output (Prompt #2), which is ready to use with <a href="https://www.descript.com">Descript</a> (AI video and audio editing tool).</p>
-<p class="text-lg text-gray-700 mb-4">Below is the output (Prompt #2) the AI returns, which is ready to use with <a href="https://www.descript.com">Descript</a> (AI tool).</p>
-<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Certainly! Here’s a prompt designed to generate suggestions for optimizing an invoice processing automation workflow:
-
----
-
-**Prompt for Generating Suggestions:**
-
-**Objective**: To propose enhancements for the automation workflow of the invoice processing system to increase efficiency, reduce errors, and save time.
-
-1. **Current Workflow Insight**: Please describe the current invoice processing workflow. Include the following details:
-   - Steps involved in the process (e.g., data entry, approval, payment).
-   - Tools or software currently being used.
-   - Average time taken per step.
-
-2. **Challenges &amp; Bottlenecks**: Identify any specific challenges or bottlenecks you face in the current workflow. What are the most time-consuming or error-prone areas?
-
-3. **Data Handling**: How are invoices currently received and stored? Are there systems for capturing data automatically or is manual entry required?
-
-4. **Integration**: Are there other systems (accounting, ERP, etc.) that the invoice processing workflow needs to integrate with? What is the current state of these integrations?
-
-5. **Metrics for Success**: What metrics do you currently track to measure the efficiency of the invoice processing workflow? If specific metrics are unclear (e.g., processing time, error rates), please specify the areas needing clarification.
-
-6. **Desired Outcomes**: What are your ultimate goals for this optimization? For instance:
-   - Reduced processing time?
-   - Higher accuracy?
-   - Better compliance?
-   - Improved user experience for staff?
-
-7. **Additional Context**: Are there any restrictions (financial, technological, manpower) that should be taken into account or specific tools you prefer to use or avoid?
-
----
-
-Feel free to fill in the answers or provide additional context, and I will generate tailored suggestions for optimizing your invoice processing automation workflow!</pre>
-<p class="text-lg text-gray-700 mb-4">Action cue: Take ownership of the next phase by using Prompt #2 in your AI tool.</p>
-
 <h2 class="text-3xl font-bold mt-8 mb-4">When NOT to use this</h2>
-<p class="text-lg text-gray-700 mb-4">Avoid implementing agentic automation for processes that require highly nuanced human judgment, such as customer service tasks requiring empathy. Additionally, ensure that the complexity of the automation is justified by a significant return on investment; otherwise, the implementation may not be worth the resources dedicated to monitoring and troubleshooting.</p>
+<p class="text-lg text-gray-700 mb-4">Avoid implementing these monitoring and troubleshooting processes when:</p>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+    <li>The automation process is in its initial development phase; testing should prioritize functionality over monitoring.</li>
+    <li>When operating in low-risk environments, such as internal processes where errors have minimal impact.</li>
+    <li>If resources for consistent monitoring are unavailable, leading to insufficient data for effective troubleshooting.</li>
+</ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">FAQ</h2>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li><strong>What are common tools for monitoring agentic automation?</strong>
-        <p class="text-lg text-gray-700">Common tools include <a href="https://uptimerobot.com/?red=flowta">UptimeRobot</a>, which tracks performance and uptime, and <a href="https://www.make.com/en/register?pc=flowtaro">Make</a>, for visual automation and integrations.</p>
-    </li>
-    <li><strong>How often should I monitor automation processes?</strong>
-        <p class="text-lg text-gray-700">Regular monitoring should be performed at least once a week, or more frequently if your automation processes impact critical operations.</p>
-    </li>
-    <li><strong>What should I do if I encounter a persistent failure mode?</strong>
-        <p class="text-lg text-gray-700">Begin by revisiting your root cause analysis and ensure that all relevant stakeholders are involved in brainstorming potential solutions. A collaborative approach may yield more effective strategies.</p>
-    </li>
+    <li><strong>What are the most common issues in agentic automation?</strong> Common issues include misconfiguration, unexpected integration failures, and data inaccuracies.</li>
+    <li><strong>How frequently should I review the performance of automation processes?</strong> Regular performance reviews should occur at least once a week, while real-time monitoring tools may provide instant notifications for anomalies.</li>
+    <li><strong>Is it necessary to involve end-users in the monitoring process?</strong> Yes, engaging users is essential as they can provide insights into operational issues that might not be captured through standard monitoring methods.</li>
 </ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Internal links</h2>
-<p class="text-lg text-gray-700 mb-4">For further reading, check out our articles on <a href="/blog/automation-basics">automation basics</a> and <a href="/blog/best-practices-for-ai">best practices for AI integration</a>.</p>
+<p class="text-lg text-gray-700 mb-4">For further reading, check out our article on optimizations in agentic workflows <a href="/blog/">here</a> and explore methodologies for advanced automation management <a href="/blog/">here</a>.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">List of AI tools mentioned in this article</h2>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-  <li><a href="https://www.descript.com">Descript</a> — AI tool for Descript workflows.</li>
-  <li><a href="https://uptimerobot.com/?red=flowta">UptimeRobot</a> — Free website and endpoint uptime monitoring</li>
   <li><a href="https://www.make.com/en/register?pc=flowtaro">Make</a> — Visual automation and integrations</li>
+  <li><a href="https://www.descript.com">Descript</a> — Descript is a tool that allows users to edit audio and video by manipulating text transcripts.</li>
+  <li><a href="https://chatgpt.com/">ChatGPT</a> — ChatGPT is an AI language model that generates human-like text based on user input.</li>
 </ul>
-
-

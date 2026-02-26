@@ -4,18 +4,17 @@ content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to how to easily set up ai-driven customer segmentation without advanced technical skills"
 tools: "Descript, Opus Clip"
-last_updated: "2026-02-23"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 audience_type: "intermediate"
 batch_id: "2026-02-23T151154"
 ---
-
 # Guide to how to easily set up AI-driven customer segmentation without advanced technical skills
 
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to how to easily set up ai-driven customer segmentation without advanced technical skills
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -77,7 +76,7 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[If this article involves creating or processing content with AI tools, generate Prompt #1 and Prompt #2 following the Try-it-yourself rules. If this article is purely strategic or analytical, replace this subsection with a single sentence: "This topic does not lend itself to a prompt-building exercise." and keep the heading.]
+[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
 
 ---
 
@@ -95,9 +94,11 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Descript, Opus Clip
 
 ---
 

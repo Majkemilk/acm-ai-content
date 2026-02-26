@@ -4,18 +4,17 @@ content_type: "best"
 category: "ai-marketing-automation"
 primary_keyword: "best implement chatbots for customer support automation with ai"
 tools: "Make"
-last_updated: "2026-02-24"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 audience_type: "beginner"
 batch_id: "2026-02-22T121243"
 ---
-
 # Best implement chatbots for customer support automation with AI
 
 **Content type:** best
 **Category:** ai-marketing-automation
 **Primary keyword:** best implement chatbots for customer support automation with ai
-**Last updated:** 2026-02-24
+**Last updated:** 2026-02-26
 
 ---
 
@@ -46,6 +45,14 @@ Before publishing, verify the following:
 
 ---
 
+## Step-by-step workflow
+
+### Try it yourself: Build your own AI prompt
+
+[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+
+---
+
 ## When NOT to use this
 
 ---
@@ -60,9 +67,11 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Make
 
 ---
 

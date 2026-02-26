@@ -3,8 +3,8 @@ title: "Guide to integrate AI tools for enhancing online customer journey mappin
 content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to integrate ai tools for enhancing online customer journey mapping"
-tools: "Jasper, Lately AI"
-last_updated: "2026-02-23"
+tools: "ChatGPT, UptimeRobot, Descript, Make, Answrr"
+last_updated: "2026-02-26"
 status: "filled"
 audience_type: "intermediate"
 batch_id: "2026-02-22T122331"
@@ -15,7 +15,7 @@ batch_id: "2026-02-22T122331"
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to integrate ai tools for enhancing online customer journey mapping
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -77,7 +77,7 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[If this article involves creating or processing content with AI tools, generate Prompt #1 and Prompt #2 following the Try-it-yourself rules. If this article is purely strategic or analytical, replace this subsection with a single sentence: "This topic does not lend itself to a prompt-building exercise." and keep the heading.]
+[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
 
 ---
 
@@ -95,20 +95,22 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Jasper, Lately AI
 
 ---
 
 ## Internal links
 
+- [Guide to leverage AI for basic social media listening and sentiment analysis](/articles/2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner/)
+- [How to automate customer feedback collection with AI tools](/articles/2026-02-22-how-to-automate-customer-feedback-collection-with-ai-tools.audience_beginner/)
+- [How to use AI to automate the creation of targeted audience profiles](/articles/2026-02-22-how-to-use-ai-to-automate-the-creation-of-targeted-audience-profiles.audience_beginner/)
 - [Guide to develop an AI-integrated platform for tracking influencer marketing effectiveness](/articles/2026-02-22-guide-to-develop-an-ai-integrated-platform-for-tracking-influencer-marketing-effectiveness.audience_professional/)
 - [Guide to implement AI-driven analytics to optimize marketing budgets in real-time](/articles/2026-02-22-guide-to-implement-ai-driven-analytics-to-optimize-marketing-budgets-in-real-time.audience_professional/)
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
-- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
+- [How to scale personalized content recommendations using AI algorithms](/articles/2026-02-22-how-to-scale-personalized-content-recommendations-using-ai-algorithms.audience_professional/)
 
 ---
 

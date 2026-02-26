@@ -3,52 +3,40 @@ title: "Guide to how to develop troubleshooting processes for unexpected agentic
 content_type: "guide"
 category: "automation workflows"
 primary_keyword: "guide to how to develop troubleshooting processes for unexpected agentic automation failures"
-tools: "Opus Clip, Make, Descript"
-last_updated: "2026-02-23"
+tools: "Descript, Make, UptimeRobot"
+last_updated: "2026-02-26"
 status: "filled"
 audience_type: "professional"
 batch_id: "2026-02-23T185219"
 -->
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Introduction</h2>
-<p class="text-lg text-gray-700 mb-4">Navigating the complexities of agentic automation systems is crucial for maintaining operational efficiency. Unexpected failures can lead to significant downtime and revenue loss. This guide outlines the essential steps to develop robust troubleshooting processes for such automation failures, equipping you with the frameworks and strategies necessary to minimize disruptions and improve system resilience.</p>
+<p class="text-lg text-gray-700 mb-4">In the rapidly evolving landscape of automation, failures can disrupt workflows and impede progress. This guide focuses on developing robust troubleshooting processes for unexpected agentic automation failures. You'll learn key strategies to identify, analyze, and resolve issues effectively, ensuring that automated systems work as intended.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">What you need to know first</h2>
-<p class="text-lg text-gray-700 mb-4">Understanding the foundational components of agentic automation systems is essential. Familiarity with basic automation principles, the technology stack, and common failure modes will help you create effective troubleshooting frameworks.</p>
+<p class="text-lg text-gray-700 mb-4">Before diving into troubleshooting processes, it's essential to grasp some foundational concepts:</p>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li>Automation Frameworks: Knowledge of various automation frameworks such as RPA, BPM, and machine learning systems.</li>
-    <li>Common Failure Modes: Recognition of typical failures, including communication errors, data inconsistencies, and system overloads.</li>
-    <li>Documentation Practices: Awareness of good documentation practices to ensure teams can easily access and understand system architecture and dependencies.</li>
+    <li><strong>Agentic Automation:</strong> This refers to automation systems with a degree of autonomy, making decisions based on pre-defined rules or machine learning models.</li>
+    <li><strong>Failure Modes:</strong> Understanding the various failure modes of automation—system errors, connectivity issues, algorithm biases, etc.—enables you to proactively mitigate risks.</li>
+    <li><strong>Monitoring and Logging:</strong> Keeping detailed logs and constant monitoring can help identify anomalies as they occur, enabling quicker resolution.</li>
 </ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Decision rules:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
     <h3 class="text-xl font-semibold mb-3">When to use this approach:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li>When failures are unpredictable and occur in complex environments.</li>
-        <li>When previous attempts to identify failures have been inefficient or time-consuming.</li>
-        <li>To enhance cross-team collaboration in managing and resolving unexpected issues.</li>
+        <li>If automation failures are impacting key business processes.</li>
+        <li>When traditional troubleshooting methods fail or are too slow for the complexity of issues.</li>
+        <li>If autonomous decision-making has become a regular feature of your systems.</li>
     </ul>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Tradeoffs:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">Pros and Cons:</h3>
+    <h3 class="text-xl font-semibold mb-3">Pros/Cons:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li><strong>Pros:</strong>
-            <ul class="list-inside space-y-2">
-                <li>Improved response time to unexpected automation failures.</li>
-                <li>Increased knowledge retention across the team.</li>
-                <li>Development of standardized processes enhances accountability.</li>
-            </ul>
-        </li>
-        <li><strong>Cons:</strong>
-            <ul class="list-inside space-y-2">
-                <li>Initial implementation may require significant resources.</li>
-                <li>Requires ongoing refinement and training to adapt to evolving technologies.</li>
-                <li>May face resistance from team members used to ad hoc troubleshooting methods.</li>
-            </ul>
-        </li>
+        <li><strong>Pros:</strong> Streamlined workflows, faster problem resolution, improved system reliability.</li>
+        <li><strong>Cons:</strong> Initial setup can be resource-intensive, requires ongoing monitoring and adjustments.</li>
     </ul>
 </div>
 
@@ -56,9 +44,9 @@ batch_id: "2026-02-23T185219"
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
     <h3 class="text-xl font-semibold mb-3">What can go wrong and how to avoid it:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li>Data Quality Issues: Inconsistent or incorrect data can lead to cascading failures. Establish a data validation framework to ensure input integrity.</li>
-        <li>Communication Failures: Network or API outages can disrupt system communication. Implement fallback systems or alternative routing mechanisms.</li>
-        <li>Software Compatibility: Updates in one part of the automation stack can lead to incompatibilities. Maintain a compatibility testing process for all updates.</li>
+        <li><strong>Algorithm Drift:</strong> Over time, machine learning models may become less effective. Regularly retrain models with updated data to mitigate this.</li>
+        <li><strong>Connectivity Issues:</strong> Automation that relies on network stability can fail due to outages. Build backup systems and failover mechanisms.</li>
+        <li><strong>Data Quality Problems:</strong> Inaccurate or irrelevant data can lead to erroneous decisions. Implement strict data validation checks.</li>
     </ul>
 </div>
 
@@ -66,187 +54,156 @@ batch_id: "2026-02-23T185219"
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
     <h3 class="text-xl font-semibold mb-3">Step-by-step checklist:</h3>
     <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li>Define failure criteria for automation processes.</li>
-        <li>Document all failure types with examples and impacts.</li>
-        <li>Create a flowchart mapping troubleshooting steps for each failure type.</li>
-        <li>Assign responsibilities to team members for different failure modes.</li>
-        <li>Regularly review and train the team on these procedures.</li>
+        <li>Identify the failure and gather initial data.</li>
+        <li>Review system logs for any anomalies.</li>
+        <li>Isolate the failure source (e.g., data, algorithm, connectivity).</li>
+        <li>Implement quick fixes if applicable; document all steps.</li>
+        <li>Analyze the failure to identify root causes.</li>
+        <li>Update documentation and troubleshooting processes based on findings.</li>
     </ol>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Template 1:</h2>
 <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Template for Incident Report:</h3>
-    <p class="text-lg text-gray-700 mb-2">Use this template to document automation failures systematically:</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Incident Title: Communication Failure in Bot X
-Date: 2023-10-01
-Incident Description: The automation bot failed to respond to API requests due to an endpoint downtime.
-Immediate Impact: Workflow A was halted, affecting downstream processes.
-Resolution Steps: 
-1. Check API connectivity.
-2. Reach out to the API provider for status.
-3. Implement fallback procedure if failure persists.</pre>
+    <h3 class="text-xl font-semibold mb-3">Failure Analysis Report:</h3>
+    <p class="text-lg text-gray-700 mb-2">Use this template to create a structured report for your team:</p>
+    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Date: (Insert Date)
+Failure Description: (Brief description of the failure observed.)
+Data Logs: 
+- Timestamp: (Insert Timestamp) | Status: (Success/Failure)
+- (Additional relevant data)
+Root Cause Analysis:
+- (Document findings from the investigation)
+Actions Taken:
+- (List immediate actions taken)
+Recommendations:
+- (Suggestions for preventing future occurrences)
+...</pre>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Template 2:</h2>
 <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Template for Root Cause Analysis:</h3>
-    <p class="text-lg text-gray-700 mb-2">Utilize this for conducting root cause analysis of automation failures:</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Incident Title: Database Overload in Automation Y
-Date: 2023-09-15
-Root Cause: Insufficient database indexing leading to timeout errors during peak loads.
-Action Items:
-1. Optimize database queries.
-2. Implement a queuing mechanism to balance load.
-3. Regularly monitor database performance metrics.</pre>
+    <h3 class="text-xl font-semibold mb-3">Troubleshooting Workflow:</h3>
+    <p class="text-lg text-gray-700 mb-2">Create a troubleshooting workflow to guide your team during failures:</p>
+    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Step 1: (Identify failure)
+Step 2: (Review system logs)
+Step 3: (Isolate cause)
+Step 4: (Implement fix)
+Step 5: (Document findings)
+Step 6: (Review and improve processes)
+...</pre>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Step-by-step workflow</h2>
 <ol class="list-decimal list-inside space-y-2 text-gray-700">
-    <li>Identify the unexpected failure mode.</li>
-    <li>Utilize the appropriate troubleshooting flowchart to analyze the issue.</li>
-    <li>Gather relevant logs and error messages for diagnostic purposes.</li>
-    <li>Collaborate with the development or infrastructure team to diagnose root causes.</li>
-    <li>Document the findings and update the relevant SOP and templates.</li>
-    <li>Test the deployment of fixes and monitor for recurring issues.</li>
+    <li>Human → Prompt #1 (meta-prompt to a general AI, using chain-of-thought reasoning) → AI returns Prompt #2 (ready-to-paste prompt for the specific tool) → Use Prompt #2 in the tool.</li>
+
+    <h3 class="text-xl font-semibold mt-6 mb-3">Try it yourself: Build your own AI prompt</h3>
+    <p class="text-lg text-gray-700 mb-4">This approach will enable you to architect a multi-step reasoning workflow actively.</p>
+    <p class="text-lg text-gray-700 mb-4">This is the input (Prompt #1), ready to use with <a href="https://chatgpt.com/">ChatGPT</a> (ChatGPT is an AI language model that generates human-like text based on user input.).</p>
+<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">**Role:** You are a senior automation engineer specializing in troubleshooting failed automated processes. 
+**Objective:** Provide a comprehensive troubleshooting approach that minimizes downtime. 
+**Task:** Please create a prompt that will assume achieving the Goal using the tools listed in the Recommended tools section, to analyze the root cause of a failed automation process. 
+**Chain of thought:** Think step by step: first understand system dependencies, then review logs, and finally diagnose issues. 
+**Output specification:** The output must always be Prompt #2: a structured troubleshooting plan detailing the necessary steps and the responsible team members. 
+**Edge cases:** 
+- If logs are missing or incomplete, provide options for alternate data sources. 
+- If the failure reoccurs, list steps for further investigation. 
+**Recommended tools:** Descript, Make, UptimeRobot. 
+**Uncertainty:** If you are unsure about specific failure types, please state it and request for clarification. 
+**Permission:** If additional context is needed, please ask clarifying questions.</pre>
+    <p class="text-lg text-gray-700 mb-4">Below is the output (Prompt #2) the AI returns, which is ready to use with ChatGPT in the same or a new thread, or in another tool of the same type (ChatGPT is an AI language model that generates human-like text based on user input.).</p>
+<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">### Prompt #2: Comprehensive Troubleshooting Plan for Failed Automation Process
+
+**Objective:** To analyze the root cause of the failed automation process systematically, minimizing downtime and ensuring a robust resolution.
+
+---
+
+#### Step 1: Understand System Dependencies
+
+1. **Identify Dependencies**
+   - **Action:** Document all external dependencies related to the failed automation process (APIs, databases).
+   - **Responsible Team:** Systems Architecture Team
+
+2. **Check for Changes**
+   - **Action:** Investigate any recent changes to the system architecture, API versions, or dependencies that may have caused the failure.
+   - **Responsible Team:** Change Management Team
+
+---
+
+#### Step 2: Review Logs
+
+1. **Collect Logs**
+   - **Action:** Gather logs from all relevant sources (application logs, server logs, transaction logs).
+   - **Responsible Team:** DevOps Team
+
+2. **Analyze Logs**
+   - **Action:** Look for error messages, stack traces, or significant indicators of failure in the logs.
+   - **Responsible Team:** Software Development Team
+
+3. **Check for Missing Logs**
+   - If logs are missing or incomplete:
+     - **Option A:** Use alternative data sources like UptimeRobot for monitoring status.
+     - **Option B:** Check system alerts or notifications that may provide insights.
+   - **Responsible Team:** Operations Team
+
+---
+
+#### Step 3: Diagnose Issues
+
+1. **Initial Diagnosis**
+   - **Action:** Run failure simulation tests to replicate the issue.
+   - **Responsible Team:** QA Team
+
+2. **Identify Patterns**
+   - **Action:** Determine if the failure is recurrent or a one-off incident. Consider frequency, triggers, and conditions.
+   - **Responsible Team:** Analytics Team
+
+3. **Root Cause Analysis**
+   - **Action:** Dive deep into identified patterns and logs to confirm root cause.
+   - **Responsible Team:** Specialized Support Team (e.g., Database or API specialists)
+
+---
+
+#### Edge Case Handling
+
+**If the failure reoccurs:**
+- **Step 1:** Document additional evidence including date, time, and activity leading up to the failure.
+- **Step 2:** Conduct a brainstorming session with impacted teams to reconsider potential causes.
+- **Step 3:** Implement fail-safes or modified approaches to tuple issues identified.
+- **Responsible Team:** Cross-Functional Team
+
+---
+
+#### Additional Clarifications Needed: 
+- Please specify the type of automation process that has failed (e.g., ETL, CI/CD, etc.).
+- What specific errors or symptoms are being observed upon failure?
+
+This plan aims to ensure that all aspects of the failure are addressed, and the responsible team members are clear on their specific roles in the troubleshooting process.</pre>
+<p class="text-lg text-gray-700 mb-4">Turn this into action by executing Prompt #2 in <a href="https://chatgpt.com/">ChatGPT</a> today.</p>
 </ol>
 
-<h3 class="text-xl font-semibold mt-6 mb-3">Try it yourself: Build your own AI prompt</h3>
-<p class="text-lg text-gray-700 mb-4">To generate specific troubleshooting prompts for your automation workflows, follow this human-centered workflow:</p>
-<p class="text-lg text-gray-700 mb-4">Human → Prompt #1 (meta-prompt to a general AI, using chain-of-thought reasoning) → AI returns Prompt #2 (ready-to-paste prompt for the specific tool) → Use Prompt #2 in the tool.</p>
-
-<p class="text-lg text-gray-700 mb-4">This is the input (Prompt #1), ready to use with <a href="https://www.opus.pro/?via=d9d7c5">Opus Clip</a> (AI tool).</p>
-<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">**Role:** You are a senior automation strategist specializing in troubleshooting and failure analysis.
-**Objective:** Develop a comprehensive troubleshooting guide that reduces the mean time to resolution (MTTR) for unexpected automation failures.
-**Chain of thought:** Think step by step: first analyze the types of failures encountered by automation systems, then identify root causes, and finally construct actionable troubleshooting prompts.
-**Output specification:** Return a structured format detailing troubleshooting steps, including a checklist for agents to follow when facing unexpected failures.
-**Edge cases:** If the failure involves multiple systems, provide integrated troubleshooting steps; if an urgent issue arises outside regular hours, include escalation protocols; if historical data is lacking, suggest potential diagnostics.
-**Uncertainty:** If there are ambiguities about existing processes, specify the need for more detailed examples.
-**Permission:** If the current context does not provide sufficient guidance, ask for clarification on specific scenarios.</pre>
-
-<p class="text-lg text-gray-700 mb-4">The AI returns the following output (Prompt #2), which is ready to use with your automation tool:</p>
-<p class="text-lg text-gray-700 mb-4">The AI returns the following output (Prompt #2), that is ready to use with <a href="https://www.opus.pro/?via=d9d7c5">Opus Clip</a> (AI tool).</p>
-<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">## Comprehensive Troubleshooting Guide for Automation Failures
-
-### Overview of Common Automation Failures
-Automation systems can encounter various unexpected failures. The most common types include:
-
-1. **Execution Failures:** Tasks that fail to initiate or complete as expected.
-2. **Data Handling Failures:** Inaccuracies or corruptions during data extraction, transformation, or loading.
-3. **Integration Failures:** Issues in communication between integrated systems or APIs.
-4. **Performance Failures:** Slow execution times or overutilization of resources that lead to timeouts.
-5. **Configuration Failures:** Errors stemming from incorrect setup or changes in the environment.
-
-### Root Cause Analysis
-Before creating actionable prompts, it's crucial to identify potential root causes of each failure type:
-
-1. **Execution Failures:**
-   - Coding errors
-   - Environment discrepancies
-   - Insufficient resources
-
-2. **Data Handling Failures:**
-   - Schema mismatches
-   - Data type inconsistencies
-   - API changes
-
-3. **Integration Failures:**
-   - Network connectivity
-   - API version mismatches
-   - Authentication issues
-
-4. **Performance Failures:**
-   - Hardware limitations
-   - Unoptimized code
-   - Resource contention
-
-5. **Configuration Failures:**
-   - Misconfigured environment variables
-   - Incorrect settings in automation tools
-   - Overlooked dependency versions
-
-### Actionable Troubleshooting Steps
-The following structured steps can be followed to address potential automation failures:
-
-#### Step 1: Identify the Failure Type
-- **Check logs** for error messages or execution timestamps.
-- **Classify the failure** into one of the aforementioned types.
-
-#### Step 2: Preliminary Assessment
-- **Evaluate recent changes:** Identify if any modifications were made to the system or environment prior to the failure.
-- **Confirm system health:** Check resource utilization (CPU, memory, network) to rule out performance issues.
-
-#### Step 3: Troubleshooting Checklist
-1. **Execution Failure:**
-   - [ ] Examine error logs for stack traces.
-   - [ ] Isolate and execute the impacted task manually.
-   - [ ] Check for syntax errors in scripts.
-   - [ ] Ensure the environment matches the defined parameters.
-
-2. **Data Handling Failure:**
-   - [ ] Validate the integrity and format of incoming data.
-   - [ ] Confirm schema compatibility.
-   - [ ] Check external data source availability.
-
-3. **Integration Failure:**
-   - [ ] Test network connectivity between systems.
-   - [ ] Validate API paths and versions being used.
-   - [ ] Confirm authentication tokens/credentials and re-generate if needed.
-
-4. **Performance Failure:**
-   - [ ] Monitor system resources during task execution.
-   - [ ] Profile the execution times of scripts/functions.
-   - [ ] Optimize or refactor slow components.
-
-5. **Configuration Failure:**
-   - [ ] Review environment variable settings.
-   - [ ] Cross-verify configuration files for discrepancies.
-   - [ ] Check dependency versions for compatibility.
-
-#### Step 4: Integrated Troubleshooting for Multi-System Failures
-- [ ] Identify interdependencies and document affected systems.
-- [ ] Conduct individual checks on each system to pinpoint where the issue originates.
-- [ ] Use a collaborative tool to log findings and updates promptly.
-
-#### Step 5: Escalation Protocols (for urgent issues)
-- If a severe failure occurs, particularly outside regular hours, agents should:
-    - [ ] Contact the on-call engineer or automation lead immediately.
-    - [ ] Use predefined alerts to notify stakeholders.
-    - [ ] Log the issue for historical analysis and post-mortem review.
-
-#### Step 6: In Cases of Insufficient Historical Data
-- [ ] Engage alternate diagnostics tools (e.g., system monitoring applications).
-- [ ] Implement temporary logging solutions to gather data.
-- [ ] Review documentation and resources for insights or known issues.
-
-### Conclusion
-Following this structured troubleshooting guide can significantly reduce MTTR for unexpected automation failures. By adhering to the steps outlined, agents can systematically diagnose issues while structuring their responses to ensure efficient resolution. Should specific scenarios arise not covered in this guide, seeking clarification or examples may be necessary.</pre>
-<p class="text-lg text-gray-700 mb-4">Action cue: From here, launch Prompt #2 in the AI tool and iterate for better fit.</p>
-
 <h2 class="text-3xl font-bold mt-8 mb-4">When NOT to use this</h2>
-<p class="text-lg text-gray-700 mb-4">Avoid using this troubleshooting approach when dealing with highly predictable failures or systems with well-established incident management protocols that are already optimized. Additionally, if your organization lacks the necessary documentation and historical data for effective troubleshooting, this approach may not be viable without preliminary groundwork.</p>
+<p class="text-lg text-gray-700 mb-4">Avoid implementing these troubleshooting processes when:</p>
+<ul class="list-disc list-inside space-y-2 text-gray-700">
+    <li>The automation process is in its initial deployment phase, as it may require different handling and adjustments.</li>
+    <li>Resources are not available for monitoring and ongoing adjustments.</li>
+    <li>Team members lack the necessary training to analyze and address automation failures.</li>
+</ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">FAQ</h2>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li><strong>What should I include in my automation troubleshooting documentation?</strong>
-        <p class="text-lg text-gray-700 mb-4">Include incident descriptions, root causes, resolution steps, and any relevant metrics to provide context for future incidents.</p>
-    </li>
-    <li><strong>How often should I review and update my troubleshooting processes?</strong>
-        <p class="text-lg text-gray-700 mb-4">Aim for quarterly reviews, or more frequently if your automation systems evolve rapidly or if failures occur frequently.</p>
-    </li>
-    <li><strong>Can AI tools assist in troubleshooting automation failures?</strong>
-        <p class="text-lg text-gray-700 mb-4">Yes, AI tools like <a href="https://www.opus.pro/?via=d9d7c5">Opus Clip</a> can aid in generating response templates, while others facilitate monitoring and diagnostics.</p>
-    </li>
+    <li><strong>What should I do if I can't identify the failure source?</strong> Consider involving a specialized team to conduct a thorough analysis, leveraging external tools for deeper insights.</li>
+    <li><strong>How often should I review my troubleshooting processes?</strong> Regularly review troubleshooting procedures after any significant incidents or quarterly to keep them relevant.</li>
+    <li><strong>Can automation tools provide insights into their own failures?</strong> Yes, many modern automation tools come with built-in monitoring and analytics to help troubleshoot issues.</li>
 </ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Internal links</h2>
-<p class="text-lg text-gray-700 mb-4">For further reading, check out our guide on <a href="#">optimizing automation workflows</a> and exploring <a href="/blog/">AI tools for process improvements</a>.</p>
+<p class="text-lg text-gray-700 mb-4">For additional insights, check our articles on how to optimize your automation workflows at <a href="/">this link</a> and learn about integration strategies at <a href="/blog/">this page</a>.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">List of AI tools mentioned in this article</h2>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-  <li><a href="https://www.opus.pro/?via=d9d7c5">Opus Clip</a> — AI short-form clips from long videos</li>
+  <li><a href="https://www.descript.com">Descript</a> — Descript is a tool that allows users to edit audio and video by manipulating text transcripts.</li>
   <li><a href="https://www.make.com/en/register?pc=flowtaro">Make</a> — Visual automation and integrations</li>
-  <li><a href="https://www.descript.com">Descript</a> — AI tool for Descript workflows.</li>
+  <li><a href="https://uptimerobot.com/?red=flowta">UptimeRobot</a> — Free website and endpoint uptime monitoring</li>
 </ul>
-
-

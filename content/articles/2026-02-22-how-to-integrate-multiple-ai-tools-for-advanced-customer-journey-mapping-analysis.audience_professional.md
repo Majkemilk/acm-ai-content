@@ -4,18 +4,17 @@ content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to integrate multiple ai tools for advanced customer journey mapping analysis"
 tools: "Make"
-last_updated: "2026-02-23"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 audience_type: "professional"
 batch_id: "2026-02-22T123900"
 ---
-
 # How to integrate multiple AI tools for advanced customer journey mapping analysis
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to integrate multiple ai tools for advanced customer journey mapping analysis
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -95,20 +94,22 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Make
 
 ---
 
 ## Internal links
 
 - [How to develop AI-driven workflows for optimizing re-engagement campaigns](/articles/2026-02-22-how-to-develop-ai-driven-workflows-for-optimizing-re-engagement-campaigns.audience_intermediate/)
+- [How to monitor downtime and performance issues in AI marketing tools effectively](/articles/2026-02-22-how-to-monitor-downtime-and-performance-issues-in-ai-marketing-tools-effectively.audience_intermediate/)
 - [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
 - [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
 
 ---
 

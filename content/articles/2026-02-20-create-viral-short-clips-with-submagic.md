@@ -4,16 +4,15 @@ content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "create viral short clips with Submagic"
 tools: ""
-last_updated: "2026-02-23"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 ---
-
 # How to create viral short-form clips from long videos with Submagic
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** create viral short clips with Submagic
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -93,7 +92,9 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
+
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
 
 {{TOOLS_MENTIONED}}
 

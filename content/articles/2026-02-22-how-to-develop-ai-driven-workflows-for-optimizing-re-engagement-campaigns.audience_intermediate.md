@@ -3,8 +3,8 @@ title: "How to develop AI-driven workflows for optimizing re-engagement campaign
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to develop ai-driven workflows for optimizing re-engagement campaigns"
-tools: "Descript, Make"
-last_updated: "2026-02-23"
+tools: "Make, Descript, ChatGPT"
+last_updated: "2026-02-26"
 status: "filled"
 audience_type: "intermediate"
 batch_id: "2026-02-22T123900"
@@ -15,7 +15,7 @@ batch_id: "2026-02-22T123900"
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to develop ai-driven workflows for optimizing re-engagement campaigns
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -95,20 +95,22 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Descript, Make
 
 ---
 
 ## Internal links
 
+- [How to integrate multiple AI tools for advanced customer journey mapping analysis](/articles/2026-02-22-how-to-integrate-multiple-ai-tools-for-advanced-customer-journey-mapping-analysis.audience_professional/)
+- [How to monitor downtime and performance issues in AI marketing tools effectively](/articles/2026-02-22-how-to-monitor-downtime-and-performance-issues-in-ai-marketing-tools-effectively.audience_intermediate/)
 - [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
 - [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
 - [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
 - [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
 
 ---
 

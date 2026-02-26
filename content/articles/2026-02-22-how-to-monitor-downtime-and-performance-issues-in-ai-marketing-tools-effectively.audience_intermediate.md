@@ -4,18 +4,17 @@ content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to monitor downtime and performance issues in ai marketing tools effectively"
 tools: "UptimeRobot, Descript"
-last_updated: "2026-02-23"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 audience_type: "intermediate"
 batch_id: "2026-02-22T123900"
 ---
-
 # How to monitor downtime and performance issues in AI marketing tools effectively
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to monitor downtime and performance issues in ai marketing tools effectively
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -95,9 +94,11 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+UptimeRobot, Descript
 
 ---
 

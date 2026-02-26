@@ -4,18 +4,17 @@ content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to develop an ai-integrated platform for tracking influencer marketing effectiveness"
 tools: "Opus Clip, Make, Descript"
-last_updated: "2026-02-23"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 audience_type: "professional"
 batch_id: "2026-02-22T122331"
 ---
-
 # Guide to develop an AI-integrated platform for tracking influencer marketing effectiveness
 
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to develop an ai-integrated platform for tracking influencer marketing effectiveness
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -77,7 +76,7 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[If this article involves creating or processing content with AI tools, generate Prompt #1 and Prompt #2 following the Try-it-yourself rules. If this article is purely strategic or analytical, replace this subsection with a single sentence: "This topic does not lend itself to a prompt-building exercise." and keep the heading.]
+[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
 
 ---
 
@@ -95,20 +94,22 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Opus Clip, Make, Descript
 
 ---
 
 ## Internal links
 
-- [AI Content Repurposing Workflow for Small Business](/articles/2026-02-18-ai-content-repurposing-workflow/)
-- [Best AI Tools for Content Repurposing](/articles/2026-02-18-best-ai-tools-for-content-repurposing/)
-- [Best AI Tools for Social Media Management in 2026](/articles/2026-02-18-best-ai-tools-for-social-media-management/)
-- [How to Choose an SEO Tool](/articles/2026-02-18-choose-seo-tool/)
-- [Guide to implement AI chatbots to enhance customer engagement with Descript](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-descript/)
-- [Guide to implement AI chatbots to enhance customer engagement with Otter](/articles/2026-02-18-guide-to-implement-ai-chatbots-to-enhance-customer-engagement-with-otter/)
+- [Guide to integrate AI tools for enhancing online customer journey mapping](/articles/2026-02-22-guide-to-integrate-ai-tools-for-enhancing-online-customer-journey-mapping.audience_intermediate/)
+- [Guide to utilize AI for automating targeted ad placements based on user behavior](/articles/2026-02-22-guide-to-utilize-ai-for-automating-targeted-ad-placements-based-on-user-behavior.audience_intermediate/)
+- [How to create automated workflows for cross-channel marketing campaigns](/articles/2026-02-22-how-to-create-automated-workflows-for-cross-channel-marketing-campaigns.audience_intermediate/)
+- [Guide to leverage AI for basic social media listening and sentiment analysis](/articles/2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner/)
+- [How to automate customer feedback collection with AI tools](/articles/2026-02-22-how-to-automate-customer-feedback-collection-with-ai-tools.audience_beginner/)
+- [How to use AI to automate the creation of targeted audience profiles](/articles/2026-02-22-how-to-use-ai-to-automate-the-creation-of-targeted-audience-profiles.audience_beginner/)
 
 ---
 

@@ -4,18 +4,17 @@ content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to automate a/b testing for video ads using ai"
 tools: "Opus Clip, Descript, Make"
-last_updated: "2026-02-23"
-status: "filled"
+last_updated: "2026-02-26"
+status: "draft"
 audience_type: "intermediate"
 batch_id: "2026-02-20T225029"
 ---
-
 # How to automate A/B testing for video ads using ai
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to automate a/b testing for video ads using ai
-**Last updated:** 2026-02-23
+**Last updated:** 2026-02-26
 
 ---
 
@@ -95,9 +94,11 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of AI tools mentioned in this article
 
-{{TOOLS_MENTIONED}}
+The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+
+Opus Clip, Descript, Make
 
 ---
 
