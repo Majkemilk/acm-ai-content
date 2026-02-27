@@ -1,20 +1,20 @@
 ---
-title: "Guide to integrate AI tools for enhancing online customer journey mapping"
+title: "Guide to monitor compliance risks associated with AI agents in marketing workflows"
 content_type: "guide"
-category: "ai-marketing-automation"
-primary_keyword: "guide to integrate ai tools for enhancing online customer journey mapping"
-tools: "Descript, ChatGPT, Answrr"
+category: "automation workflows"
+primary_keyword: "guide to monitor compliance risks associated with ai agents in marketing workflows"
+tools: "Make, ChatGPT, Descript"
 last_updated: "2026-02-27"
 status: "filled"
 audience_type: "intermediate"
-batch_id: "2026-02-22T122331"
+batch_id: "2026-02-27T071356"
 ---
 
-# Guide to integrate AI tools for enhancing online customer journey mapping
+# Guide to monitor compliance risks associated with AI agents in marketing workflows
 
 **Content type:** guide
-**Category:** ai-marketing-automation
-**Primary keyword:** guide to integrate ai tools for enhancing online customer journey mapping
+**Category:** automation workflows
+**Primary keyword:** guide to monitor compliance risks associated with ai agents in marketing workflows
 **Last updated:** 2026-02-27
 
 ---
@@ -105,18 +105,18 @@ Before publishing, verify the following:
 
 {{TOOLS_SECTION_DISCLAIMER}}
 
-ChatGPT, UptimeRobot, Descript, Make, Answrr
+Descript, Make, Opus Clip
 
 ---
 
 ## Internal links
 
-- [Guide to leverage AI for basic social media listening and sentiment analysis](/articles/2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner/)
-- [How to automate customer feedback collection with AI tools](/articles/2026-02-22-how-to-automate-customer-feedback-collection-with-ai-tools.audience_beginner/)
-- [How to use AI to automate the creation of targeted audience profiles](/articles/2026-02-22-how-to-use-ai-to-automate-the-creation-of-targeted-audience-profiles.audience_beginner/)
-- [Guide to develop an AI-integrated platform for tracking influencer marketing effectiveness](/articles/2026-02-22-guide-to-develop-an-ai-integrated-platform-for-tracking-influencer-marketing-effectiveness.audience_professional/)
-- [Guide to implement AI-driven analytics to optimize marketing budgets in real-time](/articles/2026-02-22-guide-to-implement-ai-driven-analytics-to-optimize-marketing-budgets-in-real-time.audience_professional/)
-- [How to scale personalized content recommendations using AI algorithms](/articles/2026-02-22-how-to-scale-personalized-content-recommendations-using-ai-algorithms.audience_professional/)
+- [Guide to implement security measures for AI agents in basic marketing tasks](/articles/2026-02-27-guide-to-implement-security-measures-for-ai-agents-in-basic-marketing-tasks.audience_beginner/)
+- [Guide to develop troubleshooting processes for unexpected agentic automation failures](/articles/2026-02-23-guide-to-how-to-develop-troubleshooting-processes-for-unexpected-agentic-automation-failures.audience_professional/)
+- [Guide to monitor and troubleshoot unexpected behaviors in agentic automation processes](/articles/2026-02-23-guide-to-how-to-monitor-and-troubleshoot-unexpected-behaviors-in-agentic-automation-processes.audience_intermediate/)
+- [Guide to monitor lead loss due to scenario failures in ai-driven marketing automations](/articles/2026-02-24-guide-to-how-to-monitor-lead-loss-due-to-scenario-failures-in-ai-driven-marketing-automations.audience_intermediate/)
+- [Guide to monitor AI agents for security vulnerabilities in marketing automation](/articles/2026-02-26-guide-to-how-to-monitor-ai-agents-for-security-vulnerabilities-in-marketing-automation.audience_intermediate/)
+- [How to create viral short-form clips from long videos with Submagic](/articles/2026-02-20-create-viral-short-clips-with-submagic/)
 
 ---
 

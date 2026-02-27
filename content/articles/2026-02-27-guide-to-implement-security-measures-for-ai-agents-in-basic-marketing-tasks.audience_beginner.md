@@ -1,20 +1,21 @@
 ---
-title: "How to utilize ai for video marketing analytics and insights"
-content_type: "how-to"
+title: "Guide to implement security measures for AI agents in basic marketing tasks"
+content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "how to utilize ai for video marketing analytics and insights"
-tools: "Make, Descript, Opus Clip"
-last_updated: "2026-02-26"
-status: "draft"
-audience_type: "professional"
-batch_id: "2026-02-20T225029"
+primary_keyword: "guide to implement security measures for ai agents in basic marketing tasks"
+tools: "Make, ChatGPT, Descript"
+last_updated: "2026-02-27"
+status: "filled"
+audience_type: "beginner"
+batch_id: "2026-02-27T071356"
 ---
-# How to utilize ai for video marketing analytics and insights
 
-**Content type:** how-to
+# Guide to implement security measures for AI agents in basic marketing tasks
+
+**Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** how to utilize ai for video marketing analytics and insights
-**Last updated:** 2026-02-26
+**Primary keyword:** guide to implement security measures for ai agents in basic marketing tasks
+**Last updated:** 2026-02-27
 
 ---
 
@@ -76,7 +77,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -96,20 +103,20 @@ Before publishing, verify the following:
 
 ## List of AI tools mentioned in this article
 
-The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+{{TOOLS_SECTION_DISCLAIMER}}
 
-Make, Descript, Opus Clip
+Descript, Make, ChatGPT
 
 ---
 
 ## Internal links
 
+- [Guide to monitor compliance risks associated with AI agents in marketing workflows](/articles/2026-02-27-guide-to-monitor-compliance-risks-associated-with-ai-agents-in-marketing-workflows.audience_intermediate/)
+- [How to create viral short-form clips from long videos with Submagic](/articles/2026-02-20-create-viral-short-clips-with-submagic/)
 - [Guide to create ai-driven video content strategies for engagement](/articles/2026-02-20-guide-to-create-ai-driven-video-content-strategies-for-engagement.audience_intermediate/)
 - [Guide to integrate ai tools to analyze video performance metrics](/articles/2026-02-20-guide-to-integrate-ai-tools-to-analyze-video-performance-metrics.audience_intermediate/)
-- [How to automate A/B testing for video ads using ai](/articles/2026-02-20-how-to-automate-ab-testing-for-video-ads-using-ai.audience_intermediate/)
 - [Guide to use ai to optimize video length for different platforms](/articles/2026-02-20-guide-to-use-ai-to-optimize-video-length-for-different-platforms.audience_beginner/)
-- [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
-- [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
+- [How to automate A/B testing for video ads using ai](/articles/2026-02-20-how-to-automate-ab-testing-for-video-ads-using-ai.audience_intermediate/)
 
 ---
 

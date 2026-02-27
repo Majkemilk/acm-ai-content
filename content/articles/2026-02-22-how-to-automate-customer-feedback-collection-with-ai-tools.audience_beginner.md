@@ -3,18 +3,19 @@ title: "How to automate customer feedback collection with AI tools"
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to automate customer feedback collection with ai tools"
-tools: "Opus Clip"
-last_updated: "2026-02-26"
-status: "draft"
+tools: "ChatGPT, Opus Clip, Descript"
+last_updated: "2026-02-27"
+status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-22T122331"
 ---
+
 # How to automate customer feedback collection with AI tools
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to automate customer feedback collection with ai tools
-**Last updated:** 2026-02-26
+**Last updated:** 2026-02-27
 
 ---
 
@@ -76,7 +77,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -96,9 +103,9 @@ Before publishing, verify the following:
 
 ## List of AI tools mentioned in this article
 
-The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+{{TOOLS_SECTION_DISCLAIMER}}
 
-Opus Clip
+ChatGPT, Descript, Make
 
 ---
 

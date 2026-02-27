@@ -3,18 +3,19 @@ title: "Guide to use ai to optimize video length for different platforms"
 content_type: "guide"
 category: "ai-marketing-automation"
 primary_keyword: "guide to use ai to optimize video length for different platforms"
-tools: "Opus Clip"
-last_updated: "2026-02-26"
-status: "draft"
+tools: "Descript, Make, Pictory"
+last_updated: "2026-02-27"
+status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-20T225029"
 ---
+
 # Guide to use ai to optimize video length for different platforms
 
 **Content type:** guide
 **Category:** ai-marketing-automation
 **Primary keyword:** guide to use ai to optimize video length for different platforms
-**Last updated:** 2026-02-26
+**Last updated:** 2026-02-27
 
 ---
 
@@ -76,7 +77,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -96,9 +103,9 @@ Before publishing, verify the following:
 
 ## List of AI tools mentioned in this article
 
-The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+{{TOOLS_SECTION_DISCLAIMER}}
 
-Opus Clip
+Opus Clip, Descript, Canva
 
 ---
 
@@ -109,7 +116,7 @@ Opus Clip
 - [How to automate A/B testing for video ads using ai](/articles/2026-02-20-how-to-automate-ab-testing-for-video-ads-using-ai.audience_intermediate/)
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
 - [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
-- [Guide to leverage ai to enhance collaborative video editing workflows](/articles/2026-02-20-guide-to-leverage-ai-to-enhance-collaborative-video-editing-workflows.audience_professional/)
+- [How to create viral short-form clips from long videos with Submagic](/articles/2026-02-20-create-viral-short-clips-with-submagic/)
 
 ---
 

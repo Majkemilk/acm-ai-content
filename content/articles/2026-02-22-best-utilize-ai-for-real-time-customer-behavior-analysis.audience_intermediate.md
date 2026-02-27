@@ -3,18 +3,19 @@ title: "Best utilize AI for real-time customer behavior analysis"
 content_type: "best"
 category: "ai-marketing-automation"
 primary_keyword: "best utilize ai for real-time customer behavior analysis"
-tools: "Descript, Opus Clip, Make, Canva"
-last_updated: "2026-02-26"
-status: "draft"
+tools: "Make, ChatGPT"
+last_updated: "2026-02-27"
+status: "filled"
 audience_type: "intermediate"
 batch_id: "2026-02-22T121243"
 ---
+
 # Best utilize AI for real-time customer behavior analysis
 
 **Content type:** best
 **Category:** ai-marketing-automation
 **Primary keyword:** best utilize ai for real-time customer behavior analysis
-**Last updated:** 2026-02-26
+**Last updated:** 2026-02-27
 
 ---
 
@@ -49,7 +50,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -69,9 +76,9 @@ Before publishing, verify the following:
 
 ## List of AI tools mentioned in this article
 
-The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+{{TOOLS_SECTION_DISCLAIMER}}
 
-Descript, Opus Clip, Make, Canva
+ChatGPT, Descript
 
 ---
 

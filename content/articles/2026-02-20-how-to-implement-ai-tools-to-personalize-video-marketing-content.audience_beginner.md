@@ -3,18 +3,19 @@ title: "How to implement ai tools to personalize video marketing content"
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to implement ai tools to personalize video marketing content"
-tools: "Opus Clip"
-last_updated: "2026-02-26"
-status: "draft"
+tools: "Opus Clip, Pictory, Descript"
+last_updated: "2026-02-27"
+status: "filled"
 audience_type: "beginner"
 batch_id: "2026-02-20T225029"
 ---
+
 # How to implement ai tools to personalize video marketing content
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to implement ai tools to personalize video marketing content
-**Last updated:** 2026-02-26
+**Last updated:** 2026-02-27
 
 ---
 
@@ -76,7 +77,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -96,9 +103,9 @@ Before publishing, verify the following:
 
 ## List of AI tools mentioned in this article
 
-The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+{{TOOLS_SECTION_DISCLAIMER}}
 
-Opus Clip
+Make, Descript, ChatGPT
 
 ---
 

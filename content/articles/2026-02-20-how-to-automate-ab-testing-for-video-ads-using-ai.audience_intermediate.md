@@ -3,18 +3,19 @@ title: "How to automate A/B testing for video ads using ai"
 content_type: "how-to"
 category: "ai-marketing-automation"
 primary_keyword: "how to automate a/b testing for video ads using ai"
-tools: "Opus Clip, Descript, Make"
-last_updated: "2026-02-26"
-status: "draft"
+tools: "Descript, Make, Awin"
+last_updated: "2026-02-27"
+status: "filled"
 audience_type: "intermediate"
 batch_id: "2026-02-20T225029"
 ---
+
 # How to automate A/B testing for video ads using ai
 
 **Content type:** how-to
 **Category:** ai-marketing-automation
 **Primary keyword:** how to automate a/b testing for video ads using ai
-**Last updated:** 2026-02-26
+**Last updated:** 2026-02-27
 
 ---
 
@@ -76,7 +77,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -96,9 +103,9 @@ Before publishing, verify the following:
 
 ## List of AI tools mentioned in this article
 
-The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.
+{{TOOLS_SECTION_DISCLAIMER}}
 
-Opus Clip, Descript, Make
+Opus Clip, Make
 
 ---
 
@@ -108,8 +115,8 @@ Opus Clip, Descript, Make
 - [How to automate video thumbnails creation for social media](/articles/2026-02-20-how-to-automate-video-thumbnails-creation-for-social-media.audience_beginner/)
 - [How to implement ai tools to personalize video marketing content](/articles/2026-02-20-how-to-implement-ai-tools-to-personalize-video-marketing-content.audience_beginner/)
 - [Guide to leverage ai to enhance collaborative video editing workflows](/articles/2026-02-20-guide-to-leverage-ai-to-enhance-collaborative-video-editing-workflows.audience_professional/)
-- [How to scale content production by integrating ai with video platforms](/articles/2026-02-20-how-to-scale-content-production-by-integrating-ai-with-video-platforms.audience_professional/)
-- [How to utilize ai for video marketing analytics and insights](/articles/2026-02-20-how-to-utilize-ai-for-video-marketing-analytics-and-insights.audience_professional/)
+- [Guide to create ai-driven video content strategies for engagement](/articles/2026-02-20-guide-to-create-ai-driven-video-content-strategies-for-engagement.audience_intermediate/)
+- [Guide to integrate ai tools to analyze video performance metrics](/articles/2026-02-20-guide-to-integrate-ai-tools-to-analyze-video-performance-metrics.audience_intermediate/)
 
 ---
 

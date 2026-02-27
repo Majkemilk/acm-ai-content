@@ -1,209 +1,185 @@
 <!--
-title: "Guide to how to develop troubleshooting processes for unexpected agentic automation failures"
+title: "Guide to develop troubleshooting processes for unexpected agentic automation failures"
 content_type: "guide"
 category: "automation workflows"
-primary_keyword: "guide to how to develop troubleshooting processes for unexpected agentic automation failures"
-tools: "Descript, Make, UptimeRobot"
-last_updated: "2026-02-26"
+primary_keyword: "guide to develop troubleshooting processes for unexpected agentic automation failures"
+tools: "Make, Descript"
+last_updated: "2026-02-27"
 status: "filled"
 audience_type: "professional"
 batch_id: "2026-02-23T185219"
 -->
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Introduction</h2>
-<p class="text-lg text-gray-700 mb-4">In the rapidly evolving landscape of automation, failures can disrupt workflows and impede progress. This guide focuses on developing robust troubleshooting processes for unexpected agentic automation failures. You'll learn key strategies to identify, analyze, and resolve issues effectively, ensuring that automated systems work as intended.</p>
+<p class="text-lg text-gray-700 mb-4">In the realm of automation, unexpected failures can disrupt operations and hinder productivity. This guide to develop troubleshooting processes for unexpected agentic automation failures is designed to equip professionals with a structured approach to identifying, diagnosing, and resolving automation issues effectively. Readers will learn essential concepts, decision frameworks, trade-offs involved, and practical templates that can be adapted to their specific automation needs.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">What you need to know first</h2>
-<p class="text-lg text-gray-700 mb-4">Before diving into troubleshooting processes, it's essential to grasp some foundational concepts:</p>
+<p class="text-lg text-gray-700 mb-4">Before diving into troubleshooting processes, it's crucial to understand key concepts surrounding agentic automation. Agentic automation refers to systems autonomously executing tasks and making decisions, often based on predefined rules. The following prerequisites will help you grasp the context better:</p>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li><strong>Agentic Automation:</strong> This refers to automation systems with a degree of autonomy, making decisions based on pre-defined rules or machine learning models.</li>
-    <li><strong>Failure Modes:</strong> Understanding the various failure modes of automation—system errors, connectivity issues, algorithm biases, etc.—enables you to proactively mitigate risks.</li>
-    <li><strong>Monitoring and Logging:</strong> Keeping detailed logs and constant monitoring can help identify anomalies as they occur, enabling quicker resolution.</li>
+  <li>Familiarity with automation tools and their capabilities.</li>
+  <li>Understanding of data integrity and its role in automation.</li>
+  <li>Knowledge of basic troubleshooting methodologies.</li>
 </ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Decision rules:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">When to use this approach:</h3>
-    <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li>If automation failures are impacting key business processes.</li>
-        <li>When traditional troubleshooting methods fail or are too slow for the complexity of issues.</li>
-        <li>If autonomous decision-making has become a regular feature of your systems.</li>
-    </ul>
+  <h3 class="text-xl font-semibold mb-3">When to use this approach</h3>
+  <ul class="list-disc list-inside space-y-2 text-gray-700">
+    <li>When automated processes produce unexpected outputs or errors.</li>
+    <li>In instances where system dependencies change, causing automation to fail.</li>
+    <li>During scheduled reviews of automation performance to preemptively identify weaknesses.</li>
+  </ul>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Tradeoffs:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">Pros/Cons:</h3>
-    <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li><strong>Pros:</strong> Streamlined workflows, faster problem resolution, improved system reliability.</li>
-        <li><strong>Cons:</strong> Initial setup can be resource-intensive, requires ongoing monitoring and adjustments.</li>
-    </ul>
+  <h3 class="text-xl font-semibold mb-3">Pros and Cons</h3>
+  <ul class="list-disc list-inside space-y-2 text-gray-700">
+    <li><strong>Pros:</strong> Reduces downtime, improves operational efficiency, fosters proactive maintenance.</li>
+    <li><strong>Cons:</strong> Initial time investment for comprehensive processes, potential resistance from team members.</li>
+  </ul>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Failure modes:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">What can go wrong and how to avoid it:</h3>
-    <ul class="list-disc list-inside space-y-2 text-gray-700">
-        <li><strong>Algorithm Drift:</strong> Over time, machine learning models may become less effective. Regularly retrain models with updated data to mitigate this.</li>
-        <li><strong>Connectivity Issues:</strong> Automation that relies on network stability can fail due to outages. Build backup systems and failover mechanisms.</li>
-        <li><strong>Data Quality Problems:</strong> Inaccurate or irrelevant data can lead to erroneous decisions. Implement strict data validation checks.</li>
-    </ul>
+  <h3 class="text-xl font-semibold mb-3">What can go wrong and how to avoid it</h3>
+  <ul class="list-disc list-inside space-y-2 text-gray-700">
+    <li><strong>Insufficient data checks:</strong> Ensure thorough validation of input data to prevent logical errors.</li>
+    <li><strong>Lack of documentation:</strong> Maintain clear records of automation processes and changes made.</li>
+    <li><strong>Outdated systems:</strong> Regularly update automation tools and dependencies to ensure compatibility.</li>
+  </ul>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">SOP checklist:</h2>
 <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 my-6">
-    <h3 class="text-xl font-semibold mb-3">Step-by-step checklist:</h3>
-    <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li>Identify the failure and gather initial data.</li>
-        <li>Review system logs for any anomalies.</li>
-        <li>Isolate the failure source (e.g., data, algorithm, connectivity).</li>
-        <li>Implement quick fixes if applicable; document all steps.</li>
-        <li>Analyze the failure to identify root causes.</li>
-        <li>Update documentation and troubleshooting processes based on findings.</li>
-    </ol>
+  <h3 class="text-xl font-semibold mb-3">Step-by-step checklist</h3>
+  <ol class="list-decimal list-inside space-y-2 text-gray-700">
+    <li>Identify the failure through system logs or alerts.</li>
+    <li>Gather data related to the incident (input data, previous configurations).</li>
+    <li>Analyze the data to pinpoint the cause (rule violation, data corruption).</li>
+    <li>Implement a fix based on the analysis.</li>
+    <li>Test the automation after implementing the fix.</li>
+    <li>Document the incident and update troubleshooting guidelines accordingly.</li>
+  </ol>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Template 1:</h2>
 <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Failure Analysis Report:</h3>
-    <p class="text-lg text-gray-700 mb-2">Use this template to create a structured report for your team:</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Date: (Insert Date)
-Failure Description: (Brief description of the failure observed.)
-Data Logs: 
-- Timestamp: (Insert Timestamp) | Status: (Success/Failure)
-- (Additional relevant data)
+  <h3 class="text-xl font-semibold mb-3">Process Documentation Template</h3>
+  <p class="text-lg text-gray-700 mb-2">Use this template to document your troubleshooting processes for automation failures.</p>
+  <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+Incident ID: (unique identifier)
+Date: (incident date)
+Description: (brief description of failure)
 Root Cause Analysis:
-- (Document findings from the investigation)
-Actions Taken:
-- (List immediate actions taken)
-Recommendations:
-- (Suggestions for preventing future occurrences)
-...</pre>
+- Cause: (specific cause)
+- Impact: (what was affected)
+Resolution Steps Taken:
+1. (first step)
+2. (second step)
+Documentation Link: (link to detailed documentation)
+</pre>
 </div>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Template 2:</h2>
 <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Troubleshooting Workflow:</h3>
-    <p class="text-lg text-gray-700 mb-2">Create a troubleshooting workflow to guide your team during failures:</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Step 1: (Identify failure)
-Step 2: (Review system logs)
-Step 3: (Isolate cause)
-Step 4: (Implement fix)
-Step 5: (Document findings)
-Step 6: (Review and improve processes)
-...</pre>
-</div>
+  <h3 class="text-xl font-semibold mb-3">Incident Response Matrix</h3>
+  <p class="text-lg text-gray-700 mb-2">This matrix can help you quickly assess the responses required based on incident severity.</p>
+  <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Human → Prompt #1 (to AI chat) → AI returns ready-to-use Prompt #2 or questions or instruction → Human (paste Prompt #2 into AI chat or follow the instructions given)</pre>
 
-<h2 class="text-3xl font-bold mt-8 mb-4">Step-by-step workflow</h2>
-<ol class="list-decimal list-inside space-y-2 text-gray-700">
-    <li>Human → Prompt #1 (meta-prompt to a general AI, using chain-of-thought reasoning) → AI returns Prompt #2 (ready-to-paste prompt for the specific tool) → Use Prompt #2 in the tool.</li>
-
-    <h3 class="text-xl font-semibold mt-6 mb-3">Try it yourself: Build your own AI prompt</h3>
-    <p class="text-lg text-gray-700 mb-4">This approach will enable you to architect a multi-step reasoning workflow actively.</p>
-    <p class="text-lg text-gray-700 mb-4">This is the input (Prompt #1), ready to use with <a href="https://chatgpt.com/">ChatGPT</a> (ChatGPT is an AI language model that generates human-like text based on user input.).</p>
-<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">**Role:** You are a senior automation engineer specializing in troubleshooting failed automated processes. 
-**Objective:** Provide a comprehensive troubleshooting approach that minimizes downtime. 
-**Task:** Please create a prompt that will assume achieving the Goal using the tools listed in the Recommended tools section, to analyze the root cause of a failed automation process. 
-**Chain of thought:** Think step by step: first understand system dependencies, then review logs, and finally diagnose issues. 
-**Output specification:** The output must always be Prompt #2: a structured troubleshooting plan detailing the necessary steps and the responsible team members. 
+<h3 class="text-xl font-semibold mt-6 mb-3">Try it yourself: Build your own AI prompt</h3>
+<p class="text-lg text-gray-700 mb-4">This is the input (Prompt #1), ready to use with <a href="https://chatgpt.com/">ChatGPT</a> (General AI chat).</p>
+<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm"> 
+**Role:** You are a specialist in troubleshooting automation systems, focusing on incident resolution and process optimization. 
+**Objective:** Reduce incident recovery time by 50% within the next quarter. 
+**Task:** Please create a prompt that will assume achieving the Goal using the tools listed in the Recommended tools section, to analyze the incident report data and suggest system optimizations. 
+**Chain of thought:** Think step by step: first analyze the incident report data, then identify the key patterns and causes, then construct actionable steps for the target tool. 
+**Output specification:** Output must always be Prompt #2: a structured incident report in markdown format with sections for incident description, root cause analysis, and recommended action steps. 
 **Edge cases:** 
-- If logs are missing or incomplete, provide options for alternate data sources. 
-- If the failure reoccurs, list steps for further investigation. 
-**Recommended tools:** Descript, Make, UptimeRobot. 
-**Uncertainty:** If you are unsure about specific failure types, please state it and request for clarification. 
-**Permission:** If additional context is needed, please ask clarifying questions.</pre>
-    <p class="text-lg text-gray-700 mb-4">Below is the output (Prompt #2) the AI returns, which is ready to use with ChatGPT in the same or a new thread, or in another tool of the same type (ChatGPT is an AI language model that generates human-like text based on user input.).</p>
-<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">### Prompt #2: Comprehensive Troubleshooting Plan for Failed Automation Process
+1. If the incident involves multiple systems, summarize the findings for each system. 
+2. If the data is incomplete or contradictory, request additional information. 
+3. If an urgent incident occurs, escalate it immediately. 
+**Recommended tools:** Make, Descript. 
+**Uncertainty:** If the AI is unsure about any element, it must state so and ask for clarification. 
+**Permission:** If context is insufficient, the AI should ask clarifying questions.
+</pre>
+<p class="text-lg text-gray-700 mb-4">This is sample output from the AI. You can work in the same thread or continue the workflow according to the instructions below using the indicated tools: <a href="https://www.make.com/en/register?pc=flowtaro">Make</a> (Visual automation and integrations), Descript. and <a href="https://www.descript.com">Descript</a> (Descript is a tool that allows users to edit audio and video by manipulating text transcripts.).</p>
+<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">### Prompt #2: Structured Incident Report
 
-**Objective:** To analyze the root cause of the failed automation process systematically, minimizing downtime and ensuring a robust resolution.
+```markdown
+# Incident Report
 
----
+## Incident Description
+- **Incident ID:** [Insert ID here]
+- **Date/Time of Incident:** [Insert date/time here]
+- **Affected Systems:** 
+  - System A: [Brief description of what happened]
+  - System B: [Brief description of what happened]
+  - System C: [Brief description of what happened]
+  
+## Root Cause Analysis
+- **Analysis Methodology:** [Briefly explain the analysis approach (e.g., data review, system logs, etc.)]
+- **Identified Key Patterns:**
+  - Common triggers across multiple incidents include: [List patterns]
+  - Notable anomalies detected in system logs: [List anomalies]
 
-#### Step 1: Understand System Dependencies
+- **Root Causes:**
+  - System A: [Explain the root cause]
+  - System B: [Explain the root cause]
+  - System C: [Explain the root cause]
 
-1. **Identify Dependencies**
-   - **Action:** Document all external dependencies related to the failed automation process (APIs, databases).
-   - **Responsible Team:** Systems Architecture Team
+## Recommended Action Steps
+1. **Immediate Actions:**
+   - [Action Step 1 for System A] 
+   - [Action Step 1 for System B] 
+   - [Action Step 1 for System C] 
 
-2. **Check for Changes**
-   - **Action:** Investigate any recent changes to the system architecture, API versions, or dependencies that may have caused the failure.
-   - **Responsible Team:** Change Management Team
+2. **Long-term Improvements:**
+   - Implement monitoring tools using Make to automate data collection.
+   - Utilize Descript for process documentation and staff training to improve incident response.
+   - Schedule regular reviews of incident reports to identify recurring issues.
 
----
+## Additional Information Needed
+If any of the following applied, please provide further data:
+- **Missing Data:** [Specify any missing information needed]
+- **Contradictory Information:** [Describe contradictions found during analysis]
 
-#### Step 2: Review Logs
+## Urgent Incidents
+If this incident is urgent or requires immediate attention, please escalate to the relevant technical lead or management team.
+```
 
-1. **Collect Logs**
-   - **Action:** Gather logs from all relevant sources (application logs, server logs, transaction logs).
-   - **Responsible Team:** DevOps Team
-
-2. **Analyze Logs**
-   - **Action:** Look for error messages, stack traces, or significant indicators of failure in the logs.
-   - **Responsible Team:** Software Development Team
-
-3. **Check for Missing Logs**
-   - If logs are missing or incomplete:
-     - **Option A:** Use alternative data sources like UptimeRobot for monitoring status.
-     - **Option B:** Check system alerts or notifications that may provide insights.
-   - **Responsible Team:** Operations Team
-
----
-
-#### Step 3: Diagnose Issues
-
-1. **Initial Diagnosis**
-   - **Action:** Run failure simulation tests to replicate the issue.
-   - **Responsible Team:** QA Team
-
-2. **Identify Patterns**
-   - **Action:** Determine if the failure is recurrent or a one-off incident. Consider frequency, triggers, and conditions.
-   - **Responsible Team:** Analytics Team
-
-3. **Root Cause Analysis**
-   - **Action:** Dive deep into identified patterns and logs to confirm root cause.
-   - **Responsible Team:** Specialized Support Team (e.g., Database or API specialists)
-
----
-
-#### Edge Case Handling
-
-**If the failure reoccurs:**
-- **Step 1:** Document additional evidence including date, time, and activity leading up to the failure.
-- **Step 2:** Conduct a brainstorming session with impacted teams to reconsider potential causes.
-- **Step 3:** Implement fail-safes or modified approaches to tuple issues identified.
-- **Responsible Team:** Cross-Functional Team
-
----
-
-#### Additional Clarifications Needed: 
-- Please specify the type of automation process that has failed (e.g., ETL, CI/CD, etc.).
-- What specific errors or symptoms are being observed upon failure?
-
-This plan aims to ensure that all aspects of the failure are addressed, and the responsible team members are clear on their specific roles in the troubleshooting process.</pre>
-<p class="text-lg text-gray-700 mb-4">Turn this into action by executing Prompt #2 in <a href="https://chatgpt.com/">ChatGPT</a> today.</p>
-</ol>
+### Additional Notes
+- Ensure that each action step is tailored to the specific system identified.
+- Follow up for clarification if there's uncertainty with any incident report details. 
+- Confirm any actions taken to address urgent incidents are documented clearly.</pre>
+<p class="text-lg text-gray-700 mb-4">From draft to done: your move. Tweak it and run.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">When NOT to use this</h2>
-<p class="text-lg text-gray-700 mb-4">Avoid implementing these troubleshooting processes when:</p>
-<ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li>The automation process is in its initial deployment phase, as it may require different handling and adjustments.</li>
-    <li>Resources are not available for monitoring and ongoing adjustments.</li>
-    <li>Team members lack the necessary training to analyze and address automation failures.</li>
-</ul>
+<p class="text-lg text-gray-700 mb-4">Avoid relying on these troubleshooting processes in scenarios where the automation system is undergoing fundamental changes, such as platform migration or complete system overhauls. The resolution processes may not be applicable in those cases, and broader strategies should be implemented instead.</p>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">FAQ</h2>
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-    <li><strong>What should I do if I can't identify the failure source?</strong> Consider involving a specialized team to conduct a thorough analysis, leveraging external tools for deeper insights.</li>
-    <li><strong>How often should I review my troubleshooting processes?</strong> Regularly review troubleshooting procedures after any significant incidents or quarterly to keep them relevant.</li>
-    <li><strong>Can automation tools provide insights into their own failures?</strong> Yes, many modern automation tools come with built-in monitoring and analytics to help troubleshoot issues.</li>
+  <li>
+    <strong>Q: How often should I review my automation processes?</strong>
+    <p class="text-lg text-gray-700 mb-4">A: Regular reviews, ideally quarterly, ensure that processes remain effective and up-to-date with system changes.</p>
+  </li>
+  <li>
+    <strong>Q: What is the first step in troubleshooting automation failures?</strong>
+    <p class="text-lg text-gray-700 mb-4">A: The initial step is identifying the issue through system logs or alerts, which provides a basis for further investigation.</p>
+  </li>
+  <li>
+    <strong>Q: Can these processes be applied to any kind of automation?</strong>
+    <p class="text-lg text-gray-700 mb-4">A: While the principles are broadly applicable, specific practices may need to be customized based on the tools and the environment used.</p>
+  </li>
 </ul>
 
 <h2 class="text-3xl font-bold mt-8 mb-4">Internal links</h2>
-<p class="text-lg text-gray-700 mb-4">For additional insights, check our articles on how to optimize your automation workflows at <a href="/">this link</a> and learn about integration strategies at <a href="/blog/">this page</a>.</p>
+<p class="text-lg text-gray-700 mb-4">For further exploration, check out related articles on troubleshooting automation workflows and best practices in automation management at <a href="#">this link</a> or explore how to enhance team collaboration during incident resolution <a href="/blog/">here</a>.</p>
 
-<h2 class="text-3xl font-bold mt-8 mb-4">List of AI tools mentioned in this article</h2>
+<h2 class="text-3xl font-bold mt-8 mb-4">List of AI tools mentioned in this article</h2><p class="text-lg text-gray-700 mb-4">The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.</p>
+
 <ul class="list-disc list-inside space-y-2 text-gray-700">
-  <li><a href="https://www.descript.com">Descript</a> — Descript is a tool that allows users to edit audio and video by manipulating text transcripts.</li>
   <li><a href="https://www.make.com/en/register?pc=flowtaro">Make</a> — Visual automation and integrations</li>
-  <li><a href="https://uptimerobot.com/?red=flowta">UptimeRobot</a> — Free website and endpoint uptime monitoring</li>
+  <li><a href="https://www.descript.com">Descript</a> — Descript is a tool that allows users to edit audio and video by manipulating text transcripts.</li>
 </ul>
+
