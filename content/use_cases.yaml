@@ -1,61 +1,381 @@
 # List of business problems / use cases for content generation
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
-# - suggested_content_type: string (one of: how-to, guide, best, comparison)
+# - content_type: string (one of: how-to, guide, best, comparison, review, sales, product-comparison, best-in-category, category-products)
 # - category_slug: string (e.g., "ai-marketing-automation")
-# - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
+# - audience_type: optional; beginner | intermediate | professional (from batch position)
+# - batch_id: optional; run id (e.g. 2026-02-20T143022)
+# - status: optional; "todo" = add to queue, "generated" / "archived" / "discarded" or missing = skip
 use_cases:
-  - problem: how to set up predictable workflows using agentic automations
-    suggested_content_type: how-to
+  - problem: how to set up alerts for rate limit breaches in AI marketing tools
+    content_type: guide
     category_slug: ai-marketing-automation
     audience_type: beginner
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to monitor and troubleshoot unexpected behaviors in agentic automation processes
-    suggested_content_type: guide
+    batch_id: 2026-02-25T072356
+    status: discarded
+  - problem: how to identify when rate limits impact lead generation efforts
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: beginner
+    batch_id: 2026-02-25T072356
+    status: discarded
+  - problem: how to optimize workflows to minimize lead loss during rate limit scenarios
+    content_type: guide
     category_slug: automation workflows
     audience_type: intermediate
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to scale and govern agentic automations to reduce unpredictability
-    suggested_content_type: best
+    batch_id: 2026-02-25T072356
+    status: discarded
+  - problem: how to monitor the effects of rate limits on marketing KPIs
+    content_type: guide
     category_slug: ai-marketing-automation
     audience_type: intermediate
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to implement agentic automations with consistent outputs in marketing tasks
-    suggested_content_type: how-to
+    batch_id: 2026-02-25T072356
+    status: discarded
+  - problem: best practices for scaling AI marketing strategies without hitting rate limits
+    content_type: guide
+    category_slug: automation workflows
+    audience_type: intermediate
+    batch_id: 2026-02-25T072356
+    status: discarded
+  - problem: how to implement governance frameworks to ensure reliability under rate limit conditions
+    content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to troubleshoot unpredictable responses from agentic automations during campaigns
-    suggested_content_type: guide
+    batch_id: 2026-02-25T072356
+    status: discarded
+  - problem: how to set up rate limit notifications to proactively manage lead capture
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: beginner
+    batch_id: 2026-02-25T211040
+    status: discarded
+  - problem: how to monitor marketing performance during peak rate limit scenarios
+    content_type: guide
+    category_slug: automation workflows
+    audience_type: intermediate
+    batch_id: 2026-02-25T211040
+    status: discarded
+  - problem: best strategies for enhancing automation frameworks to maintain lead generation under rate limits
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-25T211040
+    status: archived
+  - problem: how to set up a fallback automation for lead capture during rate limit breaches
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-25T222523
+    status: discarded
+  - problem: how to monitor lead generation performance when experiencing rate limit breaching
+    content_type: guide
     category_slug: automation workflows
     audience_type: professional
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to optimize agentic automations to align with marketing goals and reduce risks
-    suggested_content_type: best
+    batch_id: 2026-02-25T222646
+    status: archived
+  - problem: how to optimize detection and response strategies for lead loss during a rate limit breach
+    content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to govern and ensure reliability in complex agentic automation systems
-    suggested_content_type: how-to
+    batch_id: 2026-02-25T223917
+    status: archived
+  - problem: how to implement basic security measures for AI agents in marketing automation
+    content_type: guide
     category_slug: ai-marketing-automation
-    audience_type: professional
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to develop troubleshooting processes for unexpected agentic automation failures
-    suggested_content_type: guide
+    audience_type: beginner
+    batch_id: 2026-02-26T124635
+    status: archived
+  - problem: how to ensure compliance when setting up AI agents for marketing tasks
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: beginner
+    batch_id: 2026-02-26T124635
+    status: archived
+  - problem: how to monitor AI agents for security vulnerabilities in marketing automation
+    content_type: guide
     category_slug: automation workflows
-    audience_type: professional
-    batch_id: 2026-02-23T185219
-    status: generated
-  - problem: how to integrate governance models for high-reliability in agentic automations
-    suggested_content_type: best
+    audience_type: intermediate
+    batch_id: 2026-02-26T124635
+    status: archived
+  - problem: best practices for scaling AI agents with security and compliance governance
+    content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
-    batch_id: 2026-02-23T185219
-    status: generated
+    batch_id: 2026-02-26T124635
+    status: archived
+  - problem: implement security measures for AI agents in basic marketing tasks
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: beginner
+    batch_id: 2026-02-27T071356
+    status: archived
+  - problem: monitor compliance risks associated with AI agents in marketing workflows
+    content_type: guide
+    category_slug: automation workflows
+    audience_type: intermediate
+    batch_id: 2026-02-27T071356
+    status: archived
+  - problem: implement unique bicycle identification systems in marketing automation tools
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: beginner
+    batch_id: 2026-02-28T151539
+    status: discarded
+  - problem: monitor effectiveness of unique bicycle identification in lead generation efforts
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-28T151539
+    status: discarded
+  - problem: scale unique bicycle identification processes within marketing automation frameworks
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-28T151539
+    status: discarded
+  - problem: optimize client engagement strategies using unique bicycle identification systems
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-28T151539
+    status: discarded
+  - problem: How to implement a unique bicycle identification system within your marketing automation framework for better tracking.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: beginner
+    batch_id: 2026-02-28T162300
+    status: discarded
+  - problem: Optimizing the monitoring process for unique bicycle identification to ensure efficient data collection and usage.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T162300
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification processes to enhance marketing campaigns and customer engagement.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T162300
+    status: discarded
+  - problem: How to troubleshoot common issues with unique bicycle identification systems in marketing automation tools.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T162300
+    status: discarded
+  - problem: Guide to ensure governance and reliability in unique bicycle identification implementations within marketing frameworks.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T162300
+    status: discarded
+  - problem: How to implement a unique bicycle identification system for effective tracking in marketing automation.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: beginner
+    batch_id: 2026-02-28T163809
+    status: discarded
+  - problem: How to monitor the effectiveness of unique bicycle identification in marketing automation tools.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T163809
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification systems to ensure consistent performance across marketing campaigns.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T163809
+    status: discarded
+  - problem: How to troubleshoot common issues with unique bicycle identification systems in marketing automation workflows.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T163809
+    status: discarded
+  - problem: Guide to ensuring reliability in unique bicycle identification processes for optimized marketing efforts.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T163809
+    status: discarded
+  - problem: How to implement unique bicycle identification systems within AI marketing automation frameworks for better tracking.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T180613
+    status: discarded
+  - problem: How to optimize monitoring processes for unique bicycle identification data in marketing automation tools.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T180613
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification systems to enhance marketing strategy reliability.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T180613
+    status: discarded
+  - problem: How to troubleshoot common issues that arise with unique bicycle identification in marketing campaigns.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T180613
+    status: discarded
+  - problem: How to develop an optimized workflow for managing unique bicycle identification data in marketing automation.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T180613
+    status: discarded
+  - problem: Best strategies for ensuring compliance and governance in unique bicycle identification processes within marketing automation.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T180613
+    status: discarded
+  - problem: How to implement unique bicycle identification systems effectively within your AI marketing automation tools.
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-28T212334
+    status: discarded
+  - problem: How to troubleshoot and optimize unique bicycle identification systems in marketing automation for better performance.
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-28T212334
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification processes to ensure reliability in marketing automation frameworks.
+    content_type: guide
+    category_slug: ai-marketing-automation
+    audience_type: professional
+    batch_id: 2026-02-28T212334
+    status: discarded
+  - problem: How to integrate unique bicycle identification within existing AI-driven marketing workflows for maximum efficiency.
+    content_type: guide
+    category_slug: marketplaces-products
+    audience_type: professional
+    batch_id: 2026-02-28T212334
+    status: discarded
+  - problem: Guide to monitoring the impact of unique bicycle identification on marketing campaign performance metrics.
+    content_type: guide
+    category_slug: marketplaces-products
+    audience_type: professional
+    batch_id: 2026-02-28T212334
+    status: discarded
+  - problem: Best strategies for ensuring reliable governance in unique bicycle identification processes within scaled marketing operations.
+    content_type: guide
+    category_slug: marketplaces-products
+    audience_type: professional
+    batch_id: 2026-02-28T212334
+    status: discarded
+  - problem: How to implement a unique bicycle identification system to enhance user trust in marketing automation.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: discarded
+  - problem: How to monitor the effectiveness of a unique bicycle identification system within marketing automation workflows.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification systems to ensure reliability in marketing strategies.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: discarded
+  - problem: How to implement granular reporting for unique bicycle identification in your marketing automation tools.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: archived
+  - problem: Guide to troubleshooting common integration issues with unique bicycle identification in marketing workflows.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: archived
+  - problem: Best strategies for ensuring compliance and governance in unique bicycle identification practices within marketing frameworks.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: archived
+  - problem: How to implement unique bicycle identification systems for beginners to enhance marketing efforts.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T235001
+    status: discarded
+  - problem: How to troubleshoot common issues with unique bicycle identification systems for better user experience.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T235001
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification systems to improve marketing campaign reliability.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T235001
+    status: discarded
+  - problem: How to set up unique bicycle identification systems for tracking marketing effectiveness across campaigns.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T235001
+    status: discarded
+  - problem: How to monitor the performance of unique bicycle identification systems in real-time for marketing insights.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T235001
+    status: discarded
+  - problem: Best strategies for governing unique bicycle identification processes to ensure consistent marketing outcomes.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T235001
+    status: discarded
+  - problem: How to implement a unique bicycle identification system for beginners in marketing automation tools.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T003530
+    status: discarded
+  - problem: How to troubleshoot common issues with unique bicycle identification systems in entry-level marketing setups.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T003530
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification systems to ensure reliability in small marketing campaigns.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T003530
+    status: discarded
+  - problem: How to implement a unique bicycle identification system effectively within advanced marketing automation workflows.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T003530
+    status: discarded
+  - problem: Guide to optimizing and monitoring unique bicycle identification systems performance in complex marketing strategies.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T003530
+    status: discarded
+  - problem: Best strategies for governing unique bicycle identification processes to ensure consistent performance in high-volume marketing.
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T003530
+    status: discarded
