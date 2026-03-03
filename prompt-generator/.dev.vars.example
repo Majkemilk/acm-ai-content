@@ -1,0 +1,6 @@
+# Copy to .dev.vars and fill with your keys (used by wrangler for local preview).
+# Do not commit .dev.vars.
+NEXTJS_ENV=development
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+OPENAI_API_KEY=
