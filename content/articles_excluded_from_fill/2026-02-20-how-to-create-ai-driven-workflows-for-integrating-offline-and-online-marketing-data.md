@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to create AI-driven workflows for integrating offline and online marketing data"
 content_type: "how-to"
 category: "ai-marketing-automation"

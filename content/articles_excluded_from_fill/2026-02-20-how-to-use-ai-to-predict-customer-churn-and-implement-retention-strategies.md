@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to use AI to predict customer churn and implement retention strategies"
 content_type: "how-to"
 category: "ai-marketing-automation"

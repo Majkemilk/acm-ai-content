@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to integrate AI tools for better lead scoring in sales"
 content_type: "how-to"
 category: "ai-marketing-automation"

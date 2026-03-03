@@ -83,7 +83,7 @@ Existing article keywords/topics we already cover (suggest complementary or new 
 Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
 ```
 
-- **Źródło:** `count` = z `--limit` (domyślnie `TARGET_USE_CASE_COUNT`, np. 12), ograniczone do 1–100.
+- **Źródło:** `count` = `use_case_batch_size` z configu (np. 9), ograniczone do 1–100. Skrypt nie przyjmuje parametru `--limit`.
 - **Efekt:** Konkretna liczba do wygenerowania, wymóg „specific, actionable”, „people actively search for” i „different from existing”.
 
 ### 3.6 Typ treści (opcjonalnie)
@@ -107,7 +107,7 @@ Na końcu zawsze:
 | Dozwolone kategorie | Config + `--category` | „Allowed category_slug values” w user message |
 | Nie duplikować problemów | use_cases.yaml | „Existing use cases… do NOT suggest” |
 | Nie duplikować tematów | content/articles (max 50) | „Existing article keywords/topics… not duplicates” |
-| Liczba use case’ów | `--limit` | „Generate exactly {count} new…” |
+| Liczba use case’ów | config `use_case_batch_size` | „Generate exactly {count} new…” |
 | Jakość / intencja | Stała w user message | „specific, actionable”, „people actively search for”, „different from existing” |
 | Preferowany / wymuszony typ | `--content-type` lub brak | „Prefer how-to or guide” albo „set suggested_content_type to exactly: X” |
 | Sugerowane problemy | `content/config.yaml` → suggested_problems | „Optionally consider these problems… prefer turning them into use cases” (gdy lista niepusta) |
@@ -121,7 +121,7 @@ Po stronie skryptu jest jeszcze **walidacja po odpowiedzi:**
 
 | Parametr | Sposób | Domyślna wartość / zachowanie |
 |----------|--------|-------------------------------|
-| Liczba use case’ów | `--limit N` | 12 (`TARGET_USE_CASE_COUNT`) |
+| Liczba use case’ów | (tylko config) | `use_case_batch_size` z configu (np. 9) |
 | Kategoria | `--category SLUG` | Wszystkie z configu (production + sandbox) |
 | Typ treści | `--content-type TYPE` | Dowolny z how-to, guide, best, comparison; w tekście: „Prefer how-to or guide” |
 | Lista kategorii | `content/config.yaml` | production_category + sandbox_categories |
@@ -135,7 +135,7 @@ Stałe w kodzie (bez flag ani configu):
 - Tekst `instructions` (rola, dziedzina „AI marketing automation”, format JSON)
 - Fragmenty user message: „specific, actionable”, „people actively search for”, „different from existing”
 - Limit 50 słów kluczowych z artykułów (`keywords_list[:50]`)
-- Cap łącznej listy use case’ów w pliku: `limit` (po dopisaniu nowych zostaje ostatnie `limit` wpisów)
+- Brak globalnego limitu liczby use case’ów w pliku — nowe wpisy są dopisywane.
 
 ---
 
@@ -157,7 +157,7 @@ Stałe w kodzie (bez flag ani configu):
   Zamiast stałej `ALLOWED_CONTENT_TYPES` – lista z configu (wtedy `--content-type` i walidacja muszą z niej korzystać).
 
 - **Stałe domyślne**  
-  `TARGET_USE_CASE_COUNT` i domyślna kategoria fallback („ai-marketing-automation”) można przenieść do `config.yaml` jako np. `default_use_case_count` i `default_category_slug`.
+  Domyślna kategoria fallback („ai-marketing-automation”) można przenieść do `config.yaml` jako np. `default_category_slug`.
 
 ---
 

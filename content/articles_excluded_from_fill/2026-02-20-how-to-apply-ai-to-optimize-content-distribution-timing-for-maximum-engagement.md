@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to apply AI to optimize content distribution timing for maximum engagement"
 content_type: "how-to"
 category: "ai-marketing-automation"

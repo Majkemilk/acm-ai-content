@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to automate customer onboarding processes using AI"
 content_type: "how-to"
 category: "ai-marketing-automation"

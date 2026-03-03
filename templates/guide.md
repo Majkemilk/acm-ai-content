@@ -65,7 +65,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[If this article involves creating or processing content with AI tools, generate Prompt #1 and Prompt #2 following the Try-it-yourself rules. If this article is purely strategic or analytical, replace this subsection with a single sentence: "This topic does not lend itself to a prompt-building exercise." and keep the heading.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -83,7 +89,9 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of platforms and tools mentioned in this article
+
+{{TOOLS_SECTION_DISCLAIMER}}
 
 {{TOOLS_MENTIONED}}
 

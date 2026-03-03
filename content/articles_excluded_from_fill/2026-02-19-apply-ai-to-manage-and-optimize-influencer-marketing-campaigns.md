@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to apply AI to manage and optimize influencer marketing campaigns"
 content_type: "guide"
 category: "ai-marketing-automation"

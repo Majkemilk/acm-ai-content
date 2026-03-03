@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to automate image optimization for website and social media using AI"
 content_type: "how-to"
 category: "ai-marketing-automation"

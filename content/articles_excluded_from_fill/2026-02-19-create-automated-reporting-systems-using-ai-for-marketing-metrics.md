@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to create automated reporting systems using AI for marketing metrics"
 content_type: "how-to"
 category: "ai-marketing-automation"

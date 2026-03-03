@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to monitor and troubleshoot unexpected behaviors in agentic automation processes"
 content_type: "guide"
 category: "automation workflows"
@@ -101,7 +101,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

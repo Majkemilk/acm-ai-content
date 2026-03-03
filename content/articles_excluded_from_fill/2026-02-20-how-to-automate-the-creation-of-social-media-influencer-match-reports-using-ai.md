@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to automate the creation of social media influencer match reports using AI"
 content_type: "how-to"
 category: "ai-marketing-automation"

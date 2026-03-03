@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to develop AI-driven workflows for optimizing re-engagement campaigns"
 content_type: "how-to"
 category: "ai-marketing-automation"
@@ -101,7 +101,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to automate social media posting schedules with AI"
 content_type: "how-to"
 category: "ai-marketing-automation"

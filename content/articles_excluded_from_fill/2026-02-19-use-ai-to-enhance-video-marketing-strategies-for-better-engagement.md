@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to use AI to enhance video marketing strategies for better engagement"
 content_type: "guide"
 category: "ai-marketing-automation"

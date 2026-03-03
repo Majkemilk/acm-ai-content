@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to implement AI to streamline the creation of promotional content based on real-time trends"
 content_type: "how-to"
 category: "ai-marketing-automation"

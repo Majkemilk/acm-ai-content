@@ -90,6 +90,16 @@ python scripts/fill_articles.py --write  # apply changes (creates .bak per file)
 
 Requires `OPENAI_API_KEY`. Optional: `OPENAI_BASE_URL`. Flags: `--model`, `--limit N`, `--since YYYY-MM-DD`, `--slug_contains TEXT`, `--force` (refill if already filled). Preflight QA runs by default when using `--write`; disable with `--no-qa`, or use `--qa` in dry-run to report pass/fail and `--qa_strict` for stricter checks.
 
+## Use cases and queue
+
+Use cases live in `content/use_cases.yaml`; the queue is built from them with `scripts/generate_queue.py`. **One-time migration:** If upgrading from data that used `suggested_content_type`, run once before production/release:
+
+```bash
+python scripts/migrate_use_cases_to_content_type.py
+```
+
+After that, the pipeline uses only the `content_type` field (see `docs/spec_generate_use_cases_content_type_implementation.md`).
+
 ## Cloudflare Pages (A1 deploy)
 
 For an **A1 deploy** (publish only the static output):

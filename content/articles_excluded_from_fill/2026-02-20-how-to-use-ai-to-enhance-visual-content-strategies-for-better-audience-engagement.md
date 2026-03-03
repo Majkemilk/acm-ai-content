@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to use AI to enhance visual content strategies for better audience engagement"
 content_type: "how-to"
 category: "ai-marketing-automation"

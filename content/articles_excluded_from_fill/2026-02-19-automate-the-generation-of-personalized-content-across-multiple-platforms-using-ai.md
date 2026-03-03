@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to automate the generation of personalized content across multiple platforms using AI"
 content_type: "how-to"
 category: "ai-marketing-automation"

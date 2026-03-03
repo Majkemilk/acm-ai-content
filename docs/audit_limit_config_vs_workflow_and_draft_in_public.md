@@ -1,5 +1,7 @@
 # Audyt: limit 3 vs 9, szkielety w public
 
+**Uwaga (aktualny stan):** Override limitu w kroku „Generuj use case'y" został usunięty. Liczba use case'ów w jednym uruchomieniu pochodzi **wyłącznie** z configu (`use_case_batch_size`). Skrypt `generate_use_cases.py` nie przyjmuje parametru `--limit`; w aplikacji Flowtaro Monitor nie ma już widgetu „Inny limit". Poniższy opis dotyczy stanu przed tą zmianą.
+
 ## Opis sytuacji
 
 - W Konfiguracji: limit pomysłów **3**, piramida **2-1-0** (beginner–intermediate–professional).

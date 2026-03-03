@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to leverage AI to optimize ad spending and campaign performance"
 content_type: "how-to"
 category: "ai-marketing-automation"

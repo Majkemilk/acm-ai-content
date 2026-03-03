@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to automate cross-channel customer engagement insights with AI"
 content_type: "guide"
 category: "ai-marketing-automation"

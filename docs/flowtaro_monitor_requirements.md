@@ -44,7 +44,7 @@
 | Krok | Skrypt | Opis (dla UI) |
 |------|--------|----------------|
 | 1 | **manage_config** (odczyt/zapis) | Konfiguracja huba: główny plik huba, slug, kategorie sandbox, sugerowane problemy. Wywołanie `config_manager` (get/set/update). |
-| 2 | **generate_use_cases.py** | Generowanie pomysłów na artykuły (use case'y) z API; wynik w `content/use_cases.yaml`. Parametry: `--limit`, `--category`, `--content-type`. |
+| 2 | **generate_use_cases.py** | Generowanie pomysłów na artykuły (use case'y) z API; wynik w `content/use_cases.yaml`. Parametry: `--category`, `--content-type`. Liczba use case'ów z configu (`use_case_batch_size`). |
 | 3 | **generate_queue.py** | Tworzenie wpisów kolejki z use case'ów (z mapowaniem narzędzi); wynik w `content/queue.yaml`. Parametry: `--dry-run`. |
 | 4 | **generate_articles.py** | Generowanie szkieletów artykułów z kolejki (status todo → generated). Opcja: `--backfill`. |
 | 5 | **fill_articles.py** | Wypełnianie szkieletów treścią z AI. Parametry: `--write`, `--force`, `--limit`, `--slug_contains`, `--since`, `--qa` / `--no-qa`, `--quality_gate`, itd. |

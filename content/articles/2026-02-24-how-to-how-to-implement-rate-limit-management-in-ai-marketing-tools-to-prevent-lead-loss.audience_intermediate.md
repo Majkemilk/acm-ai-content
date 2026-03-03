@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to implement rate limit management in ai marketing tools to prevent lead loss"
 content_type: "how-to"
 category: "ai-marketing-automation"
@@ -101,7 +101,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

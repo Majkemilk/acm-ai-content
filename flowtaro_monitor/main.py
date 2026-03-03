@@ -13,7 +13,8 @@ import os
 import queue
 import re
 import subprocess
-from datetime import datetime
+import webbrowser
+from datetime import date, datetime
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from urllib.parse import urlparse, urlunparse
@@ -24,6 +25,45 @@ from flowtaro_monitor.i18n import LANG, t, set_lang
 PREFS_DIR = Path.home() / ".flowtaro_monitor"
 LAST_PARAMS_FILE = PREFS_DIR / "last_workflow_params.json"
 HUB_SLUG_PATTERN = re.compile(r"^[a-z0-9-]*$")
+
+# Wszystkie typy treści obsługiwane przez generator i fill_articles (fallback gdy brak configu)
+CONTENT_TYPES_ALL = (
+    "how-to",
+    "guide",
+    "best",
+    "comparison",
+    "review",
+    "sales",
+    "product-comparison",
+    "best-in-category",
+    "category-products",
+)
+
+
+def get_content_types_all() -> tuple[str, ...]:
+    """Lista wszystkich typów (ALL) z content/config.yaml content_types_all; przy braku configu zwraca CONTENT_TYPES_ALL."""
+    try:
+        from flowtaro_monitor._config import CONFIG_PATH
+        from content_index import load_config
+        cfg = load_config(CONFIG_PATH)
+        ct = cfg.get("content_types_all")
+        if isinstance(ct, list) and ct:
+            return tuple(str(x).strip() for x in ct if str(x).strip())
+    except Exception:
+        pass
+    return CONTENT_TYPES_ALL
+# Dla workflow: (etykieta i18n lub wartość, wartość do --content-type). Pierwszy element = "wszystkie".
+CONTENT_TYPE_CHOICES_WORKFLOW = [
+    ("wf.content_all", None),
+    ("how-to", "how-to"),
+    ("guide", "guide"),
+    ("best", "best"),
+    ("comparison", "comparison"),
+    ("wf.content_type_sales", "sales"),
+    ("wf.content_type_product_comparison", "product-comparison"),
+    ("wf.content_type_best_in_category", "best-in-category"),
+    ("wf.content_type_category_products", "category-products"),
+]
 
 
 def _create_tooltip(widget: tk.Widget, text: str):
@@ -48,16 +88,33 @@ def _create_tooltip(widget: tk.Widget, text: str):
     widget.bind("<Leave>", hide)
 
 
-def _show_article_selector(parent, title: str, items: list[tuple[str, str]],
-                           confirm_label: str, on_confirm):
+def _show_article_selector(parent, title: str, items: list[tuple[str, str] | tuple[str, str, str]],
+                           confirm_label: str, on_confirm,
+                           description_text: str | None = None,
+                           delete_label: str | None = None,
+                           on_delete_selected=None,
+                           open_public_label: str | None = None,
+                           remove_unselected_var: tk.BooleanVar | None = None):
     """Popup dialog with checkboxes for article selection.
 
-    items: [(display_text, stem_value), ...]
-    on_confirm: callable receiving list of selected stem_values.
+    items: [(display_text, stem_value)] or [(display_text, stem_value, status_key)] where status_key is 'failed', 'blocked', 'in_scope' or ''.
+    on_confirm: callable receiving list of selected stem_values; if remove_unselected_var is set, called as on_confirm(selected, remove_unselected_var.get()).
+    description_text: optional hint shown above the list.
+    delete_label, on_delete_selected: when set, show "Usuń zaznaczone" button; on_delete_selected(selected_stems) is called and dialog closes.
+    open_public_label: when set, show "Podgląd" button; opens selected article from public/ in browser (exactly one selected).
+    remove_unselected_var: when set, show checkbox "Usuń niezaznaczone i przywróć do puli" (default off); on confirm, call on_confirm(selected, var.get()).
     """
     if not items:
         messagebox.showinfo(t("msg.info"), t("sel.none"))
         return
+
+    # Normalize to (display, stem, status_key)
+    normalized: list[tuple[str, str, str]] = []
+    for it in items:
+        if len(it) == 3:
+            normalized.append((it[0], it[1], it[2]))
+        else:
+            normalized.append((it[0], it[1], ""))
 
     dialog = tk.Toplevel(parent)
     dialog.title(title)
@@ -65,7 +122,13 @@ def _show_article_selector(parent, title: str, items: list[tuple[str, str]],
     dialog.transient(parent)
     dialog.grab_set()
 
+    if description_text:
+        desc_frame = ttk.Frame(dialog, padding=(10, 10, 10, 0))
+        desc_frame.pack(fill=tk.X)
+        tk.Label(desc_frame, text=description_text, wraplength=720, justify=tk.LEFT, fg="gray").pack(anchor=tk.W)
+
     vars_map: dict[str, tk.BooleanVar] = {}
+    stem_to_status: dict[str, str] = {stem: sk for _d, stem, sk in normalized}
     all_var = tk.BooleanVar(value=True)
 
     def toggle_all():
@@ -73,10 +136,23 @@ def _show_article_selector(parent, title: str, items: list[tuple[str, str]],
         for v in vars_map.values():
             v.set(val)
 
+    def select_failed_only():
+        for stem, var in vars_map.items():
+            var.set(stem_to_status.get(stem) == "failed")
+
+    def deselect_failed():
+        for stem, var in vars_map.items():
+            if stem_to_status.get(stem) == "failed":
+                var.set(False)
+
     top_row = ttk.Frame(dialog, padding=5)
     top_row.pack(fill=tk.X)
     ttk.Checkbutton(top_row, text=t("sel.select_all"), variable=all_var,
                     command=toggle_all).pack(side=tk.LEFT)
+    has_failed = any(sk == "failed" for _d, _s, sk in normalized)
+    if has_failed:
+        ttk.Button(top_row, text=t("sel.select_failed_only"), command=select_failed_only).pack(side=tk.LEFT, padx=8)
+        ttk.Button(top_row, text=t("sel.deselect_failed"), command=deselect_failed).pack(side=tk.LEFT)
 
     canvas = tk.Canvas(dialog, highlightthickness=0)
     sb = ttk.Scrollbar(dialog, orient=tk.VERTICAL, command=canvas.yview)
@@ -88,10 +164,20 @@ def _show_article_selector(parent, title: str, items: list[tuple[str, str]],
     sb.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 10), pady=5)
     canvas.bind("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
 
-    for display, stem in items:
+    _status_labels = {"failed": "refresh.status_failed", "blocked": "refresh.status_blocked", "in_scope": "refresh.status_in_scope"}
+    for display, stem, status_key in normalized:
         var = tk.BooleanVar(value=True)
         vars_map[stem] = var
-        ttk.Checkbutton(inner, text=display, variable=var).pack(anchor=tk.W, padx=5, pady=1)
+        label = display
+        if status_key and status_key in _status_labels:
+            label = f"{display}  [{t(_status_labels[status_key])}]"
+        ttk.Checkbutton(inner, text=label, variable=var).pack(anchor=tk.W, padx=5, pady=1)
+
+    if remove_unselected_var is not None:
+        opt_frame = ttk.Frame(dialog, padding=(10, 6, 10, 0))
+        opt_frame.pack(fill=tk.X)
+        ttk.Checkbutton(opt_frame, text=t("sel.remove_unselected_checkbox"), variable=remove_unselected_var).pack(anchor=tk.W)
+        tk.Label(opt_frame, text=t("sel.remove_unselected_hint"), wraplength=720, justify=tk.LEFT, fg="gray", font=("TkDefaultFont", 9)).pack(anchor=tk.W, padx=(20, 0), pady=(2, 0))
 
     btn_row = ttk.Frame(dialog, padding=10)
     btn_row.pack(fill=tk.X)
@@ -102,9 +188,33 @@ def _show_article_selector(parent, title: str, items: list[tuple[str, str]],
         if not selected:
             messagebox.showinfo(t("msg.info"), t("sel.none"))
             return
-        on_confirm(selected)
+        if remove_unselected_var is not None:
+            on_confirm(selected, remove_unselected_var.get())
+        else:
+            on_confirm(selected)
+
+    def do_delete():
+        selected = [stem for stem, var in vars_map.items() if var.get()]
+        dialog.destroy()
+        if delete_label and on_delete_selected is not None:
+            on_delete_selected(selected)
+
+    def open_preview():
+        selected = [stem for stem, var in vars_map.items() if var.get()]
+        if len(selected) != 1:
+            messagebox.showinfo(t("msg.info"), t("report.select_one_article"))
+            return
+        path = get_public_article_html_path(selected[0])
+        if path.exists():
+            webbrowser.open(path.as_uri())
+        else:
+            messagebox.showinfo(t("msg.info"), t("report.open_article_public_no_file"))
 
     ttk.Button(btn_row, text=confirm_label, command=confirm).pack(side=tk.LEFT, padx=5)
+    if delete_label and on_delete_selected is not None:
+        ttk.Button(btn_row, text=delete_label, width=18, command=do_delete).pack(side=tk.LEFT, padx=5)
+    if open_public_label:
+        ttk.Button(btn_row, text=open_public_label, command=open_preview).pack(side=tk.LEFT, padx=5)
     ttk.Button(btn_row, text=t("btn.cancel"), command=dialog.destroy).pack(side=tk.LEFT, padx=5)
 
 
@@ -129,17 +239,76 @@ def _save_last_params(action: str, extra: list):
     lst = [s] + lst[:2]
     data[action] = lst
     LAST_PARAMS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=0), encoding="utf-8")
+from flowtaro_monitor._affiliate_descriptions import generate_short_description
 from flowtaro_monitor._monitor_data import (
-    get_dashboard_data,
-    get_cost_chart_data,
+    build_articles_report_html,
+    get_article_report_data,
+    get_public_article_html_path,
     get_article_tools_data,
+    get_cost_chart_data,
+    get_dashboard_data,
     get_use_case_defaults,
     load_affiliate_tools,
     reset_cost_data,
     save_affiliate_tools,
     validate_project_root,
 )
-from flowtaro_monitor._run_scripts import SCRIPT_MAP, run_workflow_script, run_workflow_streaming
+from flowtaro_monitor._run_scripts import SCRIPT_MAP, run_script, run_workflow_script, run_workflow_streaming
+
+# Queue/use_cases for preview dialog (revert todo, delete selected)
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+try:
+    from generate_queue import (
+        load_existing_queue,
+        save_queue,
+        load_use_cases,
+        _save_use_cases,
+        title_for_entry,
+    )
+    from generate_articles import slug_from_keyword
+    _queue_use_cases_available = True
+except Exception:
+    _queue_use_cases_available = False
+    load_existing_queue = save_queue = load_use_cases = _save_use_cases = title_for_entry = None
+    slug_from_keyword = None
+
+
+def _stem_to_queue_rest(stem: str) -> str:
+    """Part of stem after date prefix (YYYY-MM-DD-) for matching to queue."""
+    parts = stem.split("-", 3)
+    return parts[-1] if len(parts) == 4 else stem
+
+
+def _queue_item_expected_rest(item: dict) -> str:
+    """Expected rest (slug or slug.audience_XXX) for this queue item."""
+    if not slug_from_keyword:
+        return ""
+    slug = slug_from_keyword(item.get("primary_keyword") or "")
+    aud = (item.get("audience_type") or "").strip()
+    return f"{slug}.audience_{aud}" if aud else slug
+
+
+def _find_queue_index_by_stem(queue_items: list, stem: str) -> int | None:
+    rest = _stem_to_queue_rest(stem)
+    for i, item in enumerate(queue_items):
+        if _queue_item_expected_rest(item) == rest:
+            return i
+    return None
+
+
+def _find_use_case_index_by_queue_entry(use_cases: list, queue_item: dict) -> int | None:
+    if not title_for_entry:
+        return None
+    title = (queue_item.get("title") or "").strip()
+    cat = (queue_item.get("category_slug") or "").strip()
+    for i, uc in enumerate(use_cases):
+        ct = (uc.get("content_type") or "").strip()
+        uc_title = title_for_entry(uc.get("problem") or "", ct)
+        uc_cat = (uc.get("category_slug") or "").strip()
+        if uc_title == title and uc_cat == cat:
+            return i
+    return None
 
 # Klucze i18n dla etykiet etapów (t() w UI)
 WORKFLOW_LABEL_KEYS = {
@@ -183,12 +352,7 @@ def _p_multichoice(label: str, description: str, flag: str, choices: list[tuple[
     return {"label": label, "type": "multichoice", "description": description, "flag": flag, "choices": choices}
 
 
-def _p_limit_override(label: str, default: int, min_val: int = 1, max_val: int = 100) -> dict:
-    """Parametr limit z podpowiedzią (zakres + domyślna), checkbox 'Inna niż domyślna' i Spinbox w zakresie."""
-    return {"label": label, "type": "limit_override", "default": default, "min": min_val, "max": max_val}
-
-
-# generate_use_cases jest budowany dynamicznie w refresh_params_panel (limit z domyślnym z config, kategoria z listy, typ treści multichoice)
+# generate_use_cases jest budowany dynamicznie w refresh_params_panel (kategoria z listy, typ treści multichoice; batch size tylko z configu)
 WORKFLOW_PARAM_SCHEMA: dict[str, list[dict]] = {
     "generate_use_cases": None,  # budowane w _build_param_widgets_for_action
     "generate_queue": [
@@ -217,9 +381,8 @@ def _build_param_widgets_for_action(container: ttk.Frame, action: str, italic_fo
     if schema is None and action == "generate_use_cases":
         defaults = get_use_case_defaults()
         schema = [
-            _p_limit_override("wf.limit_label", default=defaults["batch_size"], min_val=1, max_val=100),
             _p_choice("wf.category", "wf.category_desc", [("wf.category_any", [])] + [(c, ["--category", c]) for c in defaults["categories"]]),
-            {"label": "wf.content_type", "type": "content_type_checkboxes", "description": "wf.content_type_desc", "flag": "--content-type", "choices": [("wf.content_all", None), ("how-to", "how-to"), ("guide", "guide"), ("best", "best"), ("comparison", "comparison")]},
+            {"label": "wf.content_type", "type": "content_type_checkboxes", "description": "wf.content_type_desc", "flag": "--content-type", "choices": CONTENT_TYPE_CHOICES_WORKFLOW},
         ]
     widgets: list = []
     if not schema:
@@ -230,27 +393,8 @@ def _build_param_widgets_for_action(container: ttk.Frame, action: str, italic_fo
         row.pack(fill=tk.X, pady=(0, 6))
         label_text = t(p["label"]) if p.get("label") else ""
         desc_text = t(p["description"]) if p.get("description") else ""
-        if p["type"] != "limit_override":
-            lbl = ttk.Label(row, text=label_text, width=28, anchor=tk.W)
-            lbl.pack(side=tk.LEFT, padx=(0, 5))
-        if p["type"] == "limit_override":
-            limit_lbl_text = t("wf.limit_line").format(min=p["min"], max=p["max"], default=p["default"])
-            limit_lbl = ttk.Label(row, text=limit_lbl_text)
-            limit_lbl.pack(side=tk.LEFT, padx=(0, 5))
-            check_var = tk.BooleanVar(value=False)
-            cb = ttk.Checkbutton(row, text=t("wf.limit_other"), variable=check_var)
-            cb.pack(side=tk.LEFT, padx=(0, 10))
-            spin = tk.Spinbox(row, from_=p["min"], to=p["max"], width=6)
-            spin.delete(0, tk.END)
-            spin.insert(0, str(p["default"]))
-            spin.config(state=tk.DISABLED)
-            spin.pack(side=tk.LEFT)
-            def _enable_spin(sv=spin, cv=check_var):
-                sv.config(state=tk.NORMAL if cv.get() else tk.DISABLED)
-            check_var.trace_add("write", lambda *a: _enable_spin())
-            widgets.append((p, (check_var, spin)))
-            _create_tooltip(limit_lbl, t("wf.limit_tooltip"))
-            continue
+        lbl = ttk.Label(row, text=label_text, width=28, anchor=tk.W)
+        lbl.pack(side=tk.LEFT, padx=(0, 5))
         if p["type"] == "content_type_checkboxes":
             choices = p["choices"]
             vars_list = []
@@ -390,20 +534,6 @@ def _collect_extra_from_widgets(param_widgets: list) -> list:
                 for _d, val, vb in vars_list[1:]:
                     if val and vb.get():
                         extra.extend([p["flag"], val])
-        elif p["type"] == "limit_override":
-            check_var, spin = w
-            if check_var.get():
-                try:
-                    val = spin.get().strip()
-                    n = int(val)
-                    n = max(p["min"], min(p["max"], n))
-                    extra.extend(["--limit", str(n)])
-                except (ValueError, tk.TclError):
-                    extra.extend(["--limit", str(p["default"])])
-            else:
-                # R1: use current config batch_size at run time, not widget's frozen default
-                defaults = get_use_case_defaults()
-                extra.extend(["--limit", str(defaults["batch_size"])])
         else:
             val = w.get().strip()
             placeholder = p.get("placeholder", "").strip()
@@ -599,7 +729,7 @@ def build_workflow_tab(parent, last_output_holder: list):
 
     for i, action in enumerate(SEQUENCE_ACTIONS):
         if i < 4:
-            section_title = "" if i == 0 else t(WORKFLOW_LABEL_KEYS.get(action, action))
+            section_title = t("wf.section_params") if i == 0 else t(WORKFLOW_LABEL_KEYS.get(action, action))
             lf = ttk.LabelFrame(inner, text=section_title)
             lf.pack(fill=tk.X, pady=(0, 10))
             section_inner = ttk.Frame(lf, padding=5)
@@ -736,7 +866,11 @@ def build_workflow_tab(parent, last_output_holder: list):
                             root.after(100, lambda: _show_article_selector(
                                 root, t("sel.title_fill"), items,
                                 t("sel.confirm_fill"),
-                                lambda selected: _fill_selected(selected, items, full_text)))
+                                lambda selected, remove_unselected=False: _fill_selected(selected, items, full_text, remove_unselected),
+                                description_text=t("sel.preview_fill_desc"),
+                                delete_label=t("sel.delete_selected"),
+                                on_delete_selected=lambda selected: _delete_selected(selected),
+                                remove_unselected_var=tk.BooleanVar(value=False)))
                         else:
                             status_label.config(text=t("wf.status_ok"), foreground="green")
                 if sequence_cancelled[0] or code != 0 or not remaining:
@@ -774,16 +908,6 @@ def build_workflow_tab(parent, last_output_holder: list):
             pass
         root.after(50, lambda: poll_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn, fill_total, fill_done))
 
-    def _effective_use_case_limit(extra: list) -> int:
-        """Parse --limit from generate_use_cases extra args, else config default."""
-        for i, x in enumerate(extra):
-            if x == "--limit" and i + 1 < len(extra):
-                try:
-                    return int(extra[i + 1])
-                except ValueError:
-                    pass
-        return get_use_case_defaults()["batch_size"]
-
     def _parse_fill_limit(extra: list) -> int:
         """Parse --limit from fill_articles extra args. 0 = no limit."""
         for i, x in enumerate(extra):
@@ -800,17 +924,6 @@ def build_workflow_tab(parent, last_output_holder: list):
             extra = _collect_extra_from_widgets(section_widgets[idx])
             steps.append((action, extra))
             _save_last_params(action, extra)
-        # R2: warn when generate_use_cases limit != pyramid sum
-        if steps and steps[0][0] == "generate_use_cases":
-            limit = _effective_use_case_limit(steps[0][1])
-            defaults = get_use_case_defaults()
-            if limit != defaults["pyramid_sum"]:
-                if not messagebox.askyesno(
-                    t("wf.limit_pyramid_title"),
-                    t("wf.limit_pyramid_mismatch", limit, defaults["pyramid_sum"]),
-                    icon=messagebox.WARNING,
-                ):
-                    return
         preview_mode[0] = False
         sequence_cancelled[0] = False
         run_btn.config(state=tk.DISABLED)
@@ -843,17 +956,6 @@ def build_workflow_tab(parent, last_output_holder: list):
             extra = _collect_extra_from_widgets(section_widgets[idx])
             steps.append((action, extra))
             _save_last_params(action, extra)
-        # R2: warn when generate_use_cases limit != pyramid sum (first step is same)
-        if steps and steps[0][0] == "generate_use_cases":
-            limit = _effective_use_case_limit(steps[0][1])
-            defaults = get_use_case_defaults()
-            if limit != defaults["pyramid_sum"]:
-                if not messagebox.askyesno(
-                    t("wf.limit_pyramid_title"),
-                    t("wf.limit_pyramid_mismatch", limit, defaults["pyramid_sum"]),
-                    icon=messagebox.WARNING,
-                ):
-                    return
         preview_remaining_steps[0] = steps[3:]
         preview_steps = steps[:3]
         preview_mode[0] = True
@@ -882,19 +984,31 @@ def build_workflow_tab(parent, last_output_holder: list):
         process_holder.append((first_action, proc))
         root.after(50, lambda: poll_sequence(preview_steps, first_header, [], q, run_btn, cancel_btn, first_fill_total, first_fill_done))
 
-    def _fill_selected(selected_stems: list[str], all_items: list[tuple[str, str]], prev_output: str):
+    def _fill_selected(selected_stems: list[str], all_items: list[tuple[str, str]], prev_output: str, remove_unselected: bool = False):
         articles_dir = get_project_root() / "content" / "articles"
         all_stems = {stem for _, stem in all_items}
         rejected = all_stems - set(selected_stems)
         deleted = 0
-        for stem in rejected:
-            p = articles_dir / (stem + ".md")
-            if p.exists():
-                try:
-                    p.unlink()
-                    deleted += 1
-                except OSError:
-                    pass
+        queue_path = get_project_root() / "content" / "queue.yaml"
+        if remove_unselected and _queue_use_cases_available and queue_path.exists() and rejected:
+            try:
+                queue_items = load_existing_queue(queue_path)
+                for stem in rejected:
+                    idx = _find_queue_index_by_stem(queue_items, stem)
+                    if idx is not None:
+                        queue_items[idx]["status"] = "todo"
+                save_queue(queue_path, queue_items)
+            except Exception:
+                pass
+        if remove_unselected:
+            for stem in rejected:
+                p = articles_dir / (stem + ".md")
+                if p.exists():
+                    try:
+                        p.unlink()
+                        deleted += 1
+                    except OSError:
+                        pass
         remaining_steps = list(preview_remaining_steps[0])
         sequence_cancelled[0] = False
         run_btn.config(state=tk.DISABLED)
@@ -931,6 +1045,61 @@ def build_workflow_tab(parent, last_output_holder: list):
         proc, q = run_workflow_streaming(first_action, extra_args=first_extra)
         process_holder.append((first_action, proc))
         root.after(50, lambda: poll_sequence(remaining_steps, accumulated, [], q, run_btn, cancel_btn, fill_total, fill_done))
+
+    def _delete_selected(selected_stems: list[str]):
+        """Remove selected skeletons: delete .md, remove from queue, set use case status to discarded."""
+        if not selected_stems or not _queue_use_cases_available:
+            if selected_stems and not _queue_use_cases_available:
+                messagebox.showerror(t("msg.error"), t("sel.queue_use_cases_unavailable"))
+            return
+        if not messagebox.askokcancel(
+            t("sel.delete_confirm_title"),
+            t("sel.delete_confirm_msg").format(len(selected_stems)),
+            icon=messagebox.WARNING,
+        ):
+            return
+        root_dir = get_project_root()
+        articles_dir = root_dir / "content" / "articles"
+        queue_path = root_dir / "content" / "queue.yaml"
+        use_cases_path = root_dir / "content" / "use_cases.yaml"
+        try:
+            queue_items = load_existing_queue(queue_path)
+            use_cases = load_use_cases(use_cases_path)
+        except Exception as e:
+            messagebox.showerror(t("msg.error"), str(e))
+            return
+        to_remove = set()
+        deleted_count = 0
+        for stem in selected_stems:
+            p = articles_dir / (stem + ".md")
+            if p.exists():
+                try:
+                    p.unlink()
+                    deleted_count += 1
+                except OSError:
+                    pass
+            idx = _find_queue_index_by_stem(queue_items, stem)
+            if idx is not None:
+                to_remove.add(idx)
+        removed_entries = [queue_items[i] for i in sorted(to_remove)]
+        queue_new = [e for i, e in enumerate(queue_items) if i not in to_remove]
+        discarded_count = 0
+        for entry in removed_entries:
+            uc_idx = _find_use_case_index_by_queue_entry(use_cases, entry)
+            if uc_idx is not None:
+                use_cases[uc_idx]["status"] = "discarded"
+                discarded_count += 1
+        save_queue(queue_path, queue_new)
+        _save_use_cases(use_cases_path, use_cases)
+        log_line = t("sel.deleted_selected_log", deleted_count, discarded_count)
+        try:
+            log_area.config(state=tk.NORMAL)
+            log_area.insert(tk.END, "\n" + log_line + "\n")
+            log_area.see(tk.END)
+            log_area.config(state=tk.DISABLED)
+        except tk.TclError:
+            pass
+        messagebox.showinfo(t("msg.info"), t("sel.deleted_selected_done", deleted_count, discarded_count))
 
     def cancel_run():
         sequence_cancelled[0] = True
@@ -1041,26 +1210,28 @@ def build_refresh_tab(parent, last_output_holder: list):
     f.after(400, _set_initial_sash_refresh)
     f.bind("<Map>", lambda e: f.after(100, _set_initial_sash_refresh))
 
-    # --- R4: sekcja „Zakres" ---
+    # --- Zakres: tryb Starsze niż | Zakres dat (radio), jedna linia podsumowania, licznik ostatniego odświeżenia ---
     lf_scope = ttk.LabelFrame(inner, text=t("refresh.section_scope"))
     lf_scope.pack(fill=tk.X, pady=(0, 10))
     scope_inner = ttk.Frame(lf_scope, padding=5)
     scope_inner.pack(fill=tk.X)
 
-    row = ttk.Frame(scope_inner); row.pack(fill=tk.X)
+    scope_mode_var = tk.StringVar(value="older")
+    row_mode = ttk.Frame(scope_inner)
+    row_mode.pack(fill=tk.X)
+    ttk.Radiobutton(row_mode, text=t("refresh.scope_mode_older"), variable=scope_mode_var, value="older").pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Radiobutton(row_mode, text=t("refresh.scope_mode_dates"), variable=scope_mode_var, value="date_range").pack(side=tk.LEFT)
+
+    row = ttk.Frame(scope_inner)
+    row.pack(fill=tk.X, pady=(6, 0))
     ttk.Label(row, text=t("refresh.days_label")).pack(side=tk.LEFT, padx=(0, 5))
     days_combo = ttk.Combobox(row, values=("7", "14", "30", "60", "90"), width=8, state="readonly")
-    days_combo.pack(side=tk.LEFT, padx=5); days_combo.set("90")
+    days_combo.pack(side=tk.LEFT, padx=5)
+    days_combo.set("90")
     _hint(row, "refresh.days_desc")
 
-    row_max = ttk.Frame(scope_inner); row_max.pack(fill=tk.X, pady=(6, 0))
-    ttk.Label(row_max, text=t("refresh.max_days_label")).pack(side=tk.LEFT, padx=(0, 5))
-    max_days_combo = ttk.Combobox(row_max, values=(t("refresh.max_days_off"), "0", "1", "2", "3", "4", "5", "6"), width=8, state="readonly")
-    max_days_combo.pack(side=tk.LEFT, padx=5); max_days_combo.set(t("refresh.max_days_off"))
-    _hint(row_max, "refresh.max_days_desc")
-
-    # Zakres dat (od – do); gdy oba ustawione, ma pierwszenstwo nad „starsze/młodsze niż”
-    row_range = ttk.Frame(scope_inner); row_range.pack(fill=tk.X, pady=(6, 0))
+    row_range = ttk.Frame(scope_inner)
+    row_range.pack(fill=tk.X, pady=(6, 0))
     ttk.Label(row_range, text=t("refresh.from_date_label")).pack(side=tk.LEFT, padx=(0, 5))
     from_date_entry = ttk.Entry(row_range, width=12)
     from_date_entry.pack(side=tk.LEFT, padx=2)
@@ -1069,18 +1240,84 @@ def build_refresh_tab(parent, last_output_holder: list):
     to_date_entry.pack(side=tk.LEFT, padx=2)
     _hint(row_range, "refresh.date_range_desc")
 
-    # R3+R9: Limit — „Bez limitu" zamiast „0", unified values
     limit_values = (t("refresh.limit_none"), "1", "5", "10", "20", "50")
-    row_lim = ttk.Frame(scope_inner); row_lim.pack(fill=tk.X, pady=(6, 0))
+    row_lim = ttk.Frame(scope_inner)
+    row_lim.pack(fill=tk.X, pady=(6, 0))
     ttk.Label(row_lim, text=t("refresh.limit_label")).pack(side=tk.LEFT, padx=(0, 5))
     limit_combo = ttk.Combobox(row_lim, values=limit_values, width=12, state="readonly")
-    limit_combo.pack(side=tk.LEFT, padx=5); limit_combo.set(t("refresh.limit_none"))
+    limit_combo.pack(side=tk.LEFT, padx=5)
+    limit_combo.set(t("refresh.limit_none"))
     _hint(row_lim, "refresh.limit_desc")
 
-    row_dry = ttk.Frame(scope_inner); row_dry.pack(fill=tk.X, pady=(6, 0))
-    dry_run_var = tk.BooleanVar(value=False)
-    ttk.Checkbutton(row_dry, text=t("refresh.dry_run"), variable=dry_run_var).pack(side=tk.LEFT, padx=(0, 5))
-    _hint(row_dry, "refresh.dry_run_desc")
+    scope_summary_var = tk.StringVar(value="")
+    row_summary = ttk.Frame(scope_inner)
+    row_summary.pack(fill=tk.X, pady=(8, 0))
+    tk.Label(row_summary, textvariable=scope_summary_var, font=("TkDefaultFont", 9, "bold")).pack(anchor=tk.W)
+    last_refresh_var = tk.StringVar(value=t("refresh.last_refresh_never"))
+    row_last = ttk.Frame(scope_inner)
+    row_last.pack(fill=tk.X, pady=(2, 0))
+    tk.Label(row_last, textvariable=last_refresh_var, font=italic_font, fg="gray").pack(anchor=tk.W)
+
+    def _update_scope_visibility():
+        mode = scope_mode_var.get()
+        if mode == "older":
+            row.pack(fill=tk.X, pady=(6, 0))
+            row_range.pack_forget()
+        else:
+            row.pack_forget()
+            row_range.pack(fill=tk.X, pady=(6, 0))
+        _update_scope_summary()
+
+    def _update_scope_summary():
+        mode = scope_mode_var.get()
+        limit_raw = (limit_combo.get() or "").strip()
+        limit_str = "0" if not limit_raw or limit_raw == t("refresh.limit_none") else limit_raw
+        if mode == "older":
+            days = (days_combo.get() or "90").strip()
+            part = f"{t('refresh.days_label').split('(')[0].strip()} {days} {t('refresh.days_unit')}, limit {limit_str}"
+            scope_summary_var.set(t("refresh.scope_summary", part))
+        else:
+            fr = (from_date_entry.get() or "").strip() or "?"
+            to = (to_date_entry.get() or "").strip() or "?"
+            part = t("refresh.from_to", fr, to) + f", limit {limit_str}"
+            scope_summary_var.set(t("refresh.scope_summary", part))
+
+    def _update_last_refresh_label():
+        root = get_project_root()
+        stamp_file = root / "logs" / "last_refresh_started.txt"
+        if not stamp_file.exists():
+            last_refresh_var.set(t("refresh.last_refresh_never"))
+            return
+        try:
+            raw = stamp_file.read_text(encoding="utf-8").strip()
+            if not raw:
+                last_refresh_var.set(t("refresh.last_refresh_never"))
+                return
+            from datetime import date as date_type
+            stamp_date = datetime.strptime(raw[:10], "%Y-%m-%d").date()
+            days_ago = (date_type.today() - stamp_date).days
+            if days_ago == 0:
+                last_refresh_var.set(t("refresh.last_refresh", t("refresh.today")))
+            else:
+                last_refresh_var.set(t("refresh.last_refresh", t("refresh.days_ago", days_ago)))
+        except Exception:
+            last_refresh_var.set(t("refresh.last_refresh_never"))
+
+    def _write_last_refresh_timestamp():
+        root = get_project_root()
+        log_dir = root / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        stamp_file = log_dir / "last_refresh_started.txt"
+        stamp_file.write_text(datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), encoding="utf-8")
+        _update_last_refresh_label()
+
+    days_combo.bind("<<ComboboxSelected>>", lambda e: _update_scope_summary())
+    limit_combo.bind("<<ComboboxSelected>>", lambda e: _update_scope_summary())
+    scope_mode_var.trace_add("write", lambda *a: _update_scope_visibility())
+    from_date_entry.bind("<KeyRelease>", lambda e: _update_scope_summary())
+    to_date_entry.bind("<KeyRelease>", lambda e: _update_scope_summary())
+    _update_scope_visibility()
+    _update_last_refresh_label()
 
     # --- R4: sekcja „Opcje AI" ---
     lf_ai = ttk.LabelFrame(inner, text=t("refresh.section_ai_options"))
@@ -1137,6 +1374,7 @@ def build_refresh_tab(parent, last_output_holder: list):
     ttk.Button(row_save, text=t("btn.save_log_file"), command=lambda: _save_log_refresh()).pack(side=tk.LEFT, padx=5)
     ttk.Button(row_save, text=t("btn.save_logs_dir"), command=lambda: _save_to_logs_refresh()).pack(side=tk.LEFT, padx=5)
     process_holder = []
+    show_selector_on_done = [False]
 
     def _save_log_refresh():
         if not last_output_holder:
@@ -1207,6 +1445,57 @@ def build_refresh_tab(parent, last_output_holder: list):
                 items.append((fname, stem))
         return items
 
+    def _get_article_status(stem: str) -> str:
+        """Return frontmatter status (blocked, filled, etc.) or ''."""
+        root = get_project_root()
+        path = root / "content" / "articles" / f"{stem}.md"
+        if not path.exists():
+            return ""
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            return ""
+        if not text.startswith("---"):
+            return ""
+        end = text.find("\n---", 3)
+        if end == -1:
+            return ""
+        for line in text[3:end].split("\n"):
+            mo = re.match(r"^status\s*:\s*(.+)$", line.strip(), re.I)
+            if mo:
+                val = mo.group(1).strip().strip("'\"")
+                if val.lower() == "blocked":
+                    return "blocked"
+                if val.lower() == "filled":
+                    return "in_scope"
+                return val.lower() or ""
+        return ""
+
+    def _load_failed_stems() -> set[str]:
+        failed_file = get_project_root() / "logs" / "last_refresh_failed.txt"
+        if not failed_file.exists():
+            return set()
+        try:
+            return {line.strip() for line in failed_file.read_text(encoding="utf-8").splitlines() if line.strip()}
+        except OSError:
+            return set()
+
+    def _build_merged_refresh_items(dry_run_items: list[tuple[str, str]]) -> list[tuple[str, str, str]]:
+        """Merge dry-run list with last_refresh_failed.txt; each item (display, stem, status_key)."""
+        failed_stems = _load_failed_stems()
+        dry_stems = {stem for _d, stem in dry_run_items}
+        out: list[tuple[str, str, str]] = []
+        for display, stem in dry_run_items:
+            if stem in failed_stems:
+                status_key = "failed"
+            else:
+                fm = _get_article_status(stem)
+                status_key = "blocked" if fm == "blocked" else ("in_scope" if fm else "in_scope")
+            out.append((display, stem, status_key))
+        for stem in sorted(failed_stems - dry_stems):
+            out.append((f"{stem}.md", stem, "failed"))
+        return out
+
     def _get_limit_value() -> str:
         raw = (limit_combo.get() or "").strip()
         if not raw or raw == t("refresh.limit_none"):
@@ -1217,9 +1506,13 @@ def build_refresh_tab(parent, last_output_holder: list):
         import tempfile
         tmp = Path(tempfile.mktemp(suffix=".txt", prefix="flowtaro_refresh_"))
         tmp.write_text("\n".join(stems), encoding="utf-8")
-        from_str = (from_date_entry.get() or "").strip()
-        to_str = (to_date_entry.get() or "").strip()
-        if from_str and to_str:
+        mode = scope_mode_var.get()
+        if mode == "date_range":
+            from_str = (from_date_entry.get() or "").strip()
+            to_str = (to_date_entry.get() or "").strip()
+            if not from_str or not to_str:
+                messagebox.showerror(t("msg.error"), t("refresh.date_range_required"))
+                return
             try:
                 from_d = datetime.strptime(from_str, "%Y-%m-%d").date()
                 to_d = datetime.strptime(to_str, "%Y-%m-%d").date()
@@ -1231,16 +1524,12 @@ def build_refresh_tab(parent, last_output_holder: list):
                 return
             extra = ["--from-date", from_str, "--to-date", to_str, "--include-file", str(tmp)]
         else:
-            max_days_val = (max_days_combo.get() or "").strip()
-            if max_days_val and max_days_val != t("refresh.max_days_off"):
-                extra = ["--max-days", max_days_val]
-            else:
-                extra = ["--days", (days_combo.get() or "90").strip()]
-            extra += ["--include-file", str(tmp)]
+            extra = ["--days", (days_combo.get() or "90").strip(), "--include-file", str(tmp)]
         if no_render_var.get():
             extra.append("--no-render")
         _append_common_extra(extra)
-        run_btn.config(state=tk.DISABLED)
+        _write_last_refresh_timestamp()
+        articles_btn.config(state=tk.DISABLED)
         cancel_btn.config(state=tk.NORMAL)
         status_label.config(text=t("refresh.running"), foreground="gray")
         progress_bar["maximum"] = 1
@@ -1255,7 +1544,7 @@ def build_refresh_tab(parent, last_output_holder: list):
         proc, q = run_workflow_streaming("refresh_articles", extra_args=extra)
         process_holder.append(("refresh_articles", proc))
         root_w = parent.winfo_toplevel()
-        root_w.after(50, lambda: poll(q, run_btn, cancel_btn, out_lines))
+        root_w.after(50, lambda: poll(q, articles_btn, cancel_btn, out_lines))
 
     def set_done(out, code, rbtn, cbtn):
         progress_label.config(text="")
@@ -1270,13 +1559,19 @@ def build_refresh_tab(parent, last_output_holder: list):
         status_label.config(text=t("refresh.status_ok") if code == 0 else t("refresh.status_error"), foreground="green" if code == 0 else "red")
         last_output_holder.clear()
         last_output_holder.append((out or "", "refresh_articles"))
-        if code == 0 and dry_run_var.get() and out:
-            items = _parse_dry_run_articles(out)
-            if items:
+        _update_last_refresh_label()
+        if code == 0 and show_selector_on_done[0] and out:
+            dry_items = _parse_dry_run_articles(out)
+            show_selector_on_done[0] = False
+            if dry_items:
+                merged = _build_merged_refresh_items(dry_items)
                 root_w = parent.winfo_toplevel()
                 root_w.after(100, lambda: _show_article_selector(
-                    root_w, t("sel.title_refresh"), items,
-                    t("sel.confirm_refresh"), _run_selective_refresh))
+                    root_w, t("sel.title_refresh"), merged,
+                    t("sel.confirm_refresh"), _run_selective_refresh,
+                    open_public_label=t("sel.preview_public")))
+        else:
+            show_selector_on_done[0] = False
 
     def poll(q, run_btn, cancel_btn, out_lines):
         try:
@@ -1308,45 +1603,15 @@ def build_refresh_tab(parent, last_output_holder: list):
         if retries_val != "2":
             extra += ["--quality_retries", retries_val]
 
-    def _run_retry_failed():
-        failed_file = get_project_root() / "logs" / "last_refresh_failed.txt"
-        if not failed_file.exists():
-            messagebox.showinfo(t("msg.info"), t("refresh.retry_failed_no_list"))
-            return
-        try:
-            content = failed_file.read_text(encoding="utf-8").strip()
-        except OSError:
-            messagebox.showwarning(t("msg.warning"), t("refresh.retry_failed_no_list"))
-            return
-        if not content:
-            messagebox.showinfo(t("msg.info"), t("refresh.retry_failed_no_list"))
-            return
-        extra = ["--include-file", str(failed_file)]
-        if no_render_var.get():
-            extra.append("--no-render")
-        _append_common_extra(extra, include_re_skeleton=False)
-        run_btn.config(state=tk.DISABLED)
-        cancel_btn.config(state=tk.NORMAL)
-        status_label.config(text=t("refresh.running"), foreground="gray")
-        progress_bar["maximum"] = 1
-        progress_bar["value"] = 0
-        progress_label.config(text="")
-        log_area.config(state=tk.NORMAL)
-        log_area.delete("1.0", tk.END)
-        log_area.insert(tk.END, t("refresh.running") + "\n")
-        log_area.config(state=tk.DISABLED)
-        out_lines = []
-        process_holder.clear()
-        proc, q = run_workflow_streaming("refresh_articles", extra_args=extra)
-        process_holder.append(("refresh_articles", proc))
-        root = parent.winfo_toplevel()
-        root.after(50, lambda: poll(q, run_btn, cancel_btn, out_lines))
-
-    def run():
+    def run_articles_list():
         limit_val = _get_limit_value()
-        from_str = (from_date_entry.get() or "").strip()
-        to_str = (to_date_entry.get() or "").strip()
-        if from_str and to_str:
+        mode = scope_mode_var.get()
+        if mode == "date_range":
+            from_str = (from_date_entry.get() or "").strip()
+            to_str = (to_date_entry.get() or "").strip()
+            if not from_str or not to_str:
+                messagebox.showerror(t("msg.error"), t("refresh.date_range_required"))
+                return
             try:
                 from_d = datetime.strptime(from_str, "%Y-%m-%d").date()
                 to_d = datetime.strptime(to_str, "%Y-%m-%d").date()
@@ -1358,17 +1623,14 @@ def build_refresh_tab(parent, last_output_holder: list):
                 return
             extra = ["--from-date", from_str, "--to-date", to_str, "--limit", limit_val]
         else:
-            max_days_val = (max_days_combo.get() or "").strip()
-            if max_days_val and max_days_val != t("refresh.max_days_off"):
-                extra = ["--max-days", max_days_val, "--limit", limit_val]
-            else:
-                extra = ["--days", (days_combo.get() or "90").strip(), "--limit", limit_val]
-        if dry_run_var.get():
-            extra.append("--dry-run")
+            extra = ["--days", (days_combo.get() or "90").strip(), "--limit", limit_val]
+        extra.append("--dry-run")
         if no_render_var.get():
             extra.append("--no-render")
         _append_common_extra(extra)
-        run_btn.config(state=tk.DISABLED)
+        show_selector_on_done[0] = True
+        _write_last_refresh_timestamp()
+        articles_btn.config(state=tk.DISABLED)
         cancel_btn.config(state=tk.NORMAL)
         status_label.config(text=t("refresh.running"), foreground="gray")
         progress_bar["maximum"] = 1
@@ -1383,7 +1645,7 @@ def build_refresh_tab(parent, last_output_holder: list):
         proc, q = run_workflow_streaming("refresh_articles", extra_args=extra)
         process_holder.append(("refresh_articles", proc))
         root = parent.winfo_toplevel()
-        root.after(50, lambda: poll(q, run_btn, cancel_btn, out_lines))
+        root.after(50, lambda: poll(q, articles_btn, cancel_btn, out_lines))
 
     def cancel_run():
         if process_holder and isinstance(process_holder[0], tuple):
@@ -1394,18 +1656,15 @@ def build_refresh_tab(parent, last_output_holder: list):
                 except Exception:
                     pass
 
-    run_btn = ttk.Button(refresh_btn_row, text=t("refresh.run"), command=run)
-    run_btn.pack(side=tk.LEFT, padx=5)
+    articles_btn = ttk.Button(refresh_btn_row, text=t("refresh.btn_articles_to_refresh"), command=run_articles_list)
+    articles_btn.pack(side=tk.LEFT, padx=5)
     cancel_btn = ttk.Button(refresh_btn_row, text=t("refresh.run_cancel"), command=cancel_run, state=tk.DISABLED)
     cancel_btn.pack(side=tk.LEFT, padx=5)
-    retry_failed_btn = ttk.Button(refresh_btn_row, text=t("refresh.retry_failed"), command=_run_retry_failed)
-    retry_failed_btn.pack(side=tk.LEFT, padx=5)
-    _create_tooltip(retry_failed_btn, t("refresh.retry_failed_desc"))
     return f
 
 
 def build_git_tab(parent):
-    """Zakładka Git: add content/articles/, commit z komunikatem, push (bez force). Status, walidacje repo i PATH."""
+    """Zakładka Publikuj: add content/articles/, commit z komunikatem, push (bez force). Status, walidacje repo i PATH."""
     f = ttk.Frame(parent, padding=10)
     f.pack(fill=tk.BOTH, expand=True)
 
@@ -1442,7 +1701,7 @@ def build_git_tab(parent):
         except FileNotFoundError:
             return (t("git.err_no_git"), 128)
         except subprocess.TimeoutExpired:
-            return ("Git: timeout.", 124)
+            return ("Publish: timeout.", 124)
 
     def _is_repo() -> tuple[bool, str]:
         if not (root_dir / ".git").exists():
@@ -1478,8 +1737,21 @@ def build_git_tab(parent):
     left_outer = ttk.Frame(paned_h)
     paned_h.add(left_outer, weight=1)
 
-    inner = ttk.Frame(left_outer, padding=5)
-    inner.pack(fill=tk.X)
+    # Lewy panel z przewijaniem, żeby sekcje Commit i Push były zawsze widoczne
+    canvas = tk.Canvas(left_outer, highlightthickness=0)
+    scrollbar = ttk.Scrollbar(left_outer, orient=tk.VERTICAL, command=canvas.yview)
+    inner = ttk.Frame(canvas, padding=5)
+    inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas_window = canvas.create_window((0, 0), window=inner, anchor=tk.NW)
+    def _on_canvas_configure(ev):
+        canvas.itemconfig(canvas_window, width=ev.width)
+    canvas.bind("<Configure>", _on_canvas_configure)
+    canvas.configure(yscrollcommand=scrollbar.set)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    def _on_mousewheel(ev):
+        canvas.yview_scroll(int(-1 * (ev.delta / 120)), tk.UNITS)
+    canvas.bind("<MouseWheel>", _on_mousewheel)
 
     lf_status = ttk.LabelFrame(inner, text=t("git.section_status"))
     lf_status.pack(fill=tk.X, pady=(0, 8))
@@ -1502,8 +1774,23 @@ def build_git_tab(parent):
     ttk.Label(commit_inner, text=t("git.commit_message")).pack(side=tk.LEFT, padx=(0, 5))
     commit_entry = ttk.Entry(commit_inner, width=36)
     commit_entry.pack(side=tk.LEFT, padx=2, fill=tk.X, expand=True)
-    ttk.Button(commit_inner, text=t("git.btn_commit"), command=lambda: _do_commit()).pack(side=tk.LEFT, padx=5)
-    commit_inner.pack(fill=tk.X)
+    commit_placeholder = t("git.commit_message_placeholder")
+    commit_entry.insert(0, commit_placeholder)
+
+    def _clear_commit_placeholder():
+        if commit_entry.get().strip() == commit_placeholder:
+            commit_entry.delete(0, tk.END)
+
+    def _restore_commit_placeholder():
+        if not commit_entry.get().strip():
+            commit_entry.delete(0, tk.END)
+            commit_entry.insert(0, commit_placeholder)
+
+    commit_entry.bind("<FocusIn>", lambda ev: _clear_commit_placeholder())
+    commit_entry.bind("<FocusOut>", lambda ev: _restore_commit_placeholder())
+    btn_commit = ttk.Button(commit_inner, text=t("git.btn_commit"), command=lambda: _do_commit())
+    btn_commit.pack(side=tk.LEFT, padx=5)
+    _create_tooltip(btn_commit, t("git.btn_commit_desc"))
     tk.Label(lf_commit, text=t("git.btn_commit_desc"), font=italic_font, fg="gray", wraplength=320).pack(anchor=tk.W, padx=5, pady=(0, 5))
 
     branch_remote_var = tk.StringVar(value="")
@@ -1558,7 +1845,7 @@ def build_git_tab(parent):
             messagebox.showerror(t("msg.error"), t("git.err_no_git"))
             return
         msg = (commit_entry.get() or "").strip()
-        if not msg:
+        if not msg or msg == commit_placeholder:
             messagebox.showwarning(t("msg.warning"), t("git.err_commit_empty"))
             return
         out, code = _run_git(["commit", "-m", msg])
@@ -1631,7 +1918,7 @@ def build_git_tab(parent):
     return f
 
 
-def build_config_tab(parent):
+def build_config_tab(parent, ideas_tab=None):
     """Zakładka Konfiguracja: spójna z Generuj artykuły – przewijany formularz, etykiety 28 znaków, podpowiedzi kursywą."""
     f = ttk.Frame(parent, padding=10)
     f.pack(fill=tk.BOTH, expand=True)
@@ -1645,7 +1932,7 @@ def build_config_tab(parent):
         return f
 
     try:
-        from content_index import load_config
+        from content_index import get_hubs_list, load_config
         from config_manager import write_config
     except ImportError as e:
         ttk.Label(f, text=f"Błąd importu: {e}", foreground="red").pack(anchor=tk.W)
@@ -1656,6 +1943,7 @@ def build_config_tab(parent):
     cat_vals = [t("wf.category_any")] + list(defaults_uc.get("categories", []))
     combo_width = min(30, max((len(str(v)) for v in cat_vals), default=10) + 2)
     combo_width = max(12, combo_width)
+    config_entry_width = 60
 
     canvas = tk.Canvas(f, highlightthickness=0)
     scrollbar = ttk.Scrollbar(f, orient=tk.VERTICAL, command=canvas.yview)
@@ -1707,9 +1995,14 @@ def build_config_tab(parent):
             e_prod_other.delete(0, tk.END)
             e_prod_other.insert(0, prod or "")
             e_prod_other.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
-        hub_vals = list(dict.fromkeys([hub, prod] + [s for s in sandbox if isinstance(s, str) and s.strip()]))
+        hubs_list = get_hubs_list(cfg) if cfg else []
+        if hubs_list:
+            hub_vals = list(dict.fromkeys([h.get("slug") or h.get("category") or "" for h in hubs_list if isinstance(h, dict)]))
+            hub_vals = [s for s in hub_vals if s]
+        else:
+            hub_vals = list(dict.fromkeys([hub, prod] + [s for s in sandbox if isinstance(s, str) and s.strip()]))
         e_hub["values"] = hub_vals
-        e_hub.set(hub or "")
+        e_hub.set(hub or (hub_vals[0] if hub_vals else ""))
         mode_vals = {
             "production_only": t("config.category_mode_production_only"),
             "preserve_sandbox": t("config.category_mode_preserve_sandbox"),
@@ -1723,21 +2016,30 @@ def build_config_tab(parent):
         for s in sandbox:
             lb_sandbox.insert(tk.END, s if isinstance(s, str) else str(s))
         e_sandbox_new.delete(0, tk.END)
+        # Problem bazowy = first element (max 1 wpis); reszta = problemy sugerowane
+        base_problem = suggested[0] if suggested else ""
+        lb_base_problem.delete(0, tk.END)
+        if base_problem is not None and str(base_problem).strip():
+            lb_base_problem.insert(tk.END, base_problem if isinstance(base_problem, str) else str(base_problem))
+        e_base_new.delete(0, tk.END)
+        _update_base_add_state()
         lb_suggested.delete(0, tk.END)
-        for s in suggested:
+        for s in (suggested[1:] if len(suggested) > 1 else []):
             lb_suggested.insert(tk.END, s if isinstance(s, str) else str(s))
         e_suggested_new.delete(0, tk.END)
         e_batch.set(batch)
         batch_int = int(batch)
-        inter_count = pyramid[0] if len(pyramid) >= 1 else 3
-        pro_count = pyramid[1] if len(pyramid) >= 2 else 0
-        beg_count = batch_int - inter_count - pro_count
-        if beg_count < 0:
-            beg_count = 0
+        # config/store: pyramid = [n_beginner, n_intermediate]; professional = batch - n_beginner - n_intermediate
+        beg_count = int(pyramid[0]) if len(pyramid) >= 1 else 3
+        inter_count = int(pyramid[1]) if len(pyramid) >= 2 else 3
+        pro_count = batch_int - beg_count - inter_count
+        if pro_count < 0:
+            pro_count = 0
         sp_beg.set(beg_count)
         sp_int.set(inter_count)
         sp_pro.set(pro_count)
         _pyr_update_sum()
+        _validate_hub()
 
     def save_ui():
         try:
@@ -1749,11 +2051,19 @@ def build_config_tab(parent):
                     prod = (e_prod["values"] or ["ai-marketing-automation"])[0]
             hub = e_hub.get().strip()
             sandbox = [lb_sandbox.get(i) for i in range(lb_sandbox.size()) if lb_sandbox.get(i).strip()]
-            suggested = [lb_suggested.get(i) for i in range(lb_suggested.size()) if lb_suggested.get(i).strip()]
+            base_val = lb_base_problem.get(0).strip() if lb_base_problem.size() > 0 else ""
+            rest_suggested = [lb_suggested.get(i) for i in range(lb_suggested.size()) if lb_suggested.get(i).strip()]
+            if base_val:
+                suggested = [base_val] + rest_suggested
+            elif rest_suggested:
+                suggested = [""] + rest_suggested
+            else:
+                suggested = []
             mode_display = (e_category_mode.get() or "").strip()
             category_mode = "preserve_sandbox" if mode_display == t("config.category_mode_preserve_sandbox") else "production_only"
             batch = int(e_batch.get().strip() or 9)
-            pyramid = [sp_int.get(), sp_pro.get()]
+            # config: pyramid = [n_beginner, n_intermediate]; professional = batch - beg - int
+            pyramid = [sp_beg.get(), sp_int.get()]
             config_path = get_project_root() / "content" / "config.yaml"
             write_config(
                 config_path,
@@ -1765,6 +2075,14 @@ def build_config_tab(parent):
                 suggested_problems=suggested,
                 category_mode=category_mode,
             )
+            # Auto-sync use_case_allowed_categories.json so pipeline uses current categories
+            try:
+                if str(SCRIPTS_DIR) not in sys.path:
+                    sys.path.insert(0, str(SCRIPTS_DIR))
+                from generate_use_cases import sync_allowed_categories_file
+                sync_allowed_categories_file(config_path, get_project_root() / "content" / "use_case_allowed_categories.json")
+            except Exception:
+                pass
             messagebox.showinfo(t("msg.saved"), f"{t('config.saved')}\n\n{config_path}")
         except Exception as e:
             messagebox.showerror(t("msg.error"), str(e))
@@ -1773,18 +2091,18 @@ def build_config_tab(parent):
     lf_hub = ttk.LabelFrame(inner, text=t("config.section_hub"), padding=5)
     lf_hub.pack(fill=tk.X, pady=(0, 10))
     row1 = ttk.Frame(lf_hub)
-    row1.pack(fill=tk.X, pady=(0, 6))
+    row1.pack(fill=tk.X, pady=(0, 2))
     ttk.Label(row1, text=t("config.production"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
     hint_prod = ttk.Frame(row1)
     hint_prod.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
     lbl_prod_hint = tk.Label(hint_prod, text=t("config.production_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
     lbl_prod_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_prod_hint)
-    e_prod = ttk.Combobox(row1, width=combo_width, state="readonly")
+    e_prod = ttk.Combobox(row1, width=config_entry_width, state="readonly")
     e_prod.pack(side=tk.LEFT)
     row1b = ttk.Frame(lf_hub)
     row1b.pack(fill=tk.X, pady=2)
-    e_prod_other = ttk.Entry(row1b, width=40)
+    e_prod_other = ttk.Entry(row1b, width=config_entry_width)
     e_prod_other.pack(side=tk.LEFT, padx=(33, 0), fill=tk.X, expand=True)
     row1b.pack_forget()
     def _on_prod_change():
@@ -1794,31 +2112,35 @@ def build_config_tab(parent):
             row1b.pack_forget()
     e_prod.bind("<<ComboboxSelected>>", lambda e: _on_prod_change())
     row2 = ttk.Frame(lf_hub)
-    row2.pack(fill=tk.X, pady=(0, 6))
+    row2.pack(fill=tk.X, pady=(0, 2))
     ttk.Label(row2, text=t("config.hub_slug"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
     hint_hub = ttk.Frame(row2)
     hint_hub.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
     lbl_hub_hint = tk.Label(hint_hub, text=t("config.hub_slug_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
     lbl_hub_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_hub_hint)
-    e_hub = ttk.Combobox(row2, width=combo_width)
+    e_hub = ttk.Combobox(row2, width=config_entry_width)
     e_hub.pack(side=tk.LEFT)
     hub_validation_lbl = tk.Label(lf_hub, text="", font=italic_font, fg="red", wraplength=520)
-    hub_validation_lbl.pack(anchor=tk.W, padx=(33, 0), pady=(0, 2))
+    hub_validation_lbl.pack(anchor=tk.W, padx=(33, 0), pady=(0, 0))
+    hub_validation_lbl.pack_forget()
     def _validate_hub():
         val = e_hub.get().strip()
         if not val:
             hub_validation_lbl.config(text="")
+            hub_validation_lbl.pack_forget()
             return
         if HUB_SLUG_PATTERN.match(val):
             hub_validation_lbl.config(text="")
+            hub_validation_lbl.pack_forget()
         else:
             hub_validation_lbl.config(text=t("config.hub_invalid"))
+            hub_validation_lbl.pack(anchor=tk.W, padx=(33, 0), pady=(0, 0))
     e_hub.bind("<KeyRelease>", lambda e: _validate_hub())
     e_hub.bind("<<ComboboxSelected>>", lambda e: _validate_hub())
 
     row2b = ttk.Frame(lf_hub)
-    row2b.pack(fill=tk.X, pady=(0, 6))
+    row2b.pack(fill=tk.X, pady=(0, 2))
     ttk.Label(row2b, text=t("config.category_mode"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
     hint_mode = ttk.Frame(row2b)
     hint_mode.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
@@ -1836,24 +2158,39 @@ def build_config_tab(parent):
     e_category_mode = ttk.Combobox(
         row2b,
         values=(t("config.category_mode_production_only"), t("config.category_mode_preserve_sandbox")),
-        width=combo_width,
+        width=config_entry_width,
         state="readonly",
     )
     e_category_mode.pack(side=tk.LEFT)
 
-    # Use case'y
+    def _go_to_ideas():
+        if ideas_tab is not None and parent.winfo_ismapped():
+            parent.select(ideas_tab)
+
+    # Pomysły (limit i piramida): Limit + tooltip w kol. 0; przycisk Pomysły (wyrównany do podglądów) + tooltip w kol. 1
     lf_uc = ttk.LabelFrame(inner, text=t("config.section_use_cases"), padding=5)
     lf_uc.pack(fill=tk.X, pady=(0, 10))
     row_batch = ttk.Frame(lf_uc)
-    row_batch.pack(fill=tk.X, pady=(0, 6))
-    ttk.Label(row_batch, text=t("config.batch_friendly") + " (" + t("config.batch_size") + ")", width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
-    hint_batch = ttk.Frame(row_batch)
+    row_batch.pack(fill=tk.X, pady=(0, 2))
+    row_batch.columnconfigure(0, weight=4)
+    row_batch.columnconfigure(1, weight=6)
+    col_batch_left = ttk.Frame(row_batch)
+    col_batch_left.grid(row=0, column=0, sticky=tk.EW)
+    ttk.Label(col_batch_left, text=t("config.batch_friendly"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    hint_batch = ttk.Frame(col_batch_left)
     hint_batch.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
     lbl_batch_hint = tk.Label(hint_batch, text=t("config.batch_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
     lbl_batch_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_batch_hint)
-    e_batch = ttk.Spinbox(row_batch, from_=1, to=12, width=5, increment=1)
-    e_batch.pack(side=tk.LEFT)
+    col_batch_right = ttk.Frame(row_batch)
+    col_batch_right.grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
+    ttk.Button(col_batch_right, text=t("config.goto_ideas_btn"), command=_go_to_ideas).pack(side=tk.LEFT)
+    lbl_ideas_info = tk.Label(col_batch_right, text=t("config.ideas_info"), font=("TkDefaultFont", 9), fg="gray", anchor=tk.W)
+    lbl_ideas_info.pack(side=tk.LEFT, padx=(6, 0))
+    row_batch_spin = ttk.Frame(lf_uc)
+    row_batch_spin.pack(fill=tk.X, pady=(0, 6))
+    e_batch = ttk.Spinbox(row_batch_spin, from_=1, to=12, width=5, increment=1)
+    e_batch.pack(side=tk.LEFT, padx=(33, 0))
 
     row_pyr = ttk.Frame(lf_uc)
     row_pyr.pack(fill=tk.X, pady=(0, 6))
@@ -1864,8 +2201,6 @@ def build_config_tab(parent):
     lbl_pyr_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_pyr_hint)
 
-    pyr_frame = ttk.Frame(lf_uc)
-    pyr_frame.pack(fill=tk.X, pady=(0, 6), padx=(0, 0))
     sp_beg = tk.IntVar(value=3)
     sp_int = tk.IntVar(value=3)
     sp_pro = tk.IntVar(value=3)
@@ -1887,45 +2222,125 @@ def build_config_tab(parent):
             total = int(e_batch.get())
         except (ValueError, TypeError):
             total = 9
-        val = var.get()
-        others = sum(v.get() for v in (sp_beg, sp_int, sp_pro) if v is not var)
-        max_allowed = total - others
-        if val > max_allowed:
-            var.set(max(0, max_allowed))
+        b, i, p = sp_beg.get(), sp_int.get(), sp_pro.get()
+        # Keep sum equal to total: Professional is the remainder when Beginner or Intermediate change.
+        if var is sp_beg:
+            sp_beg.set(max(0, min(total, b)))
+            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
+        elif var is sp_int:
+            sp_int.set(max(0, min(total, i)))
+            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
+        else:
+            # sp_pro: always sync to remainder so save [sp_beg, sp_int] is correct
+            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
         _pyr_update_sum()
 
-    pad_lbl = 32
-    row_beg = ttk.Frame(pyr_frame)
-    row_beg.pack(fill=tk.X, pady=1)
-    ttk.Label(row_beg, text="", width=pad_lbl).pack(side=tk.LEFT)
-    ttk.Label(row_beg, text=t("config.pyr_beginner"), width=14, anchor=tk.W).pack(side=tk.LEFT)
-    ttk.Spinbox(row_beg, from_=0, to=12, width=5, textvariable=sp_beg, command=lambda: _pyr_clamp(sp_beg)).pack(side=tk.LEFT)
-
-    row_inter = ttk.Frame(pyr_frame)
-    row_inter.pack(fill=tk.X, pady=1)
-    ttk.Label(row_inter, text="", width=pad_lbl).pack(side=tk.LEFT)
-    ttk.Label(row_inter, text=t("config.pyr_intermediate"), width=14, anchor=tk.W).pack(side=tk.LEFT)
-    ttk.Spinbox(row_inter, from_=0, to=12, width=5, textvariable=sp_int, command=lambda: _pyr_clamp(sp_int)).pack(side=tk.LEFT)
-
-    row_pro = ttk.Frame(pyr_frame)
-    row_pro.pack(fill=tk.X, pady=1)
-    ttk.Label(row_pro, text="", width=pad_lbl).pack(side=tk.LEFT)
-    ttk.Label(row_pro, text=t("config.pyr_professional"), width=14, anchor=tk.W).pack(side=tk.LEFT)
-    ttk.Spinbox(row_pro, from_=0, to=12, width=5, textvariable=sp_pro, command=lambda: _pyr_clamp(sp_pro)).pack(side=tk.LEFT)
-
-    row_sum = ttk.Frame(pyr_frame)
-    row_sum.pack(fill=tk.X, pady=(2, 0))
-    ttk.Label(row_sum, text="", width=pad_lbl).pack(side=tk.LEFT)
-    ttk.Label(row_sum, text="", width=14).pack(side=tk.LEFT)
-    sum_label = tk.Label(row_sum, textvariable=lbl_sum, font=italic_font, anchor=tk.W)
-    sum_label.pack(side=tk.LEFT)
+    # Suma oraz Beginner / Intermediate / Professional w jednej linii
+    pyr_frame = ttk.Frame(lf_uc)
+    pyr_frame.pack(fill=tk.X, pady=(0, 6))
+    sum_label = tk.Label(pyr_frame, textvariable=lbl_sum, font=italic_font, anchor=tk.W)
+    sum_label.pack(side=tk.LEFT, padx=(33, 12))
+    ttk.Label(pyr_frame, text=t("config.pyr_beginner"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Spinbox(pyr_frame, from_=0, to=12, width=5, textvariable=sp_beg, command=lambda: _pyr_clamp(sp_beg)).pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(pyr_frame, text=t("config.pyr_intermediate"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Spinbox(pyr_frame, from_=0, to=12, width=5, textvariable=sp_int, command=lambda: _pyr_clamp(sp_int)).pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(pyr_frame, text=t("config.pyr_professional"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Spinbox(pyr_frame, from_=0, to=12, width=5, textvariable=sp_pro, command=lambda: _pyr_clamp(sp_pro)).pack(side=tk.LEFT)
 
     sp_beg.trace_add("write", lambda *a: _pyr_clamp(sp_beg))
     sp_int.trace_add("write", lambda *a: _pyr_clamp(sp_int))
     sp_pro.trace_add("write", lambda *a: _pyr_clamp(sp_pro))
     e_batch.config(command=lambda: _pyr_update_sum())
 
-    # Sandbox / problemy
+    # Problem bazowy i problemy sugerowane
+    lf_base_sugg = ttk.LabelFrame(inner, text=t("config.section_base_and_suggested"), padding=5)
+    lf_base_sugg.pack(fill=tk.X, pady=(0, 10))
+
+    # --- Problem bazowy: etykieta + tooltip w jednej linii (jak górny obszar)
+    row_base = ttk.Frame(lf_base_sugg)
+    row_base.pack(fill=tk.X, pady=(0, 6))
+    ttk.Label(row_base, text=t("config.base_problem"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    hint_base = ttk.Frame(row_base)
+    hint_base.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+    lbl_base_hint = tk.Label(hint_base, text=t("config.base_problem_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
+    lbl_base_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+    config_hint_labels.append(lbl_base_hint)
+    # Szerokości: wpisywanie 40%, podgląd 60%. Podetykiety nad polami, przyciski pod polami.
+    row_base_grid = ttk.Frame(lf_base_sugg)
+    row_base_grid.pack(fill=tk.X, pady=(0, 6))
+    row_base_grid.columnconfigure(0, weight=4)
+    row_base_grid.columnconfigure(1, weight=6)
+    ttk.Label(row_base_grid, text=t("config.sub_label_type"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=0, sticky=tk.W, pady=(0, 2))
+    ttk.Label(row_base_grid, text=t("config.sub_label_preview"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=1, sticky=tk.W, padx=(10, 0), pady=(0, 2))
+    col_base_left = ttk.Frame(row_base_grid)
+    col_base_left.grid(row=1, column=0, sticky=tk.EW)
+    e_base_new = ttk.Entry(col_base_left, width=config_entry_width)
+    e_base_new.pack(fill=tk.X, expand=True)
+    fr_base = ttk.Frame(row_base_grid)
+    fr_base.grid(row=1, column=1, sticky=tk.EW, padx=(10, 0))
+    lb_base_problem = tk.Listbox(fr_base, height=1, width=20, selectmode=tk.SINGLE)
+    lb_base_problem.pack(side=tk.LEFT, fill=tk.X, expand=True)
+    sb_base = ttk.Scrollbar(fr_base, orient=tk.VERTICAL, command=lb_base_problem.yview)
+    sb_base.pack(side=tk.RIGHT, fill=tk.Y)
+    lb_base_problem.config(yscrollcommand=sb_base.set)
+    col_base_btn_left = ttk.Frame(row_base_grid)
+    col_base_btn_left.grid(row=2, column=0, sticky=tk.W, pady=(4, 0))
+    col_base_btn_right = ttk.Frame(row_base_grid)
+    col_base_btn_right.grid(row=2, column=1, sticky=tk.W, padx=(10, 0), pady=(4, 0))
+    btn_base_add = ttk.Button(col_base_btn_left, text=t("btn.add"), width=8)
+    btn_base_add.pack()
+    def _remove_base():
+        _list_remove_selected(lb_base_problem)
+        _update_base_add_state()
+
+    def _update_base_add_state():
+        if lb_base_problem.size() >= 1:
+            btn_base_add.config(state=tk.DISABLED)
+        else:
+            btn_base_add.config(state=tk.NORMAL)
+
+    def _add_base():
+        _list_add(lb_base_problem, e_base_new)
+        _update_base_add_state()
+
+    btn_base_add.config(command=_add_base)
+    _create_tooltip(btn_base_add, t("config.base_problem_one_only"))
+    ttk.Button(col_base_btn_right, text=t("btn.remove"), width=18, command=_remove_base).pack()
+
+    # --- Problemy sugerowane
+    row_sugg = ttk.Frame(lf_base_sugg)
+    row_sugg.pack(fill=tk.X, pady=(0, 6))
+    ttk.Label(row_sugg, text=t("config.suggested_list"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    hint_sugg = ttk.Frame(row_sugg)
+    hint_sugg.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+    lbl_sugg_hint = tk.Label(hint_sugg, text=t("config.suggested_list_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
+    lbl_sugg_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+    config_hint_labels.append(lbl_sugg_hint)
+    row_sugg_grid = ttk.Frame(lf_base_sugg)
+    row_sugg_grid.pack(fill=tk.X, pady=(0, 6))
+    row_sugg_grid.columnconfigure(0, weight=4)
+    row_sugg_grid.columnconfigure(1, weight=6)
+    ttk.Label(row_sugg_grid, text=t("config.sub_label_type"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=0, sticky=tk.W, pady=(0, 2))
+    ttk.Label(row_sugg_grid, text=t("config.sub_label_preview"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=1, sticky=tk.W, padx=(10, 0), pady=(0, 2))
+    col_sugg_left = ttk.Frame(row_sugg_grid)
+    col_sugg_left.grid(row=1, column=0, sticky=tk.EW)
+    e_suggested_new = ttk.Entry(col_sugg_left, width=config_entry_width)
+    e_suggested_new.pack(fill=tk.X, expand=True)
+    fr_sugg = ttk.Frame(row_sugg_grid)
+    fr_sugg.grid(row=1, column=1, sticky=tk.NSEW, padx=(10, 0))
+    lb_suggested = tk.Listbox(fr_sugg, height=3, width=20)
+    lb_suggested.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    sb_sugg = ttk.Scrollbar(fr_sugg, orient=tk.VERTICAL, command=lb_suggested.yview)
+    sb_sugg.pack(side=tk.RIGHT, fill=tk.Y)
+    lb_suggested.config(yscrollcommand=sb_sugg.set)
+    col_sugg_btn_left = ttk.Frame(row_sugg_grid)
+    col_sugg_btn_left.grid(row=2, column=0, sticky=tk.W, pady=(4, 0))
+    col_sugg_btn_right = ttk.Frame(row_sugg_grid)
+    col_sugg_btn_right.grid(row=2, column=1, sticky=tk.W, padx=(10, 0), pady=(4, 0))
+    ttk.Button(col_sugg_btn_left, text=t("btn.add"), width=8, command=lambda: _list_add(lb_suggested, e_suggested_new)).pack()
+    ttk.Button(col_sugg_btn_right, text=t("btn.remove"), width=18, command=lambda: _list_remove_selected(lb_suggested)).pack()
+
+    # --- Obszary tematyczne (na dole, tuż nad przyciskami)
     lf_sand = ttk.LabelFrame(inner, text=t("config.section_sandbox"), padding=5)
     lf_sand.pack(fill=tk.X, pady=(0, 10))
     row3 = ttk.Frame(lf_sand)
@@ -1936,37 +2351,30 @@ def build_config_tab(parent):
     lbl_sand_hint = tk.Label(hint_sand, text=t("config.sandbox_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
     lbl_sand_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
     config_hint_labels.append(lbl_sand_hint)
-    fr_sandbox = ttk.Frame(row3)
-    fr_sandbox.pack(side=tk.LEFT)
-    lb_sandbox = tk.Listbox(fr_sandbox, height=3, width=combo_width)
-    lb_sandbox.pack(side=tk.LEFT, fill=tk.X, expand=True)
+    row3_grid = ttk.Frame(lf_sand)
+    row3_grid.pack(fill=tk.X, pady=(0, 2))
+    row3_grid.columnconfigure(0, weight=4)
+    row3_grid.columnconfigure(1, weight=6)
+    ttk.Label(row3_grid, text=t("config.sub_label_type"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=0, sticky=tk.W, pady=(0, 2))
+    ttk.Label(row3_grid, text=t("config.sub_label_preview"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=1, sticky=tk.W, padx=(10, 0), pady=(0, 2))
+    col_sand_left = ttk.Frame(row3_grid)
+    col_sand_left.grid(row=1, column=0, sticky=tk.EW)
+    e_sandbox_new = ttk.Entry(col_sand_left, width=config_entry_width)
+    e_sandbox_new.pack(fill=tk.X, expand=True)
+    fr_sandbox = ttk.Frame(row3_grid)
+    fr_sandbox.grid(row=1, column=1, sticky=tk.NSEW, padx=(10, 0))
+    lb_sandbox = tk.Listbox(fr_sandbox, height=3, width=20)
+    lb_sandbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     sb_sand = ttk.Scrollbar(fr_sandbox, orient=tk.VERTICAL, command=lb_sandbox.yview)
     sb_sand.pack(side=tk.RIGHT, fill=tk.Y)
     lb_sandbox.config(yscrollcommand=sb_sand.set)
-    row3b = ttk.Frame(lf_sand)
-    row3b.pack(fill=tk.X, pady=2)
-    e_sandbox_new = ttk.Entry(row3b, width=60)
-    e_sandbox_new.pack(side=tk.LEFT, padx=(33, 5))
-    ttk.Button(row3b, text=t("btn.add"), width=8, command=lambda: _list_add(lb_sandbox, e_sandbox_new)).pack(side=tk.LEFT, padx=2)
-    ttk.Button(row3b, text=t("btn.remove"), width=14, command=lambda: _list_remove_selected(lb_sandbox)).pack(side=tk.LEFT, padx=2)
-    row4 = ttk.Frame(lf_sand)
-    row4.pack(fill=tk.X, pady=(0, 6))
-    ttk.Label(row4, text=t("config.suggested"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
-    hint_sugg = ttk.Frame(row4)
-    hint_sugg.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    lbl_sugg_hint = tk.Label(hint_sugg, text=t("config.suggested_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
-    lbl_sugg_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
-    config_hint_labels.append(lbl_sugg_hint)
-    fr_sugg = ttk.Frame(row4)
-    fr_sugg.pack(side=tk.LEFT)
-    lb_suggested = tk.Listbox(fr_sugg, height=3, width=combo_width)
-    lb_suggested.pack(side=tk.LEFT, fill=tk.X, expand=True)
-    row4b = ttk.Frame(lf_sand)
-    row4b.pack(fill=tk.X, pady=2)
-    e_suggested_new = ttk.Entry(row4b, width=60)
-    e_suggested_new.pack(side=tk.LEFT, padx=(33, 5))
-    ttk.Button(row4b, text=t("btn.add"), width=8, command=lambda: _list_add(lb_suggested, e_suggested_new)).pack(side=tk.LEFT, padx=2)
-    ttk.Button(row4b, text=t("btn.remove"), width=14, command=lambda: _list_remove_selected(lb_suggested)).pack(side=tk.LEFT, padx=2)
+    col_sand_btn_left = ttk.Frame(row3_grid)
+    col_sand_btn_left.grid(row=2, column=0, sticky=tk.W, pady=(4, 0))
+    col_sand_btn_right = ttk.Frame(row3_grid)
+    col_sand_btn_right.grid(row=2, column=1, sticky=tk.W, padx=(10, 0), pady=(4, 0))
+    ttk.Button(col_sand_btn_left, text=t("btn.add"), width=8, command=lambda: _list_add(lb_sandbox, e_sandbox_new)).pack()
+    ttk.Button(col_sand_btn_right, text=t("btn.remove"), width=18, command=lambda: _list_remove_selected(lb_sandbox)).pack()
+
     btn_row = ttk.Frame(inner)
     btn_row.pack(fill=tk.X, pady=(14, 0))
     ttk.Button(btn_row, text=t("btn.refresh_file"), command=load_ui).pack(side=tk.LEFT, padx=5)
@@ -2147,6 +2555,35 @@ def _category_from_url(url: str) -> str:
     return "general"
 
 
+def _ensure_description_then_append(root, data: dict, tools_holder: list, refresh_tree) -> None:
+    """If data has no short_description_en, call API to generate it (with 'Generating…' window), then append and refresh."""
+    data.setdefault("short_description_en", "")
+    if (data.get("short_description_en") or "").strip():
+        tools_holder.append(data)
+        refresh_tree()
+        return
+    wait_win = tk.Toplevel(root)
+    wait_win.title("")
+    wait_win.transient(root)
+    wait_win.grab_set()
+    ttk.Label(wait_win, text=t("links.generating_description")).pack(padx=24, pady=24)
+    wait_win.update_idletasks()
+    try:
+        desc = generate_short_description(data.get("name", ""), data.get("category", ""))
+        if desc:
+            data["short_description_en"] = desc
+    except Exception:
+        pass
+    finally:
+        try:
+            wait_win.grab_release()
+            wait_win.destroy()
+        except tk.TclError:
+            pass
+    tools_holder.append(data)
+    refresh_tree()
+
+
 def _run_add_by_link_flow(parent, tools_holder: list, refresh_tree):
     """Flow: dialog tylko link -> walidacja -> duplikat lub potwierdzenie -> zapis / edycja."""
     root = parent.winfo_toplevel()
@@ -2216,9 +2653,7 @@ def _run_add_by_link_flow(parent, tools_holder: list, refresh_tree):
         if choice[0] == "edit_name":
             data = _affiliate_edit_dialog(root, t("links.dialog_add_title"), initial=suggested)
             if data:
-                data.setdefault("short_description_en", "")
-                tools_holder.append(data)
-                refresh_tree()
+                _ensure_description_then_append(root, data, tools_holder, refresh_tree)
             return
         assert choice[0] == "add"
 
@@ -2254,16 +2689,12 @@ def _run_add_by_link_flow(parent, tools_holder: list, refresh_tree):
     if conf_choice[0] == "cancel":
         return
     if conf_choice[0] == "save":
-        suggested.setdefault("short_description_en", "")
-        tools_holder.append(suggested)
-        refresh_tree()
+        _ensure_description_then_append(root, suggested, tools_holder, refresh_tree)
         return
     if conf_choice[0] == "edit":
         data = _affiliate_edit_dialog(root, t("links.dialog_add_title"), initial=suggested)
         if data:
-            data.setdefault("short_description_en", "")
-            tools_holder.append(data)
-            refresh_tree()
+            _ensure_description_then_append(root, data, tools_holder, refresh_tree)
 
 
 def _link_type_display(tool: dict) -> str:
@@ -2393,6 +2824,278 @@ def build_affiliate_tab(parent):
     return f
 
 
+def build_use_cases_tab(parent):
+    """Zakładka Use case'y – przegląd, filtr po statusie, zmiana statusu, edycja, usuwanie."""
+    f = ttk.Frame(parent, padding=10)
+    f.pack(fill=tk.BOTH, expand=True)
+
+    ok, err = validate_project_root()
+    if not ok:
+        ttk.Label(f, text=f"Błąd: {err}", foreground="red").pack(anchor=tk.W)
+        return f
+
+    if not _queue_use_cases_available:
+        ttk.Label(f, text=t("uc.unavailable"), foreground="gray", wraplength=500).pack(anchor=tk.W)
+        return f
+
+    use_cases_path = get_project_root() / "content" / "use_cases.yaml"
+    use_cases_list: list[dict] = []
+    filtered_indices: list[int] = []
+
+    ttk.Label(f, text=t("uc.title")).pack(anchor=tk.W)
+
+    top_row = ttk.Frame(f)
+    top_row.pack(fill=tk.X, pady=(5, 2))
+    ttk.Label(top_row, text=t("uc.col_status") + ":").pack(side=tk.LEFT, padx=(0, 5))
+    filter_var = tk.StringVar(value=t("uc.filter_all"))
+    filter_combo = ttk.Combobox(
+        top_row, textvariable=filter_var, values=(
+            t("uc.filter_all"), t("uc.filter_todo"), t("uc.filter_generated"), t("uc.filter_archived"), t("uc.filter_discarded")
+        ), state="readonly", width=14
+    )
+    filter_combo.pack(side=tk.LEFT, padx=(0, 15))
+
+    tree_container = ttk.Frame(f)
+    tree_container.pack(fill=tk.BOTH, expand=True, pady=5)
+    tree = ttk.Treeview(
+        tree_container, columns=("problem", "content_type", "category", "status", "batch"),
+        show="headings", height=18, selectmode="extended"
+    )
+    tree.heading("problem", text=t("uc.col_problem"))
+    tree.heading("content_type", text=t("uc.col_content_type"))
+    tree.heading("category", text=t("uc.col_category"))
+    tree.heading("status", text=t("uc.col_status"))
+    tree.heading("batch", text=t("uc.col_batch"))
+    tree.column("problem", width=280)
+    tree.column("content_type", width=80)
+    tree.column("category", width=140)
+    tree.column("status", width=80)
+    tree.column("batch", width=120)
+    tree.pack(fill=tk.BOTH, expand=True)
+    empty_msg_lbl = tk.Label(tree_container, text=t("uc.empty_list"), font=("TkDefaultFont", 10), foreground="gray")
+    last_read_var = tk.StringVar(value="")
+    file_read_row = ttk.Frame(f)
+    file_read_row.pack(fill=tk.X, pady=(0, 4))
+    ttk.Label(file_read_row, text=t("uc.file_label"), font=("TkDefaultFont", 9), foreground="gray").pack(side=tk.LEFT, padx=(0, 15))
+    ttk.Label(file_read_row, textvariable=last_read_var, font=("TkDefaultFont", 9), foreground="gray").pack(side=tk.LEFT)
+
+    def _problem_short(s: str, max_len: int = 50) -> str:
+        s = (s or "").strip()
+        return (s[: max_len - 3] + "...") if len(s) > max_len else s
+
+    def apply_filter():
+        nonlocal filtered_indices
+        val = filter_var.get().strip()
+        if val == t("uc.filter_todo"):
+            status_filter = "todo"
+        elif val == t("uc.filter_generated"):
+            status_filter = "generated"
+        elif val == t("uc.filter_archived"):
+            status_filter = "archived"
+        elif val == t("uc.filter_discarded"):
+            status_filter = "discarded"
+        else:
+            status_filter = None
+        filtered_indices = []
+        for i, uc in enumerate(use_cases_list):
+            st = (uc.get("status") or "").strip().lower()
+            if status_filter is None or st == status_filter:
+                filtered_indices.append(i)
+        for item in tree.get_children():
+            tree.delete(item)
+        for pos, idx in enumerate(filtered_indices):
+            uc = use_cases_list[idx]
+            tree.insert("", tk.END, iid=str(pos), values=(
+                _problem_short(uc.get("problem") or ""),
+                (uc.get("content_type") or "").strip(),
+                (uc.get("category_slug") or "").strip(),
+                (uc.get("status") or "").strip(),
+                (uc.get("batch_id") or "").strip(),
+            ))
+
+    def load_data():
+        nonlocal use_cases_list
+        try:
+            use_cases_list = load_use_cases(use_cases_path) if use_cases_path.exists() else []
+        except Exception:
+            use_cases_list = []
+        last_read_var.set(t("uc.last_read", datetime.now().strftime("%H:%M")))
+        if not use_cases_list:
+            tree.pack_forget()
+            empty_msg_lbl.pack(pady=20)
+        else:
+            empty_msg_lbl.pack_forget()
+            tree.pack(fill=tk.BOTH, expand=True)
+            apply_filter()
+
+    def get_selected_indices() -> list[int]:
+        sel = tree.selection()
+        out = []
+        for iid in sel:
+            try:
+                pos = int(iid)
+                if 0 <= pos < len(filtered_indices):
+                    out.append(filtered_indices[pos])
+            except ValueError:
+                pass
+        return out
+
+    def change_status():
+        indices = get_selected_indices()
+        if not indices:
+            messagebox.showinfo(t("msg.info"), t("uc.select_first"))
+            return
+        dialog = tk.Toplevel(f)
+        dialog.title(t("uc.status_dialog_title"))
+        dialog.transient(f.winfo_toplevel())
+        dialog.grab_set()
+        ttk.Label(dialog, text=t("uc.status_prompt")).pack(anchor=tk.W, padx=10, pady=(10, 5))
+        status_var = tk.StringVar(value="todo")
+        fr = ttk.Frame(dialog)
+        fr.pack(fill=tk.X, padx=10, pady=5)
+        for s in ("todo", "generated", "discarded"):
+            ttk.Radiobutton(fr, text=s, variable=status_var, value=s).pack(side=tk.LEFT, padx=(0, 12))
+        def ok():
+            new_status = status_var.get().strip()
+            if len(indices) > 1 and not messagebox.askokcancel(t("msg.info"), t("uc.status_confirm_multi", new_status, len(indices)), icon=messagebox.QUESTION):
+                return
+            for i in indices:
+                use_cases_list[i]["status"] = new_status
+            try:
+                _save_use_cases(use_cases_path, use_cases_list)
+                apply_filter()
+                messagebox.showinfo(t("msg.info"), t("uc.saved"))
+            except Exception as e:
+                messagebox.showerror(t("msg.error"), str(e))
+            dialog.destroy()
+        btn_row = ttk.Frame(dialog)
+        btn_row.pack(pady=10)
+        ttk.Button(btn_row, text=t("btn.ok"), command=ok).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_row, text=t("btn.cancel"), command=dialog.destroy).pack(side=tk.LEFT)
+
+    _content_type_allowed = get_content_types_all()
+
+    def edit_one():
+        indices = get_selected_indices()
+        if not indices:
+            messagebox.showinfo(t("msg.info"), t("uc.select_first"))
+            return
+        idx = indices[0]
+        uc = use_cases_list[idx]
+        categories = (get_use_case_defaults().get("categories") or ["ai-marketing-automation"])[:]
+        dialog = tk.Toplevel(f)
+        dialog.title(t("uc.edit_title"))
+        dialog.transient(f.winfo_toplevel())
+        dialog.grab_set()
+        dialog.geometry("420x280")
+        fields = {}
+        row = ttk.Frame(dialog, padding=5)
+        row.pack(fill=tk.X)
+        ttk.Label(row, text=t("uc.problem"), width=18, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+        fields["problem"] = tk.Entry(row, width=45)
+        fields["problem"].pack(side=tk.LEFT, fill=tk.X, expand=True)
+        fields["problem"].insert(0, (uc.get("problem") or "").strip())
+        row = ttk.Frame(dialog, padding=5)
+        row.pack(fill=tk.X)
+        ttk.Label(row, text=t("uc.col_content_type"), width=18, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+        fields["content_type"] = ttk.Combobox(row, values=list(_content_type_allowed), width=42, state="readonly")
+        ct_val = (uc.get("content_type") or "guide").strip().lower()
+        fields["content_type"].set(ct_val if ct_val in _content_type_allowed else "guide")
+        fields["content_type"].pack(side=tk.LEFT, fill=tk.X, expand=True)
+        row = ttk.Frame(dialog, padding=5)
+        row.pack(fill=tk.X)
+        ttk.Label(row, text=t("uc.category_slug"), width=18, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+        fields["category_slug"] = ttk.Combobox(row, values=categories, width=42, state="readonly")
+        cur_cat = (uc.get("category_slug") or "").strip()
+        fields["category_slug"].set(cur_cat if cur_cat in categories else (categories[0] if categories else ""))
+        fields["category_slug"].pack(side=tk.LEFT, fill=tk.X, expand=True)
+        row = ttk.Frame(dialog, padding=5)
+        row.pack(fill=tk.X)
+        ttk.Label(row, text=t("uc.audience_type"), width=18, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+        fields["audience_type"] = tk.Entry(row, width=45)
+        fields["audience_type"].pack(side=tk.LEFT, fill=tk.X, expand=True)
+        fields["audience_type"].insert(0, (uc.get("audience_type") or "").strip())
+        row = ttk.Frame(dialog, padding=5)
+        row.pack(fill=tk.X)
+        ttk.Label(row, text=t("uc.batch_id"), width=18, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+        fields["batch_id"] = tk.Entry(row, width=45)
+        fields["batch_id"].pack(side=tk.LEFT, fill=tk.X, expand=True)
+        fields["batch_id"].insert(0, (uc.get("batch_id") or "").strip())
+
+        def ok():
+            uc["problem"] = fields["problem"].get().strip()
+            ct = (fields["content_type"].get() or "").strip().lower()
+            uc["content_type"] = ct if ct in _content_type_allowed else "guide"
+            if "suggested_content_type" in uc:
+                del uc["suggested_content_type"]
+            cat = (fields["category_slug"].get() or "").strip()
+            if not cat and categories:
+                cat = categories[0]
+            if not cat:
+                messagebox.showwarning(t("msg.info"), t("uc.category_required"))
+                return
+            uc["category_slug"] = cat
+            aud = fields["audience_type"].get().strip()
+            if aud:
+                uc["audience_type"] = aud
+            elif "audience_type" in uc:
+                del uc["audience_type"]
+            bid = fields["batch_id"].get().strip()
+            if bid:
+                uc["batch_id"] = bid
+            elif "batch_id" in uc:
+                del uc["batch_id"]
+            try:
+                _save_use_cases(use_cases_path, use_cases_list)
+                apply_filter()
+                messagebox.showinfo(t("msg.info"), t("uc.saved"))
+            except Exception as e:
+                messagebox.showerror(t("msg.error"), str(e))
+            dialog.destroy()
+
+        btn_row = ttk.Frame(dialog)
+        btn_row.pack(pady=10)
+        ttk.Button(btn_row, text=t("btn.ok"), command=ok).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_row, text=t("btn.cancel"), command=dialog.destroy).pack(side=tk.LEFT)
+
+    def delete_selected():
+        indices = get_selected_indices()
+        if not indices:
+            messagebox.showinfo(t("msg.info"), t("uc.select_first"))
+            return
+        n = len(indices)
+        msg = t("uc.delete_confirm") if n == 1 else t("uc.delete_confirm_multi", n)
+        if not messagebox.askokcancel(t("msg.info"), msg, icon=messagebox.WARNING):
+            return
+        for i in sorted(indices, reverse=True):
+            use_cases_list.pop(i)
+        try:
+            _save_use_cases(use_cases_path, use_cases_list)
+            apply_filter()
+            messagebox.showinfo(t("msg.info"), t("uc.saved"))
+        except Exception as e:
+            messagebox.showerror(t("msg.error"), str(e))
+
+    filter_combo.bind("<<ComboboxSelected>>", lambda e: apply_filter())
+
+    btn_row = ttk.Frame(f)
+    btn_row.pack(anchor=tk.W, pady=5)
+    ttk.Button(btn_row, text=t("uc.refresh_list"), command=load_data).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(btn_row, text=t("uc.change_status"), command=change_status).pack(side=tk.LEFT, padx=(0, 8))
+    edit_btn = ttk.Button(btn_row, text=t("uc.edit"), command=edit_one)
+    edit_btn.pack(side=tk.LEFT, padx=(0, 8))
+    _create_tooltip(edit_btn, t("uc.edit_tooltip"))
+    ttk.Button(btn_row, text=t("uc.delete"), command=delete_selected).pack(side=tk.LEFT)
+
+    tk.Label(f, text=t("uc.hint_status"), font=("TkDefaultFont", 9, "italic"), foreground="gray", wraplength=600, justify=tk.LEFT).pack(anchor=tk.W, pady=(8, 0))
+    tk.Label(f, text=t("uc.hint_discarded"), font=("TkDefaultFont", 9, "italic"), foreground="gray", wraplength=600, justify=tk.LEFT).pack(anchor=tk.W, pady=(2, 0))
+
+    f.bind("<F5>", lambda e: load_data())
+    f.bind("<Control-r>", lambda e: load_data())
+    load_data()
+    return f
+
+
 def build_mapping_tab(parent):
     """Zakładka Narzędzia w artykułach – odczyt pola tools z frontmatter artykułów."""
     f = ttk.Frame(parent, padding=10)
@@ -2404,7 +3107,9 @@ def build_mapping_tab(parent):
         return f
 
     ttk.Label(f, text=t("mapping.title")).pack(anchor=tk.W)
-    tree = ttk.Treeview(f, columns=("slug", "tools"), show="headings", height=20)
+    tree = ttk.Treeview(
+        f, columns=("slug", "tools"), show="headings", height=20, selectmode="extended"
+    )
     tree.heading("slug", text=t("mapping.col_slug"))
     tree.heading("tools", text=t("mapping.col_tools"))
     tree.column("slug", width=380)
@@ -2417,8 +3122,371 @@ def build_mapping_tab(parent):
         for slug, tools_str in get_article_tools_data():
             tree.insert("", tk.END, values=(slug, tools_str))
 
-    ttk.Button(f, text=t("btn.refresh"), command=refresh).pack(anchor=tk.W, pady=5)
+    def copy_selected():
+        sel = tree.selection()
+        if not sel:
+            return
+        lines = []
+        for item_id in sel:
+            vals = tree.item(item_id, "values")
+            if len(vals) >= 2:
+                lines.append(f"{vals[0]}\t{vals[1]}")
+            elif len(vals) == 1:
+                lines.append(vals[0])
+        if lines:
+            text = "\n".join(lines)
+            root = tree.winfo_toplevel()
+            root.clipboard_clear()
+            root.clipboard_append(text)
+            root.update()
+            messagebox.showinfo(t("mapping.copy_selected"), t("mapping.copied_n", len(lines)))
+
+    btn_row = ttk.Frame(f)
+    btn_row.pack(anchor=tk.W, pady=5)
+    ttk.Button(btn_row, text=t("btn.refresh"), command=refresh).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(btn_row, text=t("mapping.copy_selected"), command=copy_selected).pack(side=tk.LEFT)
+    ttk.Label(f, text=t("mapping.copy_hint"), font=("TkDefaultFont", 9, "italic"), foreground="gray").pack(anchor=tk.W)
+    tree.bind("<Control-c>", lambda e: copy_selected())
+    tree.bind("<Control-C>", lambda e: copy_selected())
     refresh()
+    return f
+
+
+def build_clean_non_live_tab(parent):
+    """Zakładka Czyszczenie nieżywych: zakres (content/public/both), podgląd (dry-run), wykonaj."""
+    f = ttk.Frame(parent, padding=10)
+    f.pack(fill=tk.BOTH, expand=True)
+
+    ok, err = validate_project_root()
+    if not ok:
+        ttk.Label(f, text=f"Błąd: {err}", foreground="red").pack(anchor=tk.W)
+        return f
+
+    ttk.Label(f, text=t("clean.title"), font=("TkDefaultFont", 10, "bold")).pack(anchor=tk.W)
+    ttk.Label(f, text=t("clean.desc"), wraplength=700, justify=tk.LEFT, foreground="gray").pack(anchor=tk.W, pady=(4, 12))
+
+    scope_var = tk.StringVar(value="both")
+    row_scope = ttk.Frame(f)
+    row_scope.pack(anchor=tk.W, pady=(0, 8))
+    ttk.Label(row_scope, text=t("clean.scope")).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Radiobutton(row_scope, text=t("clean.scope_both"), variable=scope_var, value="both").pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Radiobutton(row_scope, text=t("clean.scope_content"), variable=scope_var, value="content_only").pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Radiobutton(row_scope, text=t("clean.scope_public"), variable=scope_var, value="public_only").pack(side=tk.LEFT)
+
+    def build_args(dry_run: bool) -> list[str]:
+        args = ["--archive"]
+        if dry_run:
+            args.append("--dry-run")
+        else:
+            args.append("--confirm")
+        if scope_var.get() == "content_only":
+            args.append("--content-only")
+        elif scope_var.get() == "public_only":
+            args.append("--public-only")
+        return args
+
+    out_text = scrolledtext.ScrolledText(f, height=16, wrap=tk.WORD, state=tk.NORMAL, font=("Consolas", 9))
+    out_text.pack(fill=tk.BOTH, expand=True, pady=(8, 8))
+
+    def run_and_show(dry_run: bool):
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, "Uruchamianie…\n")
+        f.update_idletasks()
+        args = build_args(dry_run)
+        out, code = run_script("clean_non_live_articles.py", args, timeout_seconds=120)
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, out if out else "(brak outputu)")
+        if code != 0:
+            out_text.insert(tk.END, f"\n\n[Kod powrotu: {code}]")
+
+    def do_preview():
+        run_and_show(dry_run=True)
+
+    def do_execute():
+        if not messagebox.askyesno(t("msg.warning"), t("clean.execute_confirm"), icon=messagebox.WARNING):
+            return
+        run_and_show(dry_run=False)
+        messagebox.showinfo(t("msg.info"), t("clean.done_hint"))
+
+    btn_row = ttk.Frame(f)
+    btn_row.pack(anchor=tk.W)
+    ttk.Button(btn_row, text=t("clean.preview"), command=do_preview).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(btn_row, text=t("clean.execute"), command=do_execute).pack(side=tk.LEFT)
+
+    # --- Remove by date (same output area) ---
+    sep = ttk.Separator(f, orient=tk.HORIZONTAL)
+    sep.pack(fill=tk.X, pady=(20, 12))
+    ttk.Label(f, text=t("clean.by_date_title"), font=("TkDefaultFont", 10, "bold")).pack(anchor=tk.W)
+    ttk.Label(f, text=t("clean.by_date_desc"), wraplength=700, justify=tk.LEFT, foreground="gray").pack(anchor=tk.W, pady=(4, 8))
+    row_date = ttk.Frame(f)
+    row_date.pack(anchor=tk.W, pady=(0, 8))
+    ttk.Label(row_date, text=t("clean.by_date_from"), width=22, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 8))
+    by_date_from_var = tk.StringVar(value=date.today().isoformat())
+    ttk.Entry(row_date, textvariable=by_date_from_var, width=12).pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(row_date, text=t("clean.by_date_to"), width=8, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    by_date_to_var = tk.StringVar(value=date.today().isoformat())
+    ttk.Entry(row_date, textvariable=by_date_to_var, width=12).pack(side=tk.LEFT, padx=(0, 8))
+
+    def do_by_date_articles():
+        date_f = (by_date_from_var.get() or "").strip()[:10]
+        date_t = (by_date_to_var.get() or "").strip()[:10]
+        try:
+            datetime.strptime(date_f, "%Y-%m-%d")
+            datetime.strptime(date_t, "%Y-%m-%d")
+        except ValueError:
+            messagebox.showerror(t("msg.info"), t("clean.by_date_invalid_date"))
+            return
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, "Wczytywanie listy…\n")
+        f.update_idletasks()
+        out, code = run_script("remove_articles_by_date.py", ["--date-from", date_f, "--date-to", date_t, "--list-stems"], timeout_seconds=60)
+        stems = [s.strip() for s in (out or "").strip().splitlines() if s.strip()]
+        if not stems:
+            out_text.delete("1.0", tk.END)
+            out_text.insert(tk.END, t("clean.by_date_none"))
+            messagebox.showinfo(t("msg.info"), t("clean.by_date_none"))
+            return
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, t("clean.by_range_loaded", len(stems)))
+
+        def execute_removal(selected: list):
+            if not selected:
+                messagebox.showinfo(t("msg.info"), t("clean.by_range_none_selected"))
+                return
+            if not messagebox.askyesno(t("msg.warning"), t("clean.by_range_confirm", len(selected)), icon=messagebox.WARNING):
+                return
+            out_text.delete("1.0", tk.END)
+            out_text.insert(tk.END, "Uruchamianie…\n")
+            f.update_idletasks()
+            args = ["--stems", ",".join(selected), "--confirm"]
+            out, code = run_script("remove_articles_by_date.py", args, timeout_seconds=120)
+            out_text.delete("1.0", tk.END)
+            out_text.insert(tk.END, out if out else "(brak outputu)")
+            if code != 0:
+                out_text.insert(tk.END, f"\n\n[Kod powrotu: {code}]")
+            messagebox.showinfo(t("msg.info"), t("clean.by_range_done"))
+
+        root = f.winfo_toplevel()
+        items = [(stem, stem) for stem in stems]
+        root.after(100, lambda: _show_article_selector(
+            root, t("clean.by_date_dialog_title"), items,
+            t("clean.by_date_confirm_btn"), execute_removal,
+            description_text=t("clean.by_range_loaded", len(stems))))
+
+    btn_row_date = ttk.Frame(f)
+    btn_row_date.pack(anchor=tk.W)
+    ttk.Button(btn_row_date, text=t("clean.by_date_btn_articles"), command=do_by_date_articles).pack(side=tk.LEFT)
+
+    # --- Remove by date range with selection ---
+    sep2 = ttk.Separator(f, orient=tk.HORIZONTAL)
+    sep2.pack(fill=tk.X, pady=(20, 12))
+    ttk.Label(f, text=t("clean.by_range_title"), font=("TkDefaultFont", 10, "bold")).pack(anchor=tk.W)
+    ttk.Label(f, text=t("clean.by_range_desc"), wraplength=700, justify=tk.LEFT, foreground="gray").pack(anchor=tk.W, pady=(4, 8))
+    ttk.Label(f, text=t("clean.preview_skeletons_hint"), wraplength=700, justify=tk.LEFT, foreground="gray", font=("TkDefaultFont", 9, "italic")).pack(anchor=tk.W, pady=(0, 8))
+    row_range = ttk.Frame(f)
+    row_range.pack(anchor=tk.W, pady=(0, 4))
+    ttk.Label(row_range, text=t("clean.by_range_from"), width=18, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    date_from_var = tk.StringVar(value=date.today().isoformat())
+    ttk.Entry(row_range, textvariable=date_from_var, width=12).pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(row_range, text=t("clean.by_range_to"), width=8, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    date_to_var = tk.StringVar(value=date.today().isoformat())
+    ttk.Entry(row_range, textvariable=date_to_var, width=12).pack(side=tk.LEFT, padx=(0, 8))
+
+    range_stems: list[str] = []
+
+    lb_frame = ttk.Frame(f)
+    lb_frame.pack(anchor=tk.W, fill=tk.BOTH, expand=True, pady=(4, 4))
+    range_listbox = tk.Listbox(lb_frame, height=8, selectmode=tk.EXTENDED, font=("Consolas", 9))
+    range_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    range_scroll = ttk.Scrollbar(lb_frame, orient=tk.VERTICAL, command=range_listbox.yview)
+    range_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+    range_listbox.config(yscrollcommand=range_scroll.set)
+
+    def load_range_list():
+        nonlocal range_stems
+        date_f = (date_from_var.get() or "").strip()[:10]
+        date_t = (date_to_var.get() or "").strip()[:10]
+        try:
+            datetime.strptime(date_f, "%Y-%m-%d")
+            datetime.strptime(date_t, "%Y-%m-%d")
+        except ValueError:
+            messagebox.showerror(t("msg.info"), t("clean.by_date_invalid_date"))
+            return
+        out, code = run_script("remove_articles_by_date.py", ["--date-from", date_f, "--date-to", date_t, "--list-stems"], timeout_seconds=60)
+        range_stems = [s.strip() for s in (out or "").strip().splitlines() if s.strip()]
+        range_listbox.delete(0, tk.END)
+        for s in range_stems:
+            range_listbox.insert(tk.END, s)
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, t("clean.by_range_loaded", len(range_stems)))
+
+    def range_select_all():
+        range_listbox.selection_set(0, tk.END)
+
+    def range_deselect_all():
+        range_listbox.selection_clear(0, tk.END)
+
+    def run_by_range(dry_run: bool):
+        sel = list(range_listbox.curselection())
+        if not sel:
+            out_text.delete("1.0", tk.END)
+            out_text.insert(tk.END, t("clean.by_range_none_selected"))
+            return
+        stems_to_remove = [range_listbox.get(i) for i in sel]
+        stems_arg = ",".join(stems_to_remove)
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, "Uruchamianie…\n")
+        f.update_idletasks()
+        args = ["--stems", stems_arg, "--dry-run"] if dry_run else ["--stems", stems_arg, "--confirm"]
+        out, code = run_script("remove_articles_by_date.py", args, timeout_seconds=120)
+        out_text.delete("1.0", tk.END)
+        out_text.insert(tk.END, out if out else "(brak outputu)")
+        if code != 0:
+            out_text.insert(tk.END, f"\n\n[Kod powrotu: {code}]")
+        if not dry_run and code == 0:
+            for i in reversed(sel):
+                range_listbox.delete(i)
+            range_stems[:] = [range_listbox.get(i) for i in range(range_listbox.size())]
+
+    def do_by_range_preview():
+        run_by_range(dry_run=True)
+
+    def do_by_range_execute():
+        sel = list(range_listbox.curselection())
+        if not sel:
+            messagebox.showinfo(t("msg.info"), t("clean.by_range_none_selected"))
+            return
+        n = len(sel)
+        if not messagebox.askyesno(t("msg.warning"), t("clean.by_range_confirm", n), icon=messagebox.WARNING):
+            return
+        run_by_range(dry_run=False)
+        messagebox.showinfo(t("msg.info"), t("clean.by_range_done"))
+
+    row_range_btn = ttk.Frame(f)
+    row_range_btn.pack(anchor=tk.W, pady=(4, 0))
+    ttk.Button(row_range_btn, text=t("clean.by_range_load"), command=load_range_list).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(row_range_btn, text=t("clean.by_range_select_all"), command=range_select_all).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Button(row_range_btn, text=t("clean.by_range_deselect_all"), command=range_deselect_all).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(row_range_btn, text=t("clean.by_range_preview"), command=do_by_range_preview).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(row_range_btn, text=t("clean.by_range_execute"), command=do_by_range_execute).pack(side=tk.LEFT)
+
+    return f
+
+
+def build_articles_report_tab(parent):
+    """Zakładka Raport artykułów: Treeview + odśwież + otwórz raport HTML w przeglądarce."""
+    f = ttk.Frame(parent, padding=10)
+    f.pack(fill=tk.BOTH, expand=True)
+
+    ok, err = validate_project_root()
+    if not ok:
+        ttk.Label(f, text=f"Błąd: {err}", foreground="red").pack(anchor=tk.W)
+        return f
+
+    ttk.Label(f, text=t("report.title")).pack(anchor=tk.W)
+    tree = ttk.Treeview(
+        f,
+        columns=("stem", "status", "last_updated", "content_type", "audience", "lang", "has_html", "last_error"),
+        show="headings",
+        height=18,
+        selectmode="extended",
+    )
+    tree.heading("stem", text=t("report.col_stem"))
+    tree.heading("status", text=t("report.col_status"))
+    tree.heading("last_updated", text=t("report.col_last_updated"))
+    tree.heading("content_type", text=t("report.col_content_type"))
+    tree.heading("audience", text=t("report.col_audience"))
+    tree.heading("lang", text=t("report.col_lang"))
+    tree.heading("has_html", text=t("report.col_has_html"))
+    tree.heading("last_error", text=t("report.col_last_error"))
+    for col, w in [("stem", 220), ("status", 70), ("last_updated", 95), ("content_type", 90), ("audience", 90), ("lang", 40), ("has_html", 45), ("last_error", 200)]:
+        tree.column(col, width=w)
+    tree.pack(fill=tk.BOTH, expand=True, pady=5)
+
+    status_var = tk.StringVar(value="")
+    content_type_var = tk.StringVar(value="")
+    lang_var = tk.StringVar(value="")
+    filter_frame = ttk.Frame(f)
+    filter_frame.pack(anchor=tk.W, pady=(0, 5))
+    ttk.Label(filter_frame, text=t("report.filter_status")).pack(side=tk.LEFT, padx=(0, 6))
+    status_combo = ttk.Combobox(filter_frame, textvariable=status_var, values=("", "draft", "filled", "blocked"), width=10, state="readonly")
+    status_combo.pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(filter_frame, text=t("report.filter_content_type")).pack(side=tk.LEFT, padx=(0, 6))
+    content_type_combo = ttk.Combobox(
+        filter_frame, textvariable=content_type_var,
+        values=("", "sales", "product-comparison", "best-in-category", "category-products", "guide", "how-to", "best", "comparison", "review"),
+        width=18, state="readonly"
+    )
+    content_type_combo.pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(filter_frame, text=t("report.filter_lang")).pack(side=tk.LEFT, padx=(0, 6))
+    lang_combo = ttk.Combobox(filter_frame, textvariable=lang_var, values=("", "en", "pl"), width=6, state="readonly")
+    lang_combo.pack(side=tk.LEFT)
+
+    def apply_filter_and_refresh():
+        for i in tree.get_children():
+            tree.delete(i)
+        status_filter = (status_var.get() or "").strip().lower()
+        content_type_filter = (content_type_var.get() or "").strip().lower()
+        lang_filter = (lang_var.get() or "").strip().lower()
+        for row in get_article_report_data():
+            if status_filter and (row.get("status") or "").strip().lower() != status_filter:
+                continue
+            if content_type_filter and (row.get("content_type") or "").strip().lower() != content_type_filter:
+                continue
+            if lang_filter and (row.get("lang") or "").strip().lower() != lang_filter:
+                continue
+            tree.insert("", tk.END, values=(
+                row.get("stem", ""),
+                row.get("status", ""),
+                row.get("last_updated", ""),
+                row.get("content_type", ""),
+                row.get("audience_type", ""),
+                row.get("lang", ""),
+                "✓" if row.get("has_html") else "—",
+                row.get("last_error", ""),
+            ))
+        _update_open_article_btn_state()
+
+    def open_report_in_browser():
+        data = get_article_report_data()
+        report_path = LOGS_DIR / "articles_report.html"
+        try:
+            build_articles_report_html(data, report_path)
+            webbrowser.open(report_path.as_uri())
+        except Exception as e:
+            messagebox.showerror(t("msg.error"), str(e))
+
+    def open_article_public():
+        sel = tree.selection()
+        if len(sel) != 1:
+            messagebox.showinfo(t("msg.info"), t("report.select_one_article"))
+            return
+        item = tree.item(sel[0])
+        vals = item.get("values") or ()
+        stem = (vals[0] or "").strip() if vals else ""
+        if not stem:
+            messagebox.showinfo(t("msg.info"), t("report.open_article_public_no_file"))
+            return
+        path = get_public_article_html_path(stem)
+        if path.exists():
+            webbrowser.open(path.as_uri())
+        else:
+            messagebox.showinfo(t("msg.info"), t("report.open_article_public_no_file"))
+
+    def _update_open_article_btn_state(*_):
+        open_article_btn.state(["!disabled"] if len(tree.selection()) == 1 else ["disabled"])
+
+    btn_row = ttk.Frame(f)
+    btn_row.pack(anchor=tk.W, pady=5)
+    ttk.Button(btn_row, text=t("report.refresh"), command=apply_filter_and_refresh).pack(side=tk.LEFT, padx=(0, 8))
+    ttk.Button(btn_row, text=t("report.open_html"), command=open_report_in_browser).pack(side=tk.LEFT, padx=(0, 8))
+    open_article_btn = ttk.Button(btn_row, text=t("report.open_article_public"), command=open_article_public, state="disabled")
+    open_article_btn.pack(side=tk.LEFT)
+    tree.bind("<<TreeviewSelect>>", _update_open_article_btn_state)
+    status_combo.bind("<<ComboboxSelected>>", lambda e: apply_filter_and_refresh())
+    content_type_combo.bind("<<ComboboxSelected>>", lambda e: apply_filter_and_refresh())
+    lang_combo.bind("<<ComboboxSelected>>", lambda e: apply_filter_and_refresh())
+    apply_filter_and_refresh()
     return f
 
 
@@ -2441,6 +3509,13 @@ def main():
     root.title("Flowtaro Monitor")
     root.minsize(700, 500)
     root.geometry("900x600")
+
+    # Etykiety głównych sekcji (LabelFrame): powiększenie i pogrubienie
+    style = ttk.Style()
+    try:
+        style.configure("TLabelframe.Label", font=("TkDefaultFont", 10, "bold"))
+    except tk.TclError:
+        pass
 
     prefs_dir = Path.home() / ".flowtaro_monitor"
     geometry_file = prefs_dir / "window_geometry.txt"
@@ -2514,8 +3589,10 @@ def main():
             w = nb.nametowidget(tid)
             nb.forget(tid)
             w.destroy()
-        tab_config = build_config_tab(nb)
+        tab_use_cases = build_use_cases_tab(nb)
+        tab_config = build_config_tab(nb, tab_use_cases)
         nb.add(tab_config, text=t("tab.config"))
+        nb.add(tab_use_cases, text=t("tab.use_cases"))
         tab_work = build_workflow_tab(nb, last_output_holder)
         nb.add(tab_work, text=t("tab.workflow"))
         tab_refresh = build_refresh_tab(nb, last_output_holder)
@@ -2524,6 +3601,10 @@ def main():
         nb.add(tab_git, text=t("tab.git"))
         tab_mapping = build_mapping_tab(nb)
         nb.add(tab_mapping, text=t("tab.mapping"))
+        tab_articles_report = build_articles_report_tab(nb)
+        nb.add(tab_articles_report, text=t("tab.articles_report"))
+        tab_clean_non_live = build_clean_non_live_tab(nb)
+        nb.add(tab_clean_non_live, text=t("tab.clean_non_live"))
         tab_affiliate = build_affiliate_tab(nb)
         nb.add(tab_affiliate, text=t("tab.affiliate"))
         tab_dash, dash_refresh = build_dashboard_tab(nb)

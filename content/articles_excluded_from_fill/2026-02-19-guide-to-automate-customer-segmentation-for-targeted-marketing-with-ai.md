@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to automate customer segmentation for targeted marketing with AI"
 content_type: "guide"
 category: "ai-marketing-automation"

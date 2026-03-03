@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to develop AI-driven loyalty rewards systems based on purchasing behavior"
 content_type: "guide"
 category: "ai-marketing-automation"

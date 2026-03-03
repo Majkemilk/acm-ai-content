@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to use AI to create dynamic landing pages that adapt to user behavior"
 content_type: "how-to"
 category: "ai-marketing-automation"

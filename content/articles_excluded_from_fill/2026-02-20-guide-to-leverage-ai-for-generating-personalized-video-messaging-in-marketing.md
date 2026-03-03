@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to leverage AI for generating personalized video messaging in marketing"
 content_type: "guide"
 category: "ai-marketing-automation"

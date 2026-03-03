@@ -8,16 +8,34 @@ Uses only Python standard library. Line-based YAML parsing (no external deps).
 
 import json
 import re
+import sys
 from datetime import date
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+from content_index import load_config
+
 CONTENT_DIR = PROJECT_ROOT / "content"
+CONFIG_PATH = CONTENT_DIR / "config.yaml"
 AFFILIATE_TOOLS_PATH = CONTENT_DIR / "affiliate_tools.yaml"
 USE_CASES_PATH = CONTENT_DIR / "use_cases.yaml"
 QUEUE_PATH = CONTENT_DIR / "queue.yaml"
 
-ALLOWED_CONTENT_TYPES = ["how-to", "guide", "best", "comparison", "review"]
+# Default when config has no content_types_all (ALL = same list as generate_use_cases)
+ALLOWED_CONTENT_TYPES = [
+    "how-to",
+    "guide",
+    "best",
+    "comparison",
+    "review",
+    "sales",
+    "product-comparison",
+    "best-in-category",
+    "category-products",
+]
 DEFAULT_CONTENT_TYPE = "guide"
 
 CONTENT_TYPE_ACTION = {
@@ -25,7 +43,41 @@ CONTENT_TYPE_ACTION = {
     "guide": "Guide to",
     "best": "Best",
     "comparison": "Comparison of",
+    "review": "Guide to",
+    "sales": "Sales:",
+    "product-comparison": "Comparison of",
+    "best-in-category": "Best in category:",
+    "category-products": "Products in category:",
 }
+
+# Prefixes to strip from start of problem (case-insensitive) to avoid duplicated title prefix
+PREFIXES_TO_STRIP_BY_TYPE = {
+    "how-to": ["how to "],
+    "guide": ["guide to ", "how to "],
+    "best": ["best ", "how to "],
+    "comparison": ["comparison of "],
+    "review": ["guide to ", "how to "],
+    "sales": ["sales:", "sales "],
+    "product-comparison": ["comparison of "],
+    "best-in-category": ["best in category:", "best in category "],
+    "category-products": ["products in category:", "products in category "],
+}
+
+
+def _strip_duplicate_prefix(problem: str, content_type: str) -> str:
+    """Remove leading prefix from problem that would duplicate CONTENT_TYPE_ACTION (case-insensitive)."""
+    if not problem:
+        return problem
+    ct = (content_type or "").strip().lower()
+    prefixes = PREFIXES_TO_STRIP_BY_TYPE.get(ct)
+    if not prefixes:
+        return problem
+    rest = problem.strip()
+    for prefix in prefixes:
+        if rest.lower().startswith(prefix):
+            rest = rest[len(prefix) :].strip()
+            break
+    return rest or problem.strip()
 
 
 def _strip_comments(text: str) -> str:
@@ -106,12 +158,11 @@ def load_use_cases(path: Path) -> list[dict]:
 
 
 def title_for_entry(problem: str, content_type: str) -> str:
-    """Generate title as '{action} {problem}'."""
+    """Generate title as '{action} {problem}'. Strips from problem any leading prefix that would duplicate the action."""
     problem = (problem or "").strip()
-    action = CONTENT_TYPE_ACTION.get(
-        (content_type or "").strip().lower(),
-        "Guide to",
-    )
+    content_type_key = (content_type or "").strip().lower()
+    problem = _strip_duplicate_prefix(problem, content_type_key)
+    action = CONTENT_TYPE_ACTION.get(content_type_key, "Guide to")
     if not problem:
         return "Untitled"
     return f"{action} {problem}"
@@ -122,15 +173,17 @@ def title_to_primary_keyword(title: str) -> str:
     return (title or "").strip().lower() or "article"
 
 
-def build_queue_items(use_cases: list[dict], today: str) -> list[dict]:
-    """Build queue items: one entry per use case. Tools left empty (filled at fill_articles stage)."""
+def build_queue_items(use_cases: list[dict], today: str, allowed_content_types: list[str] | None = None) -> list[dict]:
+    """Build queue items: one entry per use case. Tools left empty (filled at fill_articles stage).
+    allowed_content_types: from config content_types_all; if missing/invalid, content_type falls back to DEFAULT_CONTENT_TYPE."""
+    allowed = list(allowed_content_types) if allowed_content_types else ALLOWED_CONTENT_TYPES
     items = []
     for uc in use_cases:
         problem = (uc.get("problem") or "").strip()
         if not problem:
             continue
-        content_type = (uc.get("suggested_content_type") or "").strip().lower()
-        if content_type not in ALLOWED_CONTENT_TYPES:
+        content_type = (uc.get("content_type") or "").strip().lower()
+        if content_type not in allowed:
             content_type = DEFAULT_CONTENT_TYPE
         category_slug = (uc.get("category_slug") or "").strip() or "ai-marketing-automation"
         title = title_for_entry(problem, content_type)
@@ -144,9 +197,14 @@ def build_queue_items(use_cases: list[dict], today: str) -> list[dict]:
             "last_updated": today,
         }
         if uc.get("audience_type"):
+            # Required for correct audience badge (Beginner/Intermediate/Advanced) in rendered articles
             item["audience_type"] = (uc.get("audience_type") or "").strip()
         if uc.get("batch_id"):
             item["batch_id"] = (uc.get("batch_id") or "").strip()
+        if uc.get("lang"):
+            item["lang"] = (uc.get("lang") or "").strip().lower()
+        elif content_type in ("sales", "product-comparison", "best-in-category", "category-products"):
+            item["lang"] = "en"
         items.append(item)
     return items
 
@@ -215,14 +273,14 @@ def _duplicate_key(item: dict) -> tuple[str, str]:
 USE_CASES_HEADER = """# List of business problems / use cases for content generation
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
-# - suggested_content_type: string (one of: how-to, guide, best, comparison)
+# - content_type: string (one of: how-to, guide, best, comparison, review, sales, product-comparison, best-in-category, category-products)
 # - category_slug: string (e.g., "ai-marketing-automation")
-# - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
+# - status: optional; "todo" = add to queue; "generated" / "archived" / "discarded" or missing = skip
 """
 
 
 def _save_use_cases(path: Path, items: list[dict]) -> None:
-    """Write use_cases.yaml (same format as generate_use_cases). Preserves status."""
+    """Write use_cases.yaml (same format as generate_use_cases). Preserves status. Uses content_type only."""
     def q(v: str) -> str:
         v = str(v)
         if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
@@ -231,10 +289,10 @@ def _save_use_cases(path: Path, items: list[dict]) -> None:
     lines = [USE_CASES_HEADER.strip(), "use_cases:"]
     for item in items:
         problem = (item.get("problem") or "").strip()
-        content_type = (item.get("suggested_content_type") or "").strip()
+        content_type = (item.get("content_type") or "").strip()
         category = (item.get("category_slug") or "").strip()
         lines.append(f"  - problem: {q(problem)}")
-        lines.append(f"    suggested_content_type: {q(content_type)}")
+        lines.append(f"    content_type: {q(content_type)}")
         lines.append(f"    category_slug: {q(category)}")
         if item.get("audience_type"):
             lines.append(f"    audience_type: {q(str(item.get('audience_type', '')).strip())}")
@@ -258,14 +316,19 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # ALL = content_types_all from config (single source of truth; fallback when type not on list)
+    config = load_config(CONFIG_PATH)
+    allowed_content_types = list(config.get("content_types_all") or ALLOWED_CONTENT_TYPES)
+
     today = date.today().isoformat()
     use_cases = load_use_cases(USE_CASES_PATH)
 
+    # Only use cases with status "todo" are added; "generated", "archived", "discarded" are skipped.
     todo_use_cases = [
         uc for uc in use_cases
-        if str(uc.get("status") or "generated").strip().lower() == "todo"
+        if str(uc.get("status") or "").strip().lower() == "todo"
     ]
-    candidates = build_queue_items(todo_use_cases, today)
+    candidates = build_queue_items(todo_use_cases, today, allowed_content_types=allowed_content_types)
     if not candidates:
         print("No queue entries to add (no use cases with status 'todo').")
         return
@@ -293,10 +356,10 @@ def main() -> None:
         if _duplicate_key(c) in added_keys_set:
             uc = todo_use_cases[i]
             p = (uc.get("problem") or "").strip()
-            ct = (uc.get("suggested_content_type") or "").strip()
+            ct = (uc.get("content_type") or "").strip()
             cat = (uc.get("category_slug") or "").strip()
             for u in use_cases:
-                if (u.get("problem") or "").strip() == p and (u.get("suggested_content_type") or "").strip() == ct and (u.get("category_slug") or "").strip() == cat:
+                if (u.get("problem") or "").strip() == p and (u.get("content_type") or "").strip() == ct and (u.get("category_slug") or "").strip() == cat:
                     u["status"] = "generated"
                     break
     _save_use_cases(USE_CASES_PATH, use_cases)

@@ -13,7 +13,7 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-from content_index import get_production_articles, load_config
+from content_index import get_hubs_list, get_production_articles, load_config
 
 # Pattern: markdown link using our internal URL convention (already has links)
 INTERNAL_LINK_PATTERN = re.compile(r"\]\s*\(\s*/articles/[^)]+\)")
@@ -26,7 +26,17 @@ INTERNAL_LINK_SUFFIX = "/"
 # - production_only: all final article categories forced to production_category
 # - preserve_sandbox: keep category_slug when it is in whitelist (production + sandbox), else fallback to production
 CATEGORY_MODE_VALUES = {"production_only", "preserve_sandbox"}
-ALLOWED_CONTENT_TYPES = ["review", "comparison", "best", "how-to", "guide"]
+ALLOWED_CONTENT_TYPES = [
+    "review",
+    "comparison",
+    "best",
+    "how-to",
+    "guide",
+    "sales",
+    "product-comparison",
+    "best-in-category",
+    "category-products",
+]
 CATEGORY_ALIASES = {
     "seo": "ai-marketing-automation",
     "marketing-automation": "ai-marketing-automation",
@@ -80,6 +90,7 @@ FRONTMATTER_KEYS = [
     "status",
     "audience_type",
     "batch_id",
+    "lang",  # optional: en (default for product pipeline) or pl
 ]
 
 
@@ -181,7 +192,7 @@ def slug_from_keyword(primary_keyword: str) -> str:
 def parse_article_frontmatter(path: Path) -> dict | None:
     """Parse frontmatter from a markdown file. Returns dict with title, category, content_type, tools, slug (filename stem)."""
     try:
-        text = path.read_text(encoding="utf-8")
+        text = path.read_text(encoding="utf-8-sig")
     except OSError:
         return None
     if not text.startswith("---"):
@@ -369,7 +380,7 @@ def backfill_internal_links_in_file(
     Returns: "updated" | "skipped" (already has links) | "unchanged" (no placeholder / no section).
     """
     try:
-        content = path.read_text(encoding="utf-8")
+        content = path.read_text(encoding="utf-8-sig")
     except OSError:
         return "unchanged"
     if not content.startswith("---"):
@@ -425,7 +436,7 @@ def run_re_skeleton(path: Path) -> bool:
         print(f"Error: not an existing .md file: {path}")
         return False
     try:
-        content = path.read_text(encoding="utf-8")
+        content = path.read_text(encoding="utf-8-sig")
     except OSError as e:
         print(f"Error reading {path}: {e}")
         return False
@@ -457,6 +468,11 @@ def run_re_skeleton(path: Path) -> bool:
     production_category = (cfg.get("production_category") or "ai-marketing-automation").strip() or "ai-marketing-automation"
     sandbox = [str(s).strip() for s in (cfg.get("sandbox_categories") or []) if str(s).strip()]
     allowed_categories = {production_category, *sandbox}
+    for hub in get_hubs_list(cfg) or []:
+        if isinstance(hub, dict):
+            c = (hub.get("category") or hub.get("slug") or "").strip()
+            if c:
+                allowed_categories.add(c)
 
     content_type = normalize_content_type((item.get("content_type") or "").strip())
     try:
@@ -548,6 +564,13 @@ def build_frontmatter(
         "last_updated": item.get("last_updated") or today,
         "status": "draft",
     }
+    # Default language: English for product pipeline types
+    ct_lower = raw_ct.strip().lower()
+    product_types = ("sales", "product-comparison", "best-in-category", "category-products")
+    if ct_lower in product_types and not item.get("lang"):
+        fm["lang"] = "en"
+    elif item.get("lang"):
+        fm["lang"] = (item.get("lang") or "").strip()
     if item.get("audience_type"):
         fm["audience_type"] = (item.get("audience_type") or "").strip()
     if item.get("batch_id"):
@@ -593,7 +616,7 @@ def get_replacements(
         if var == "SECONDARY_TOOL":
             return tools_list[1] if len(tools_list) > 1 else (tools_list[0] if tools_list else None)
         if var == "TOOLS_MENTIONED":
-            return ", ".join(tools_list) if tools_list else None
+            return None  # leave placeholder for fill_articles to replace with list and links
         if var == "INTERNAL_LINKS":
             if internal_links_override is not None:
                 return internal_links_override
@@ -650,6 +673,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate articles from queue or backfill internal links.")
     parser.add_argument("--backfill", action="store_true", help="Update existing articles with internal links; do not generate from queue.")
     parser.add_argument("--re-skeleton", metavar="PATH", type=Path, default=None, help="Regenerate skeleton for one .md from its frontmatter (overwrites file; same slug).")
+    parser.add_argument("--include-preview-skipped", action="store_true", help="Also process queue items with status 'preview_skipped' (for preview flow).")
     args = parser.parse_args()
 
     articles_dir = ARTICLES_DIR
@@ -677,6 +701,11 @@ def main() -> None:
     production_category = (cfg.get("production_category") or "ai-marketing-automation").strip() or "ai-marketing-automation"
     sandbox = [str(s).strip() for s in (cfg.get("sandbox_categories") or []) if str(s).strip()]
     allowed_categories = {production_category, *sandbox}
+    for hub in get_hubs_list(cfg) or []:
+        if isinstance(hub, dict):
+            c = (hub.get("category") or hub.get("slug") or "").strip()
+            if c:
+                allowed_categories.add(c)
     if not QUEUE_PATH.exists():
         print(f"Queue not found: {QUEUE_PATH}")
         return
@@ -685,9 +714,10 @@ def main() -> None:
         print("Queue is empty.")
         return
 
-    todo_indices = [i for i, it in enumerate(items) if it.get("status") == "todo"]
+    statuses = ("todo", "preview_skipped") if args.include_preview_skipped else ("todo",)
+    todo_indices = [i for i, it in enumerate(items) if it.get("status") in statuses]
     if not todo_indices:
-        print("No queue items with status: todo.")
+        print("No queue items with status: todo" + (" or preview_skipped." if statuses == ("todo", "preview_skipped") else "."))
         return
 
     for i in todo_indices:

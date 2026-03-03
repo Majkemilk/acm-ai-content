@@ -2,12 +2,14 @@
 """
 Populate content/use_cases.yaml with business problems/use cases for content generation.
 Uses existing articles (keywords/topics) and OpenAI API to suggest new, non-duplicative use cases.
+Number of use cases per run is taken only from config (use_case_batch_size); no CLI override.
 Stdlib only + OpenAI Responses API (urllib). No PyYAML; simple line-based YAML read/write.
 """
 
 import argparse
 import json
 import os
+import random
 import re
 import sys
 import urllib.error
@@ -20,24 +22,48 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from content_index import load_config  # noqa: E402
+from content_index import get_hubs_list, load_config  # noqa: E402
 
 PROJECT_ROOT = _SCRIPTS_DIR.parent
 CONTENT_DIR = PROJECT_ROOT / "content"
 CONFIG_PATH = CONTENT_DIR / "config.yaml"
 USE_CASES_PATH = CONTENT_DIR / "use_cases.yaml"
 ARTICLES_DIR = CONTENT_DIR / "articles"
+ALLOWED_CATEGORIES_FILE = CONTENT_DIR / "use_case_allowed_categories.json"
 
-ALLOWED_CONTENT_TYPES = ["how-to", "guide", "best", "comparison"]
-TARGET_USE_CASE_COUNT = 12  # Exact number of use cases to keep; change here to affect both use_cases.yaml and queue size
+# Fallback when config has no content_types_all (ALL = full list for generate_use_cases)
+ALLOWED_CONTENT_TYPES = [
+    "how-to",
+    "guide",
+    "best",
+    "comparison",
+    "review",
+    "sales",
+    "product-comparison",
+    "best-in-category",
+    "category-products",
+]
+
+# Short requirements per content type (2–4 sentences) for prompt injection.
+CONTENT_TYPE_SPECS: dict[str, str] = {
+    "how-to": "How-to: step-by-step instructions, clear outcome, optional try-it-yourself. One concrete task per article.",
+    "guide": "Guide: broader overview or multi-step workflow, contextual H2s, practical tips. Can include comparison elements.",
+    "best": "Best: curated list (listicle), criteria-based selection, short rationale per item. Optional table or CTA.",
+    "comparison": "Comparison: head-to-head or criteria matrix, neutral tone, recommendation section. Table or structured pros/cons.",
+    "review": "Review: single product/service assessment, pros and cons, verdict. Similar to guide but focused on one offering.",
+    "sales": "Sales: product-focused, conversational tone, clear CTA. English for product pipeline. Conversion-oriented.",
+    "product-comparison": "Product comparison: compare specific products, criteria table, recommendation. English, CTA.",
+    "best-in-category": "Best-in-category: listicle of top products in a category, contextual H2s, comparison table, CTA.",
+    "category-products": "Category products: overview of products in a category, structured sections, table, CTA.",
+}
 USE_CASES_HEADER = """# List of business problems / use cases for content generation
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
-# - suggested_content_type: string (one of: how-to, guide, best, comparison)
+# - content_type: string (one of: how-to, guide, best, comparison, review, sales, product-comparison, best-in-category, category-products)
 # - category_slug: string (e.g., "ai-marketing-automation")
 # - audience_type: optional; beginner | intermediate | professional (from batch position)
 # - batch_id: optional; run id (e.g. 2026-02-20T143022)
-# - status: optional; "todo" = add to queue, missing or "generated" = skip (backward compat)
+# - status: optional; "todo" = add to queue, "generated" / "archived" / "discarded" or missing = skip
 """
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+", re.IGNORECASE)
@@ -165,7 +191,10 @@ def load_use_cases(path: Path) -> list[dict]:
 
 
 def save_use_cases(path: Path, items: list[dict]) -> None:
-    """Write use_cases.yaml with header comments and list of use cases (same format as template)."""
+    """Write use_cases.yaml with header comments and list of use cases (same format as template).
+    Only the key content_type is written (suggested_content_type is never written).
+    Value for content_type is taken from item['content_type'] or, for pre-migration data, item['suggested_content_type'].
+    Run scripts/migrate_use_cases_to_content_type.py once before production; after that the file uses only content_type."""
     def q(v: str) -> str:
         v = str(v)
         if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
@@ -175,10 +204,10 @@ def save_use_cases(path: Path, items: list[dict]) -> None:
     if items:
         for item in items:
             problem = (item.get("problem") or "").strip()
-            content_type = (item.get("suggested_content_type") or "").strip()
+            content_type = (item.get("content_type") or item.get("suggested_content_type") or "").strip()
             category = (item.get("category_slug") or "").strip()
             lines.append(f"  - problem: {q(problem)}")
-            lines.append(f"    suggested_content_type: {q(content_type)}")
+            lines.append(f"    content_type: {q(content_type)}")
             lines.append(f"    category_slug: {q(category)}")
             if item.get("audience_type"):
                 lines.append(f"    audience_type: {q(str(item.get('audience_type', '')).strip())}")
@@ -191,7 +220,7 @@ def save_use_cases(path: Path, items: list[dict]) -> None:
 
 
 def get_categories_from_config(config_path: Path) -> list[str]:
-    """Return list of categories (production_category + sandbox_categories) from config.yaml."""
+    """Return list of categories (production + sandbox + hub categories) from config.yaml."""
     config = load_config(config_path)
     prod = (config.get("production_category") or "").strip()
     sandbox = config.get("sandbox_categories") or []
@@ -199,7 +228,66 @@ def get_categories_from_config(config_path: Path) -> list[str]:
     for s in sandbox:
         if isinstance(s, str) and s.strip() and s.strip() not in cats:
             cats.append(s.strip())
+    for hub in get_hubs_list(config) or []:
+        if isinstance(hub, dict):
+            c = (hub.get("category") or hub.get("slug") or "").strip()
+            if c and c not in cats:
+                cats.append(c)
     return cats or ["ai-marketing-automation"]
+
+
+def _build_scope_description(config: dict) -> str:
+    """Build natural-language scope from hub titles and sandbox categories (for model instruction)."""
+    parts = []
+    for hub in get_hubs_list(config) or []:
+        if isinstance(hub, dict):
+            t = (hub.get("title") or hub.get("category") or hub.get("slug") or "").strip()
+            if t and t not in parts:
+                parts.append(t)
+    for s in (config.get("sandbox_categories") or []):
+        if isinstance(s, str) and s.strip() and s.strip() not in parts:
+            parts.append(s.strip())
+    return ", ".join(parts) if parts else ""
+
+
+def sync_allowed_categories_file(config_path: Path, output_path: Path | None = None) -> None:
+    """
+    Write content/use_case_allowed_categories.json from current config.
+    Called on config save (FlowMonitor) or by scripts/sync_use_case_categories.py.
+    """
+    out = output_path or ALLOWED_CATEGORIES_FILE
+    config = load_config(config_path)
+    categories = get_categories_from_config(config_path)
+    scope_description = _build_scope_description(config)
+    data = {"allowed_categories": categories, "scope_description": scope_description}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def get_allowed_categories(
+    config_path: Path,
+    categories_file: Path | None = None,
+) -> tuple[list[str], str]:
+    """
+    Return (allowed_categories, scope_description). Prefer content/use_case_allowed_categories.json
+    if it exists and is not older than config; otherwise sync from config and return.
+    """
+    cfg_path = config_path.resolve()
+    out = (categories_file or ALLOWED_CATEGORIES_FILE).resolve()
+    config_mtime = cfg_path.stat().st_mtime if cfg_path.exists() else 0.0
+    file_mtime = out.stat().st_mtime if out.exists() else 0.0
+    if out.exists() and file_mtime >= config_mtime:
+        try:
+            data = json.loads(out.read_text(encoding="utf-8"))
+            cats = list(data.get("allowed_categories") or [])
+            scope = str(data.get("scope_description") or "").strip()
+            if cats:
+                return cats, scope
+        except (OSError, json.JSONDecodeError):
+            pass
+    sync_allowed_categories_file(cfg_path, out)
+    config = load_config(cfg_path)
+    return get_categories_from_config(cfg_path), _build_scope_description(config)
 
 
 def parse_article_frontmatter(path: Path) -> dict | None:
@@ -296,22 +384,50 @@ def build_prompt(
     article_keywords: list[dict],
     categories: list[str],
     count: int,
-    content_type_filter: str | None = None,
+    allowed_content_types: list[str] | None = None,
     suggested_problems: list[str] | None = None,
     hard_lock_problem: str | None = None,
     quality_feedback: list[str] | None = None,
+    audience_pyramid: list[int] | None = None,
+    is_all_types: bool = False,
+    hub_titles: list[str] | None = None,
+    production_category: str = "",
+    scope_description: str = "",
 ) -> tuple[str, str]:
     """Build (instructions, user_message) for the model. count = how many use cases to ask for.
-    If content_type_filter is set, prompt restricts suggested_content_type to that value.
-    suggested_problems (from config): optional list of problems to prefer turning into use cases."""
-    instructions = """You are a content strategist. Your task is to suggest new business problems / use cases for blog content in the AI marketing automation space.
+    allowed_content_types: list of allowed content_type values (e.g. ["how-to", "guide"]).
+    is_all_types: True when allowed equals full list (ALL) – model has full freedom; otherwise only allowed types permitted.
+    suggested_problems (from config): optional list of problems to prefer turning into use cases.
+    audience_pyramid [n1, n2]: first n1 = beginner, next n2 = intermediate, remaining = professional.
+    hub_titles: from config hubs[].title, used as space description in instructions. production_category: from config.
+    scope_description: optional pre-built scope text (from use_case_allowed_categories.json); used when non-empty instead of hub_titles."""
+    types = list(allowed_content_types or ALLOWED_CONTENT_TYPES)
+
+    if scope_description and scope_description.strip():
+        intro = f"You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following these areas: {scope_description.strip()}."
+    elif hub_titles:
+        space_phrase = ", ".join(hub_titles)
+        intro = f"You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following these hubs: {space_phrase}."
+    else:
+        intro = "You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following the allowed categories (see user message)."
+    if production_category:
+        category_rule = f" The production category for this site is {production_category}; the full list of allowed category_slug values is in the user message—assign each use case exactly one of them. Use only the allowed category_slug values from the user message."
+    else:
+        category_rule = " The allowed category_slug values are given in the user message; you must assign each use case exactly one of those values. Use only the allowed category_slug values from the user message."
+    instructions = intro + category_rule + """
 
 Output ONLY a valid JSON array of objects. Each object must have exactly these keys:
-- "problem": string, concise description of the business problem (e.g., "turn podcasts into written content")
-- "suggested_content_type": string, one of: how-to, guide, best, comparison
+- "problem": string, concise description of the problem
+- "content_type": string (see allowed list and rules in the user message)
 - "category_slug": string, one of the allowed categories provided in the user message
 
 Do not output any markdown, explanation, or text outside the JSON array. The response must be parseable as JSON."""
+    if not is_all_types:
+        instructions += (
+            "\n\nCRITICAL: The user message defines the ONLY allowed content_type values. "
+            "You MUST assign each use case a content_type that is on that list. "
+            "It is not permitted to assign any content_type that is not in the allowed list."
+        )
     if hard_lock_problem:
         instructions += (
             "\n\nHARD LOCK (MUST FOLLOW): Every generated use case must stay on the same base problem domain provided by the user. "
@@ -357,25 +473,37 @@ For exactly 3 use cases, enforce distinct angles:
         for reason in quality_feedback:
             user += f"- {reason}\n"
         user += "\n"
+    pyramid = list(audience_pyramid or [3, 3])
+    n1 = int(pyramid[0]) if len(pyramid) >= 1 else 3
+    n2 = int(pyramid[1]) if len(pyramid) >= 2 else 3
     user += f"""Generate exactly {count} new, specific, actionable business problems that people actively search for solutions to in AI marketing automation. Each must be different from the existing use cases and topics above.
 
 Structure by audience (follow this order strictly):
-- First 3: for beginners (simple, entry-level).
-- Next 3: for intermediate or mixed (can build on or complement the first three).
-- Remaining: for professional users only (advanced, scaling, integration)."""
-    if content_type_filter:
-        user += f" For every use case, set suggested_content_type to exactly: {json.dumps(content_type_filter)}."
+- First {n1}: for beginners (simple, entry-level).
+- Next {n2}: for intermediate or mixed (can build on or complement the first ones).
+- Remaining: for professional users only (advanced, scaling, integration).
+"""
+    if is_all_types:
+        user += f" For each use case, set content_type to exactly one of: {', '.join(types)}. You may choose any type from this list as appropriate for each use case.\n\n"
     else:
-        user += " Prefer problems that fit how-to or guide content."
-    user += " Return only the JSON array."
+        user += f" You MUST set content_type for each use case to exactly one of these values only: {json.dumps(types)}. It is not permitted to assign a content_type outside this list. Choose one of these types for each use case (vary across the batch where appropriate).\n\n"
+    user += "Requirements per content type (use these to match each use case to a suitable type):\n"
+    for t in types:
+        spec = CONTENT_TYPE_SPECS.get(t, "")
+        if spec:
+            user += f"- {t}: {spec}\n"
+    user += "\nReturn only the JSON array."
 
     return instructions, user
 
 
 def audience_type_for_position(position_1based: int, pyramid: list[int]) -> str:
-    """Return beginner | intermediate | professional from 1-based position and pyramid [n1, n2]."""
+    """Return beginner | intermediate | professional from 1-based position and pyramid [n1, n2].
+    If pyramid is [0, 0] or n1+n2 is 0, treats as [1, 1] so not all use cases become professional."""
     n1 = pyramid[0] if pyramid else 3
     n2 = pyramid[1] if len(pyramid) > 1 else 3
+    if n1 + n2 <= 0:
+        n1, n2 = 1, 1
     if position_1based <= n1:
         return "beginner"
     if position_1based <= n1 + n2:
@@ -385,8 +513,10 @@ def audience_type_for_position(position_1based: int, pyramid: list[int]) -> str:
 
 def parse_ai_use_cases(raw: str, allowed_types: list[str], allowed_categories: list[str]) -> list[dict]:
     """
-    Parse AI response into list of use case dicts. Validates suggested_content_type and category_slug.
-    Returns only valid items; skips invalid or malformed entries.
+    Parse AI response into list of use case dicts. Validates content_type and category_slug.
+    If API returns content_type outside allowed list, sets content_type to random choice from allowed.
+    ALL is defined as content_types_all from config; fallback only when returned type is not on that list.
+    Returns only valid items; outputs content_type only (no suggested_content_type).
     """
     # Try to extract JSON array (in case model wrapped in markdown)
     text = raw.strip()
@@ -410,15 +540,15 @@ def parse_ai_use_cases(raw: str, allowed_types: list[str], allowed_categories: l
         problem = (item.get("problem") or "").strip()
         if not problem:
             continue
-        content_type = (item.get("suggested_content_type") or "").strip().lower()
+        content_type = (item.get("content_type") or item.get("suggested_content_type") or "").strip().lower()
         if content_type not in allowed_types_set:
-            content_type = "guide"
+            content_type = random.choice(allowed_types)
         category = (item.get("category_slug") or "").strip()
         if category not in allowed_cats_set:
             category = allowed_categories[0] if allowed_categories else "ai-marketing-automation"
         out.append({
             "problem": problem,
-            "suggested_content_type": content_type,
+            "content_type": content_type,
             "category_slug": category,
             "status": "todo",  # so generate_queue.py adds them to the queue
         })
@@ -444,13 +574,6 @@ def is_duplicate(problem: str, existing: list[dict]) -> bool:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate new use cases and append to content/use_cases.yaml")
     parser.add_argument(
-        "--limit",
-        type=int,
-        default=None,
-        metavar="N",
-        help="Number of use cases to generate and cap total list at (default: from config use_case_batch_size, else 9)",
-    )
-    parser.add_argument(
         "--category",
         type=str,
         default=None,
@@ -463,8 +586,7 @@ def main() -> None:
         action="append",
         default=None,
         metavar="TYPE",
-        choices=ALLOWED_CONTENT_TYPES,
-        help="Restrict suggested_content_type to one or more (repeat for multiple: how-to, guide, best, comparison).",
+        help="Restrict content_type to one or more (repeat for multiple). Must be in config content_types_all.",
     )
     args = parser.parse_args()
 
@@ -475,17 +597,22 @@ def main() -> None:
     base_url = (os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com").strip()
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip()
 
-    # Load config for categories, batch size, pyramid; optionally restrict to --category
+    # Load config first (needed for content_types_all and categories)
     config_path = CONFIG_PATH
     config = load_config(config_path)
+    content_types_all = list(config.get("content_types_all") or ALLOWED_CONTENT_TYPES)
+    if not content_types_all:
+        content_types_all = list(ALLOWED_CONTENT_TYPES)
     batch_size = int(config.get("use_case_batch_size", 9))
+    batch_size = max(1, min(100, batch_size))
     pyramid = list(config.get("use_case_audience_pyramid") or [3, 3])
     if not pyramid:
         pyramid = [3, 3]
     pyramid = [int(x) for x in pyramid]
-    limit = args.limit if args.limit is not None else batch_size
-    limit = max(1, min(100, limit))
-    all_categories = get_categories_from_config(config_path)
+    if pyramid[0] + (pyramid[1] if len(pyramid) > 1 else 0) <= 0:
+        print("Warning: use_case_audience_pyramid [0, 0] would make all use cases 'professional'. Using [1, 1] so you get beginner/intermediate/professional spread.")
+        pyramid = [1, 1]
+    all_categories, scope_description = get_allowed_categories(config_path)
     if args.category:
         if args.category.strip() not in all_categories:
             print(f"Error: --category {args.category!r} is not in allowed categories: {all_categories}")
@@ -494,11 +621,13 @@ def main() -> None:
     else:
         categories = all_categories
     if args.content_type:
-        allowed_types = [t.strip().lower() for t in args.content_type if t and t.strip() in ALLOWED_CONTENT_TYPES]
+        allowed_types = list(dict.fromkeys(t.strip().lower() for t in args.content_type if t and (t.strip() in content_types_all)))
         if not allowed_types:
-            allowed_types = ALLOWED_CONTENT_TYPES
+            allowed_types = list(content_types_all)
     else:
-        allowed_types = ALLOWED_CONTENT_TYPES
+        allowed_types = list(content_types_all)
+    is_all_types = set(allowed_types) == set(content_types_all)
+    batch_size = int(config.get("use_case_batch_size", 9))
 
     # Load existing use cases (create file with empty list if missing)
     existing = load_use_cases(USE_CASES_PATH)
@@ -508,9 +637,15 @@ def main() -> None:
     # Collect keywords from existing articles
     article_keywords = collect_article_keywords(ARTICLES_DIR)
 
-    # Build prompt and call API (ask for exactly limit use cases)
+    hub_titles = []
+    for h in get_hubs_list(config) or []:
+        t = (h.get("title") or h.get("category") or h.get("slug") or "").strip()
+        if t:
+            hub_titles.append(t)
+    production_category = (config.get("production_category") or "").strip()
+
+    # Build prompt and call API (ask for exactly batch_size use cases)
     suggested_problems = list(config.get("suggested_problems") or [])
-    content_type_filter = (args.content_type[0].strip().lower() if args.content_type else None)
     raw_first = (suggested_problems[0].strip() if suggested_problems and suggested_problems[0].strip() else None)
     # Use only first line or first 200 chars as anchor so a pasted paragraph doesn't flood logs or break lock
     if raw_first and len(raw_first) > 200:
@@ -528,11 +663,16 @@ def main() -> None:
             existing,
             article_keywords,
             categories,
-            limit,
-            content_type_filter=content_type_filter,
+            batch_size,
+            allowed_content_types=allowed_types,
             suggested_problems=suggested_problems,
             hard_lock_problem=hard_lock_problem,
             quality_feedback=last_issues if attempt > 1 else None,
+            audience_pyramid=pyramid,
+            is_all_types=is_all_types,
+            hub_titles=hub_titles,
+            production_category=production_category,
+            scope_description=scope_description,
         )
         try:
             response_text = call_responses_api(
@@ -560,17 +700,17 @@ def main() -> None:
         for i, uc in enumerate(candidates):
             uc["_orig_i"] = i
 
-        # Cap candidates to requested limit BEFORE lock checks/audience assignment
+        # Cap candidates to requested batch size BEFORE lock checks/audience assignment
         n_returned = len(candidates)
-        if n_returned > limit:
+        if n_returned > batch_size:
             if hard_lock_problem:
                 locked = [c for c in candidates if _is_locked_to_problem(c.get("problem", ""), hard_lock_problem)]
                 rest = [c for c in candidates if c not in locked]
-                candidates = (locked + rest)[:limit]
-                print(f"  AI returned {n_returned} candidates, preferring {len(locked)} locked to problem; capped to {limit}.")
+                candidates = (locked + rest)[:batch_size]
+                print(f"  AI returned {n_returned} candidates, preferring {len(locked)} locked to problem; capped to {batch_size}.")
             else:
-                candidates = candidates[:limit]
-                print(f"  AI returned {n_returned} candidates, capping to {limit}.")
+                candidates = candidates[:batch_size]
+                print(f"  AI returned {n_returned} candidates, capping to {batch_size}.")
 
         if hard_lock_problem:
             mismatched = [
@@ -612,36 +752,25 @@ def main() -> None:
     if not new_use_cases:
         print("All generated use cases were duplicates or too similar to existing ones. Nothing added.")
         sys.exit(2)
-    if hard_lock_problem and len(new_use_cases) < limit:
+    if hard_lock_problem and len(new_use_cases) < batch_size:
         print(
-            f"Fail-fast: only {len(new_use_cases)} non-duplicate use case(s) remained, below requested {limit} under hard lock."
+            f"Fail-fast: only {len(new_use_cases)} non-duplicate use case(s) remained, below requested {batch_size} under hard lock."
         )
         print(f"Base locked problem: {hard_lock_problem}")
         sys.exit(2)
 
-    # Option A: replace mode when hard lock — save only the new batch (overwrite). Otherwise append and cap.
-    if hard_lock_problem:
-        combined = new_use_cases[:limit]
-        save_use_cases(USE_CASES_PATH, combined)
-        kept = len(combined)
-        msg = f"Saved {kept} use case(s) to {USE_CASES_PATH} (replace mode). Total in file: {len(combined)} (limit: {limit})."
-    else:
-        combined = (existing + new_use_cases)[:limit]
-        save_use_cases(USE_CASES_PATH, combined)
-        kept = len(combined) - len(existing)
-        kept = max(0, kept)
-        dropped = len(new_use_cases) - kept
-        msg = f"Saved {kept} new use case(s) to {USE_CASES_PATH}. Total in file: {len(combined)} (limit: {limit})."
-        if dropped > 0:
-            msg += f" Dropped {dropped} (exceeded limit)."
-        print(msg)
-        for uc in new_use_cases[:kept]:
-            print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")
-        if not hard_lock_problem:
-            return  # avoid double-print below
+    # Zawsze dopisuj do istniejących. Historyczne wpisy ze statusem "generated" oznacz jako "archived",
+    # żeby były jawnie tylko do przeglądu i nigdy nie trafiły do kolejki przy kolejnym runie.
+    for u in existing:
+        if str(u.get("status") or "").strip().lower() == "generated":
+            u["status"] = "archived"
+    combined = existing + new_use_cases[:batch_size]
+    save_use_cases(USE_CASES_PATH, combined)
+    kept = len(new_use_cases[:batch_size])
+    msg = f"Saved {kept} new use case(s) to {USE_CASES_PATH}. Total in file: {len(combined)}."
     print(msg)
-    for uc in combined:
-        print(f"  - {uc.get('problem')} ({uc.get('suggested_content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")
+    for uc in new_use_cases[:batch_size]:
+        print(f"  - {uc.get('problem')} ({uc.get('content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")
 
 
 if __name__ == "__main__":

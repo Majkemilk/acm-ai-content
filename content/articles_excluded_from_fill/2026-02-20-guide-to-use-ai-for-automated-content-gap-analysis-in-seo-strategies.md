@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to use AI for automated content gap analysis in SEO strategies"
 content_type: "guide"
 category: "ai-marketing-automation"

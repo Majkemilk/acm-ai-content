@@ -28,7 +28,7 @@ To da się sensownie zapisać w instrukcjach dla API i w danych wejściowych (li
 ### Uzupełnienia / krytyka
 
 - **„Lista A vs lista B”** – w YAML masz jedną listę; każdy wpis ma jeden `affiliate_link`. Aby mieć A vs B, trzeba **wyznaczyć afiliacyjność po URL** (np. zawiera `?via=`, `?ref=`, `affiliate`, itd.) i w `fill_articles.py` dzielić narzędzia na dwie listy przed zbudowaniem promptu. To nie wymaga zmiany struktury YAML – wystarczy konwencja: link z parametrem = afiliacyjny.
-- **Gdzie dokładnie opisy** – analiza sugeruje „pierwsze wystąpienie lub sekcja Tools mentioned”. To dobre. Dodatkowo warto **explicite** w instrukcji napisać: „przy **pierwszym** wystąpieniu danego narzędzia w tekście użyj formy: *Nazwa (krótki opis)*, a w kolejnych wystąpieniach samo *Nazwa* (bez powtarzania opisu)”. Unikasz przeładowania i zachowujesz spójność z sekcją „List of AI tools”.
+- **Gdzie dokładnie opisy** – analiza sugeruje „pierwsze wystąpienie lub sekcja Tools mentioned”. To dobre. Dodatkowo warto **explicite** w instrukcji napisać: „przy **pierwszym** wystąpieniu danego narzędzia w tekście użyj formy: *Nazwa (krótki opis)*, a w kolejnych wystąpieniach samo *Nazwa* (bez powtarzania opisu)”. Unikasz przeładowania i zachowujesz spójność z sekcją „List of platforms and tools”.
 - **Konflikt render vs AI** – dla **HTML** nie ma konfliktu. Dla **MD** ewentualna zmiana to: „dla artykułów generowanych przez AI w trybie, który wstawia linki, nie uruchamiać `replace_tool_names_with_links`” albo „uruchamiać tylko tam, gdzie nie ma jeszcze żadnego linku do narzędzia”. To da się doprecyzować przy faktycznym wdrożeniu trybu MD z linkami od AI.
 
 ---
@@ -41,7 +41,7 @@ To da się sensownie zapisać w instrukcjach dla API i w danych wejściowych (li
 | Dwie listy w prompcie | `_build_html_prompt` | Niska – osobne bloki tekstowe „Affiliate tools (prefer when context fits): …” i „Other tools (use if no affiliate match): …”. |
 | Instrukcja priorytetów | Ten sam prompt | Niska – 2–3 zdania w stylu analizy. |
 | Opis przy pierwszym wystąpieniu | Instrukcja dla AI | Średnia – model musi rozpoznać „pierwsze wystąpienie” i dodać nawias; warto dać przykład w prompcie. |
-| Sekcja „List of AI tools” | Już jest; opisy już wymagane | Brak zmiany – tylko spójność z nową zasadą (język angielski, krótko). |
+| Sekcja „List of platforms and tools” | Już jest; opisy już wymagane | Brak zmiany – tylko spójność z nową zasadą (język angielski, krótko). |
 
 Brak konieczności zmiany `render_site.py` dla trybu HTML.
 
@@ -58,7 +58,7 @@ Brak konieczności zmiany `render_site.py` dla trybu HTML.
 ## 5. Rekomendacja końcowa
 
 1. **Wdrożyć** priorytetyzację (lista afiliacyjna vs ogólna) i jasną instrukcję w prompcie – bez zmian w `render_site.py` dla HTML.
-2. **Wprowadzić** zasadę opisu w nawiasie przy **pierwszym** wystąpieniu każdego narzędzia (angielski, jednym zdaniem); w sekcji „List of AI tools” opisy już są – utrzymać spójność.
+2. **Wprowadzić** zasadę opisu w nawiasie przy **pierwszym** wystąpieniu każdego narzędzia (angielski, jednym zdaniem); w sekcji „List of platforms and tools” opisy już są – utrzymać spójność.
 3. **Zdefiniować** w kodzie heurystykę „czy URL jest afiliacyjny” (np. `?via=`, `?ref=`, `ref=`, ścieżka `/ref/` itd.) i budować dwie listy z jednego `affiliate_tools.yaml`.
 4. **Opcjonalnie** – dodać w YAML pole `short_description_en` i używać go w prompcie zamiast polegać wyłącznie na wiedzy modelu; wtedy mniejsza szansa na błędy i większa spójność z SEO.
 

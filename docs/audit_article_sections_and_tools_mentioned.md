@@ -1,4 +1,4 @@
-# Audyt: sekcje artykułów i „List of AI tools mentioned”
+# Audyt: sekcje artykułów i „List of platforms and tools mentioned”
 
 ## Porównanie dwóch artykułów
 
@@ -10,13 +10,13 @@
 | Sekcja „Tools mentioned” | `## Tools mentioned` + `- {{TOOLS_MENTIONED}}` | `## Tools mentioned` + `- {{TOOLS_MENTIONED}}` |
 | Treść „Tools mentioned” | Placeholder `{{TOOLS_MENTIONED}}` | Placeholder `{{TOOLS_MENTIONED}}` (nie zastąpiony) |
 
-**Wniosek:** Oba artykuły mają **tę samą strukturę H2**. Artykuł z 22.02 **ma** sekcję „Tools mentioned”; brakuje w niej **treści** (lista narzędzi), bo pozostaje placeholder `{{TOOLS_MENTIONED}}`. Tytuł „List of AI tools mentioned in this article” występuje tylko w promptcie dla **HTML** (fill_articles, tryb `--html`); w szablonie markdown i we wszystkich artykułach .md używana jest nazwa **„Tools mentioned”**.
+**Wniosek:** Oba artykuły mają **tę samą strukturę H2**. Artykuł z 22.02 **ma** sekcję „Tools mentioned”; brakuje w niej **treści** (lista narzędzi), bo pozostaje placeholder `{{TOOLS_MENTIONED}}`. Tytuł „List of platforms and tools mentioned in this article” występuje tylko w promptcie dla **HTML** (fill_articles, tryb `--html`); w szablonie markdown i we wszystkich artykułach .md używana jest nazwa **„Tools mentioned”**.
 
 ---
 
 ## Jakich sekcji „brakuje”?
 
-- **„List of AI tools mentioned in this article”** – w .md **nie ma** takiego nagłówka; w szablonie jest **„Tools mentioned”**. Treść tej sekcji to zawsze `- {{TOOLS_MENTIONED}}`, czyli placeholder.
+- **„List of platforms and tools mentioned in this article”** – w .md **nie ma** takiego nagłówka; w szablonie jest **„Tools mentioned”**. Treść tej sekcji to zawsze `- {{TOOLS_MENTIONED}}`, czyli placeholder.
 - **Żadne inne sekcje H2 nie znikają** w artykułach z 22.02: Verification policy, Introduction, What you need to know first, Main content (z Decision rules, Tradeoffs, Failure modes, SOP checklist, Template 1, Template 2), Step-by-step workflow, When NOT to use this, FAQ, Tools mentioned, Internal links, CTA, Disclosure, Pre-publish checklist – wszystkie są obecne w obu plikach.
 
 Rzeczywisty problem to więc **pusta treść sekcji „Tools mentioned”** (placeholder nie jest zastępowany listą narzędzi), a nie brak sekcji ani inna struktura artykułów z 22.02.
@@ -57,8 +57,8 @@ Dzięki temu już w momencie generowania .md sekcja „Tools mentioned” będzi
 
 ### 2. Spójna nazwa sekcji (opcjonalnie)
 
-- W **szablonach** .md (np. `templates/how-to.md`) zmienić nagłówek z `## Tools mentioned` na `## List of AI tools mentioned in this article`, jeśli chcesz pełną spójność z promptem HTML i z oczekiwaniami redakcji.
-- W **fill_articles** (prompt markdown) można dodać zdanie, że pod sekcją „Tools mentioned” (albo „List of AI tools…”) model **nie** wstawia treści – treść pochodzi z placeholderów (po implementacji p. 1).
+- W **szablonach** .md (np. `templates/how-to.md`) zmienić nagłówek z `## Tools mentioned` na `## List of platforms and tools mentioned in this article`, jeśli chcesz pełną spójność z promptem HTML i z oczekiwaniami redakcji.
+- W **fill_articles** (prompt markdown) można dodać zdanie, że pod sekcją „Tools mentioned” (albo „List of platforms and tools…”) model **nie** wstawia treści – treść pochodzi z placeholderów (po implementacji p. 1).
 
 ### 3. Uzupełnienie kolejki o `tools_mentioned` (alternatywa do 1)
 
@@ -70,10 +70,10 @@ Dzięki temu już w momencie generowania .md sekcja „Tools mentioned” będzi
 ## Rekomendacja
 
 - **Zaimplementować propozycję 1** w `generate_articles.py`: przy braku `tools_mentioned` w elemencie kolejki budować listę z `primary_tool` i `secondary_tool` (oraz opcjonalnie z `affiliate_tools.yaml` w formacie „- [Nazwa](url)”) i podstawiać pod `{{TOOLS_MENTIONED}}`.
-- **Opcjonalnie** propozycja 2 (zmiana nagłówka na „List of AI tools mentioned in this article”) dla spójności z HTML i z opisem audytu.
+- **Opcjonalnie** propozycja 2 (zmiana nagłówka na „List of platforms and tools mentioned in this article”) dla spójności z HTML i z opisem audytu.
 - Propozycja 3 może być uzupełnieniem (kolejka ustawia `tools_mentioned`, a generate_articles tylko go używa lub robi fallback jak w 1).
 
-Po wdrożeniu p. 1 nowe i odświeżane artykuły będą miały w sekcji „Tools mentioned” (lub „List of AI tools…”) faktyczną listę narzędzi zamiast samego placeholderu.
+Po wdrożeniu p. 1 nowe i odświeżane artykuły będą miały w sekcji „Tools mentioned” (lub „List of platforms and tools…”) faktyczną listę narzędzi zamiast samego placeholderu.
 
 ---
 

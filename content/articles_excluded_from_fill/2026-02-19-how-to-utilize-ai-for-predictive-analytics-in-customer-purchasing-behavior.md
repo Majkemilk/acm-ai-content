@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to utilize AI for predictive analytics in customer purchasing behavior"
 content_type: "how-to"
 category: "ai-marketing-automation"

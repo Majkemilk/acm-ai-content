@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to leverage AI for effective upselling during the checkout process"
 content_type: "how-to"
 category: "ai-marketing-automation"

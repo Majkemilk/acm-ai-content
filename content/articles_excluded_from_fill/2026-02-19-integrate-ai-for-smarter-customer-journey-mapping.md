@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to integrate AI for smarter customer journey mapping"
 content_type: "how-to"
 category: "ai-marketing-automation"

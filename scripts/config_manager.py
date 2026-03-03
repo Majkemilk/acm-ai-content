@@ -103,16 +103,35 @@ def write_config(
     if suggested_problems is None:
         suggested_problems = list(existing.get("suggested_problems") or [])
     else:
-        suggested_problems = [str(x).strip() for x in suggested_problems if str(x).strip()]
+        # Preserve empty string as first element (no HARD LOCK, rest as suggestions)
+        suggested_problems = [str(x) for x in suggested_problems]
     if category_mode is None:
         category_mode = str(existing.get("category_mode") or DEFAULT_CATEGORY_MODE).strip().lower()
     category_mode = _validate_category_mode(category_mode)
     lines = [
         f"production_category: {_quote_yaml_value(production_category)}",
         f"hub_slug: {_quote_yaml_value(hub_slug)}",
-        f"category_mode: {_quote_yaml_value(category_mode)}",
-        "sandbox_categories:",
     ]
+    # Preserve hub_title and hubs from existing config (multi-hub; not edited in FlowMonitor yet)
+    hub_title = (existing.get("hub_title") or "").strip()
+    if hub_title:
+        lines.append(f"hub_title: {_quote_yaml_value(hub_title)}")
+    hubs = existing.get("hubs")
+    if hubs and isinstance(hubs, list) and len(hubs) > 0:
+        lines.append("")
+        lines.append("# Lista hubów (slug, category, title). Używana przez generate_hubs, render_site, sitemap.")
+        lines.append("hubs:")
+        for h in hubs:
+            if isinstance(h, dict):
+                slug = (h.get("slug") or h.get("category") or "").strip()
+                cat = (h.get("category") or h.get("slug") or "").strip()
+                title = (h.get("title") or slug).strip()
+                if slug or cat:
+                    lines.append(f'  - slug: {_quote_yaml_value(slug)}')
+                    lines.append(f'    category: {_quote_yaml_value(cat)}')
+                    lines.append(f'    title: {_quote_yaml_value(title)}')
+    lines.append(f"category_mode: {_quote_yaml_value(category_mode)}")
+    lines.append("sandbox_categories:")
     for cat in sandbox_categories:
         lines.append(f'  - {_quote_yaml_value(cat)}')
     lines.append(f"use_case_batch_size: {int(use_case_batch_size)}")

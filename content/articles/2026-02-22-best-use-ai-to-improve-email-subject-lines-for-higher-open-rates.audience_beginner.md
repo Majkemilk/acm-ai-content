@@ -1,4 +1,4 @@
----
+﻿---
 title: "Best use AI to improve email subject lines for higher open rates"
 content_type: "best"
 category: "ai-marketing-automation"
@@ -74,7 +74,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

@@ -25,7 +25,7 @@ Poniżej: gdzie i w jakim brzmieniu mógłby być umieszczany, ocena względem s
 
 ### Opcja B – W każdym artykule (przy liście narzędzi)
 
-- **Gdzie:** Bezpośrednio przy sekcji „List of AI tools mentioned in this article” (nad lub pod listą), w jednym zdaniu.
+- **Gdzie:** Bezpośrednio przy sekcji „List of platforms and tools mentioned in this article” (nad lub pod listą), w jednym zdaniu.
 - **Brzmienie (PL):**  
   *„Wymienione narzędzia są sugestią dla opisanego przypadku, a nie wskazaniem bezwzględnie najlepszej opcji.”*
 - **Brzmienie (EN):**  
@@ -72,7 +72,7 @@ Poniżej: gdzie i w jakim brzmieniu mógłby być umieszczany, ocena względem s
 ## Rekomendacja
 
 1. **Wdrożyć** taki zapis – jest merytorycznie sensowny i wpisuje się w dobre praktyki (uczciwość, uzupełnienie disclosure).
-2. **Miejsce:** **W każdym artykule przy sekcji „List of AI tools…”** (Opcja B) – nad lub tuż pod nagłówkiem sekcji, jednym zdaniem. Daje to najlepszy kontekst (czytelnik widzi listę narzędzi i od razu informację o charakterze sugestii).
+2. **Miejsce:** **W każdym artykule przy sekcji „List of platforms and tools…”** (Opcja B) – nad lub tuż pod nagłówkiem sekcji, jednym zdaniem. Daje to najlepszy kontekst (czytelnik widzi listę narzędzi i od razu informację o charakterze sugestii).
 3. **Brzmienie:** Krótko i neutralnie, np.:  
    - PL: *„Wymienione narzędzia są sugestią dla opisanego przypadku, a nie wskazaniem bezwzględnie najlepszej opcji.”*  
    - EN: *„The tools listed are a suggestion for the use case described, not a claim that they are the best option.”*

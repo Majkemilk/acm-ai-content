@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to utilize AI for content curation and distribution strategies"
 content_type: "guide"
 category: "ai-marketing-automation"

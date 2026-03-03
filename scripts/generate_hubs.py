@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Category hub generator: reads content/config.yaml and content/articles/,
-generates hub pages only for production_category (sandbox categories excluded). Stdlib only.
-Outputs HTML with card grids (same structure as homepage).
+generates hub pages for each hub in config (get_hubs_list). If config has multiple hubs,
+articles are assigned by meta.category; otherwise all production articles go to the single hub.
+Stdlib only. Outputs HTML with card grids (same structure as homepage).
 """
 
 import html as html_module
@@ -10,15 +11,13 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 
-from content_index import get_production_articles, load_config
+from content_index import get_production_articles, get_hubs_list, load_config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 HUBS_DIR = PROJECT_ROOT / "content" / "hubs"
 CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
 
-HUB_SLUG = "ai-marketing-automation"
-HUB_TITLE = "AI Marketing Automation Tools & Workflows"
 ARTICLES_URL_PREFIX = "/articles/"
 ARTICLES_URL_SUFFIX = "/"
 
@@ -28,7 +27,11 @@ CONTENT_TYPE_SECTIONS = [
     ("how-to", "How-to"),
     ("review", "Reviews"),
     ("comparison", "Comparisons"),
+    ("product-comparison", "Product comparisons"),
     ("best", "Best"),
+    ("best-in-category", "Best in category"),
+    ("sales", "Sales"),
+    ("category-products", "Category products"),
 ]
 H2_CLASS = 'class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"'
 GRID_CLASS = 'class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"'
@@ -118,18 +121,19 @@ def _section_html(section_title: str, articles: list[tuple[dict, Path]]) -> str:
     return "".join(parts)
 
 
-def build_hub_content(articles: list[tuple[dict, Path]]) -> str:
-    """Build hub page as HTML: H1, intro, then sections by content_type (cards). No 'Start here' – newest are on homepage."""
+def build_hub_content(hub_title: str, hub_intro: str, articles: list[tuple[dict, Path]]) -> str:
+    """Build hub page as HTML: H1, intro, then sections by content_type (cards)."""
     parts: list[str] = []
+    intro = hub_intro.strip() or (
+        "This hub collects guides, how-tos, reviews, and comparisons. "
+        "The articles below are organized by type so you can find what fits your goal."
+    )
     parts.append(
         '<div style="text-align: justify">\n'
-        f"<h1 style=\"margin-bottom: 1em\">{html_module.escape(HUB_TITLE)}</h1>\n\n"
-        "<p>This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. "
-        "Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below "
-        "are organized by type so you can find what fits your goal.</p>\n"
+        f"<h1 style=\"margin-bottom: 1em\">{html_module.escape(hub_title)}</h1>\n\n"
+        f"<p>{html_module.escape(intro)}</p>\n"
         "</div>\n"
     )
-    # Group by content_type
     by_type: dict[str, list[tuple[dict, Path]]] = {}
     for meta, path in articles:
         ct = (meta.get("content_type") or "guide").strip().lower()
@@ -142,18 +146,53 @@ def build_hub_content(articles: list[tuple[dict, Path]]) -> str:
     return "".join(parts)
 
 
+def _articles_for_hub(
+    all_articles: list[tuple[dict, Path]],
+    hub_category: str,
+    first_hub_category: str | None,
+) -> list[tuple[dict, Path]]:
+    """Return articles whose meta.category matches hub_category; articles without category go to first hub."""
+    out: list[tuple[dict, Path]] = []
+    for meta, path in all_articles:
+        art_cat = (meta.get("category") or "").strip().lower()
+        if art_cat:
+            if art_cat == hub_category.lower():
+                out.append((meta, path))
+        else:
+            if first_hub_category and hub_category.lower() == first_hub_category.lower():
+                out.append((meta, path))
+    return out
+
+
 def main() -> None:
     config = load_config(CONFIG_PATH)
-    production_category = (config.get("production_category") or "ai-marketing-automation").strip()
-    articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+    hubs = get_hubs_list(config)
+    all_articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+    first_hub_category = hubs[0]["category"] if hubs else None
     HUBS_DIR.mkdir(parents=True, exist_ok=True)
-    html_body = build_hub_content(articles)
-    # Write hub file with frontmatter (title for render_site) and HTML body
-    frontmatter = f'---\ntitle: "{HUB_TITLE}"\n---\n\n'
-    content = frontmatter + html_body
-    out_path = HUBS_DIR / f"{production_category}.md"
-    out_path.write_text(content, encoding="utf-8")
-    print(f"Hub written: {out_path} ({len(articles)} production articles)")
+    hub_intros: dict[str, str] = {
+        "ai-marketing-automation": (
+            "This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. "
+            "Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below "
+            "are organized by type so you can find what fits your goal."
+        ),
+        "marketplaces-products": (
+            "This hub focuses on marketplaces and popular physical products sold on them. "
+            "Find guides, comparisons, and how-tos to choose and sell better on major marketplaces."
+        ),
+    }
+    for hub in hubs:
+        slug = hub["slug"]
+        category = hub["category"]
+        title = hub["title"] or slug
+        articles = _articles_for_hub(all_articles, category, first_hub_category)
+        intro = hub_intros.get(slug, hub_intros.get(category, ""))
+        html_body = build_hub_content(title, intro, articles)
+        frontmatter = f'---\ntitle: "{title}"\n---\n\n'
+        content = frontmatter + html_body
+        out_path = HUBS_DIR / f"{slug}.md"
+        out_path.write_text(content, encoding="utf-8")
+        print(f"Hub written: {out_path} ({len(articles)} articles)")
 
 
 if __name__ == "__main__":

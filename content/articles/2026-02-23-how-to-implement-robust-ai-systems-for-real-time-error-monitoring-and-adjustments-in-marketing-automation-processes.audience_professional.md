@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to implement robust AI systems for real-time error monitoring and adjustments in marketing automation processes"
 content_type: "how-to"
 category: "ai-marketing-automation"
@@ -101,7 +101,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

@@ -1,4 +1,4 @@
----
+﻿---
 title: "Comparison of Make vs Zapier vs n8n — choose the right automation platform"
 content_type: "comparison"
 category: "ai-marketing-automation"

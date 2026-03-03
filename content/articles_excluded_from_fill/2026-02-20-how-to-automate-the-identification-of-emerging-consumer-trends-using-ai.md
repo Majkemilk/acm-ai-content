@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to automate the identification of emerging consumer trends using AI"
 content_type: "how-to"
 category: "ai-marketing-automation"

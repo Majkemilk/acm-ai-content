@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to utilize AI for automating targeted ad placements based on user behavior"
 content_type: "guide"
 category: "ai-marketing-automation"
@@ -101,7 +101,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

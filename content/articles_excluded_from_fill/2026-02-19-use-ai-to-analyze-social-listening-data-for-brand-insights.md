@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to use AI to analyze social listening data for brand insights"
 content_type: "guide"
 category: "ai-marketing-automation"

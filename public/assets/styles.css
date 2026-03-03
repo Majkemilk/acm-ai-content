@@ -280,6 +280,30 @@ hr {
     margin-bottom: 1.5rem;
 }
 
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem 0.5rem;
+    font-size: 0.95rem;
+}
+
+.site-nav-link {
+    color: rgb(23, 38, 107);
+    text-decoration: none;
+}
+
+.site-nav-link:hover {
+    text-decoration: underline;
+}
+
+.site-nav-sep {
+    color: #94a3b8;
+    margin: 0 0.15rem;
+    user-select: none;
+}
+
 .site-header .mission {
     font-size: 1.1rem;
     color: #475569;

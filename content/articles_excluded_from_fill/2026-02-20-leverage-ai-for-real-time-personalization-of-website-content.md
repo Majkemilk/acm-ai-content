@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to leverage AI for real-time personalization of website content"
 content_type: "how-to"
 category: "ai-marketing-automation"

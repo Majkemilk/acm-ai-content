@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to develop AI-powered recommendations for upselling and cross-selling"
 content_type: "how-to"
 category: "ai-marketing-automation"

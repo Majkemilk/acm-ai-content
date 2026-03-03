@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to leverage AI for sentiment analysis in brand campaigns"
 content_type: "guide"
 category: "ai-marketing-automation"

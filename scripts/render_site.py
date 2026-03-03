@@ -5,6 +5,7 @@ Renders production articles and production hub; updates public/index.html.
 """
 
 import html
+import json
 import math
 import random
 import re
@@ -13,7 +14,7 @@ from datetime import date, datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
-from content_index import get_production_articles, load_config
+from content_index import get_production_articles, get_hubs_list, load_config
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
@@ -230,6 +231,24 @@ def _escape(s: str) -> str:
     return html.escape(s, quote=True)
 
 
+def _build_nav_html(hubs: list[dict]) -> str:
+    """Build site nav HTML: Home | hub1 | hub2 | Prompt Generator | Privacy Policy."""
+    parts: list[str] = []
+    parts.append('<a href="/" class="site-nav-link">Home</a>')
+    for h in hubs:
+        slug = (h.get("slug") or h.get("category") or "").strip()
+        if not slug:
+            continue
+        label = (h.get("title") or slug).strip()
+        url = f"/hubs/{_escape(slug)}/"
+        parts.append(f'<a href="{url}" class="site-nav-link">{_escape(label)}</a>')
+    parts.append(
+        '<a href="https://generator.flowtaro.com" class="site-nav-link" target="_blank" rel="noopener noreferrer">Prompt Generator</a>'
+    )
+    parts.append('<a href="/privacy.html" class="site-nav-link">Privacy Policy</a>')
+    return '<nav class="site-nav" aria-label="Main">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join(parts) + "</nav>"
+
+
 def _inline_links(s: str) -> str:
     """Replace [text](url) with <a href="url">text</a>. s must be already escaped for &<>."""
     def sub(match: re.Match) -> str:
@@ -362,6 +381,16 @@ _AUDIENCE_BADGE: dict[str, tuple[str, str]] = {
     "intermediate": ("Intermediate", "bg-blue-50 text-blue-700"),
     "professional": ("Advanced", "bg-purple-50 text-purple-700"),
 }
+
+VALID_AUDIENCE_TYPES = frozenset(_AUDIENCE_BADGE.keys())
+
+
+def _audience_type_from_stem(stem: str) -> str | None:
+    """If stem ends with .audience_<type> and type is beginner/intermediate/professional, return it; else None."""
+    if not stem or ".audience_" not in stem:
+        return None
+    suffix = stem.split(".audience_")[-1].strip().lower()
+    return suffix if suffix in VALID_AUDIENCE_TYPES else None
 
 
 def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str,
@@ -614,6 +643,7 @@ def _footer_html() -> str:
     return (
         '<footer class="text-center">\n'
         '    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · '
+        '<a href="https://generator.flowtaro.com" target="_blank" rel="noopener noreferrer">Prompt Generator</a> · '
         '<a href="/privacy.html">Privacy Policy</a></p>\n'
         '</footer>'
     )
@@ -685,7 +715,7 @@ def _strip_disclosure_from_html(body: str) -> str:
     )
 
 
-def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None = None) -> None:
+def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None = None, nav_html: str = "") -> None:
     is_html = path.suffix.lower() == ".html"
     if is_html:
         parsed = _parse_html_article(path)
@@ -723,6 +753,8 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     # Title (H1) at top, then meta block (category, date, reading time, lead), then body
     title_h1 = _article_title_h1(title)
     audience_type = (meta.get("audience_type") or "").strip() or None
+    if not audience_type:
+        audience_type = _audience_type_from_stem(path.stem)
     meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead, audience_type)
     full_body_html = title_h1 + meta_html + body_html
 
@@ -761,6 +793,7 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
         content = content.replace("{{TITLE}}", _escape(title), 1)
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
+        content = content.replace("<!-- NAV -->", nav_html, 1)
     else:
         content = _wrap_page(title, body_html, updated_iso)
     html_path.write_text(content, encoding="utf-8")
@@ -846,6 +879,7 @@ def _render_hub(
     articles: list[tuple[dict, Path]],
     existing_slugs: set[str] | None = None,
     output_slug: str | None = None,
+    nav_html: str = "",
 ) -> None:
     meta, body = _parse_md_file(path)
     slug = (output_slug or meta.get("slug") or path.stem).strip()
@@ -876,6 +910,7 @@ def _render_hub(
         content = content.replace("HUB_TITLE_PLACEHOLDER", _escape(title), 1)
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
+        content = content.replace("<!-- NAV -->", nav_html, 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
@@ -883,22 +918,29 @@ def _render_hub(
             f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"../../assets/styles.css\">\n"
             "  <style>body{font-family:-apple-system,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n"
             "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
-            "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
+            "  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n  </div>\n"
             "  <footer class=\"site-footer text-center\"><div class=\"site-footer-inner\">"
-            "<p>&copy; 2026 Flowtaro. <a href=\"/privacy.html\">Privacy Policy</a></p></div></footer>\n"
+            "<p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\" target=\"_blank\" rel=\"noopener noreferrer\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></div></footer>\n"
             "</body>\n</html>\n"
         )
     html_path.write_text(content, encoding="utf-8")
     print(f"  {html_path.relative_to(out_dir)}")
 
 
-def _update_index(out_dir: Path, hub_slug: str, articles: list[tuple[dict, Path]]) -> None:
+def _update_index(out_dir: Path, hubs: list[dict], articles: list[tuple[dict, Path]], nav_html: str) -> None:
     index_path = out_dir / "index.html"
     newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:12]
-    hub_link = f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center"><a href="/hubs/{_escape(hub_slug)}/" class="text-[rgb(23,38,107)] hover:underline">All articles</a></h2>\n'
+    hub_links: list[str] = []
+    for h in hubs:
+        slug = (h.get("slug") or h.get("category") or "").strip()
+        slug_esc = _escape(slug)
+        label = (h.get("title") or slug).strip()
+        label_esc = _escape(label)
+        hub_links.append(f'<a href="/hubs/{slug_esc}/" class="text-[rgb(23,38,107)] hover:underline">{label_esc}</a>')
+    hub_link = '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">' + " &middot; ".join(hub_links) + '</h2>\n'
     articles_html = ""
     if newest:
         articles_html = '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Newest articles</h2>\n'
@@ -925,13 +967,15 @@ def _update_index(out_dir: Path, hub_slug: str, articles: list[tuple[dict, Path]
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
+        content = content.replace("<!-- NAV -->", nav_html, 1)
     else:
         # Fallback: build full page with static footer (no template file)
-        footer = '  <footer class="text-center">\n    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="/privacy.html">Privacy Policy</a></p>\n  </footer>\n'
+        footer = '  <footer class="text-center">\n    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="https://generator.flowtaro.com" target="_blank" rel="noopener noreferrer">Prompt Generator</a> · <a href="/privacy.html">Privacy Policy</a></p>\n  </footer>\n'
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n</head>\n<body>\n"
+            "  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n"
@@ -943,7 +987,7 @@ def _update_index(out_dir: Path, hub_slug: str, articles: list[tuple[dict, Path]
     print(f"  {index_path.relative_to(out_dir)} (updated)")
 
 
-def _write_privacy_page(out_dir: Path) -> None:
+def _write_privacy_page(out_dir: Path, nav_html: str = "") -> None:
     """Generate public/privacy.html from privacy.docx or Privacy Policy.md (or placeholder if both missing)."""
     privacy_body: str
     if PRIVACY_DOCX_PATH.exists() and _DOCX_AVAILABLE:
@@ -965,15 +1009,15 @@ def _write_privacy_page(out_dir: Path) -> None:
         content = content.replace("{{TITLE}}", "Privacy Policy", 1)
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", privacy_body, 1)
+        content = content.replace("<!-- NAV -->", nav_html, 1)
     else:
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}.article-body{max-width:70ch;margin-left:auto;margin-right:auto;line-height:1.7;color:#1e293b;padding:0 1rem}</style>\n</head>\n<body>\n"
-            "  <header class=\"site-header\"><div class=\"header-inner\"></div></header>\n"
-            "  <div class=\"bg-white py-10 text-center\"><div class=\"max-w-4xl mx-auto\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div></div>\n"
+            "  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n" + privacy_body + "\n  </div>\n"
-            "  <footer class=\"site-footer text-center\"><p>&copy; 2026 Flowtaro. <a href=\"/privacy.html\">Privacy Policy</a></p></footer>\n"
+            "  <footer class=\"site-footer text-center\"><p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\" target=\"_blank\" rel=\"noopener noreferrer\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></footer>\n"
             "</body>\n</html>\n"
         )
     privacy_path = out_dir / "privacy.html"
@@ -997,10 +1041,29 @@ def _ensure_images(out_dir: Path) -> None:
                 pass
 
 
+def _articles_for_hub(
+    all_articles: list[tuple[dict, Path]],
+    hub_category: str,
+    first_hub_category: str | None,
+) -> list[tuple[dict, Path]]:
+    """Return articles whose meta.category matches hub_category; articles without category go to first hub."""
+    out: list[tuple[dict, Path]] = []
+    for meta, path in all_articles:
+        art_cat = (meta.get("category") or "").strip().lower()
+        if art_cat:
+            if art_cat == hub_category.lower():
+                out.append((meta, path))
+        else:
+            if first_hub_category and hub_category.lower() == first_hub_category.lower():
+                out.append((meta, path))
+    return out
+
+
 def main() -> None:
     config = load_config(CONFIG_PATH)
-    production_category = (config.get("production_category") or "ai-marketing-automation").strip()
-    hub_slug = (config.get("hub_slug") or "ai-marketing-automation").strip()
+    hubs = get_hubs_list(config)
+    nav_html = _build_nav_html(hubs)
+    first_hub_category = hubs[0]["category"] if hubs else None
     public = PUBLIC_DIR
     public.mkdir(parents=True, exist_ok=True)
 
@@ -1008,20 +1071,24 @@ def main() -> None:
     articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
     existing_slugs = {meta.get("slug") or path.stem for meta, path in articles}
     for meta, path in articles:
-        _render_article(path, public, existing_slugs)
+        _render_article(path, public, existing_slugs, nav_html)
 
-    print("Rendering production hub...")
-    hub_path = HUBS_DIR / f"{production_category}.md"
-    if hub_path.exists():
-        _render_hub(hub_path, public, articles, existing_slugs, output_slug=hub_slug)
-    else:
-        print(f"  (no {hub_path.name})")
+    print("Rendering hubs...")
+    for hub in hubs:
+        slug = hub["slug"]
+        category = hub["category"]
+        hub_path = HUBS_DIR / f"{slug}.md"
+        if hub_path.exists():
+            hub_articles = _articles_for_hub(articles, category, first_hub_category)
+            _render_hub(hub_path, public, hub_articles, existing_slugs, output_slug=slug, nav_html=nav_html)
+        else:
+            print(f"  (no {hub_path.name})")
 
     print("Updating public/index.html...")
-    _update_index(public, hub_slug, articles)
+    _update_index(public, hubs, articles, nav_html)
 
     print("Writing privacy page...")
-    _write_privacy_page(public)
+    _write_privacy_page(public, nav_html)
 
     _ensure_images(public)
 

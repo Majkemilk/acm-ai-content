@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to optimize detection and response strategies for lead loss during a rate limit breach"
 content_type: "guide"
 category: "ai-marketing-automation"
@@ -101,7 +101,7 @@ Before publishing, verify the following:
 
 ---
 
-## List of AI tools mentioned in this article
+## List of platforms and tools mentioned in this article
 
 {{TOOLS_SECTION_DISCLAIMER}}
 

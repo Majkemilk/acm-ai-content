@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to integrate AI for automating influencer performance tracking and analytics"
 content_type: "guide"
 category: "ai-marketing-automation"

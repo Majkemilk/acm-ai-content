@@ -65,7 +65,13 @@ Before publishing, verify the following:
 
 ### Try it yourself: Build your own AI prompt
 
-[Generate Prompt #1 (meta-prompt) and Prompt #2 (ready-to-paste output for the tool) following the Try-it-yourself rules from the instructions.]
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
 
 ---
 
@@ -83,7 +89,9 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of platforms and tools mentioned in this article
+
+{{TOOLS_SECTION_DISCLAIMER}}
 
 {{TOOLS_MENTIONED}}
 

@@ -34,6 +34,20 @@ Before publishing, verify the following:
 
 ---
 
+## Step-by-step workflow
+
+### Try it yourself: Build your own AI prompt
+
+```
+# Prompt #1 (meta-prompt) — replace with your input prompt
+```
+
+```
+# Prompt #2 (ready-to-paste output) — replace with the AI tool output
+```
+
+---
+
 ## When NOT to use this
 
 ---
@@ -48,7 +62,9 @@ Before publishing, verify the following:
 
 ---
 
-## Tools mentioned
+## List of platforms and tools mentioned in this article
+
+{{TOOLS_SECTION_DISCLAIMER}}
 
 {{TOOLS_MENTIONED}}
 

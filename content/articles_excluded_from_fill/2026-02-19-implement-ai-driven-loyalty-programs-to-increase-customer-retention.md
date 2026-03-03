@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to implement AI-driven loyalty programs to increase customer retention"
 content_type: "how-to"
 category: "ai-marketing-automation"

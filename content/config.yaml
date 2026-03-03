@@ -1,11 +1,21 @@
-production_category: "ai-marketing-automation"
-hub_slug: "ai-marketing-automation"
+production_category: "marketplaces-products"
+hub_slug: "marketplaces-products"
+hub_title: "AI Marketing Automation Tools & Workflows"
+
+# Lista hubów (slug, category, title). Używana przez generate_hubs, render_site, sitemap.
+hubs:
+  - slug: "ai-marketing-automation"
+    category: "ai-marketing-automation"
+    title: "AI Marketing Automation Tools & Workflows"
+  - slug: "marketplaces-products"
+    category: "marketplaces-products"
+    title: "Marketplaces & Popular Physical Products"
 category_mode: "preserve_sandbox"
 sandbox_categories:
-  - "automation workflows"
+  - "Bicycle Theft"
 use_case_batch_size: 3
 use_case_audience_pyramid:
   - 1
-  - 2
+  - 1
 suggested_problems:
-  - "agentic automations are unpredictable"
+  - "Lack of Unique Bicycle Identification"

@@ -44,7 +44,7 @@ Rekomendowana do wdrożenia jest **opcja B** (od szkieletu, bez zmiany use_cases
 
 ## Za
 
-- **Aktualna struktura** – stare artykuły zyskują sekcje i wymagania z bieżących szablonów (np. Try-it-yourself, Verification policy, List of AI tools), bez ręcznej przeróbki.  
+- **Aktualna struktura** – stare artykuły zyskują sekcje i wymagania z bieżących szablonów (np. Try-it-yourself, Verification policy, List of platforms and tools), bez ręcznej przeróbki.  
 - **Ten sam temat, ten sam URL** – slug pozostaje, więc nie ma duplikatów ani rozjazdu linków; internal links w innych artykułach dalej działają.  
 - **Jednorodna jakość** – wszystkie artykuły przechodzą przez te same bramki (długość, QA, quality gate) i te same szablony.  
 - **Bez nowych pomysłów z API** – nie uruchamiamy generate_use_cases; używamy tylko „pomysłu” zapisanego w starym artykule (title / primary_keyword / content_type itd.).  

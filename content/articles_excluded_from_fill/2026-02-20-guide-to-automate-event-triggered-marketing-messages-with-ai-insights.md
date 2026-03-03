@@ -1,4 +1,4 @@
----
+﻿---
 title: "Guide to automate event-triggered marketing messages with AI insights"
 content_type: "guide"
 category: "ai-marketing-automation"

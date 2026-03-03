@@ -3,9 +3,7 @@
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
 # - content_type: string (one of: how-to, guide, best, comparison, review, sales, product-comparison, best-in-category, category-products)
 # - category_slug: string (e.g., "ai-marketing-automation")
-# - audience_type: optional; beginner | intermediate | professional (from batch position)
-# - batch_id: optional; run id (e.g. 2026-02-20T143022)
-# - status: optional; "todo" = add to queue, "generated" / "archived" / "discarded" or missing = skip
+# - status: optional; "todo" = add to queue; "generated" / "archived" / "discarded" or missing = skip
 use_cases:
   - problem: how to set up alerts for rate limit breaches in AI marketing tools
     content_type: guide
@@ -379,3 +377,177 @@ use_cases:
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
+  - problem: How to implement unique bicycle identification systems in beginner-friendly marketing automation tools.
+    content_type: product-comparison
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T083335
+    status: discarded
+  - problem: How to monitor and optimize the effectiveness of unique bicycle identification systems in entry-level marketing automation.
+    content_type: product-comparison
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T083335
+    status: discarded
+  - problem: Best practices for scaling unique bicycle identification systems in professional marketing environments for enhanced reliability.
+    content_type: product-comparison
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T083335
+    status: discarded
+  - problem: Implementing governance frameworks for effective governance of unique bicycle identification systems in advanced marketing strategies.
+    content_type: product-comparison
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T083335
+    status: discarded
+  - problem: Beginner's guide on how to implement a unique bicycle identification system for marketing automation.
+    content_type: sales
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T084810
+    status: archived
+  - problem: How to monitor and troubleshoot common issues in unique bicycle identification systems within marketing automation tools.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T084810
+    status: archived
+  - problem: Best practices for scaling unique bicycle identification systems to ensure reliability and governance in marketing automation.
+    content_type: category-products
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T084810
+    status: archived
+  - problem: Beginners need guidance on how to effectively implement a unique bicycle identification system for their bikes to prevent theft.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T110236
+    status: discarded
+  - problem: Intermediate users face challenges in monitoring the effectiveness of their unique bicycle identification system and require troubleshooting strategies.
+    content_type: product-comparison
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T110236
+    status: discarded
+  - problem: Professional users struggle with scaling their unique bicycle identification systems for broader marketing strategies and ensuring governance.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T110236
+    status: discarded
+  - problem: Beginners struggle to implement a unique bicycle identification system to ensure bike security effectively.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T112342
+    status: discarded
+  - problem: Intermediate users need guidance on monitoring the effectiveness of their unique bicycle identification system to prevent theft.
+    content_type: product-comparison
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T112342
+    status: discarded
+  - problem: Professional users face challenges in scaling their unique bicycle identification systems for broader bike security networks.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T112342
+    status: discarded
+  - problem: Beginners struggle to implement a unique bicycle identification system effectively to enhance security.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T113634
+    status: todo
+  - problem: Intermediate users need effective strategies to monitor the performance of their unique bicycle identification systems to prevent theft.
+    content_type: category-products
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T113634
+    status: todo
+  - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability across larger operations.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T113634
+    status: todo
+  - problem: Beginners need guidance on how to implement a unique bicycle identification system effectively to prevent theft.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T114439
+    status: archived
+  - problem: Intermediate users need effective strategies to monitor the performance of their unique bicycle identification systems to ensure security.
+    content_type: category-products
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T114439
+    status: archived
+  - problem: Professional users face challenges in scaling their unique bicycle identification systems to enhance reliability in larger bike security networks.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T114439
+    status: archived
+  - problem: Beginners need a simple guide on implementing unique bicycle identification systems to enhance bike security.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Intermediate users require assistance in troubleshooting and optimizing the effectiveness of their unique bicycle identification systems.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Professional users face challenges in scaling unique bicycle identification systems to ensure consistent reliability across larger bike security networks.
+    content_type: category-products
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Beginners need to learn how to set up unique bicycle identification systems to prevent theft effectively.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Intermediate users need a comprehensive strategy for monitoring the effectiveness of their unique bicycle identification systems to enhance security.
+    content_type: category-products
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Professional users need guidelines on ensuring governance in their unique bicycle identification systems for enhanced scalability.
+    content_type: best-in-category
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Intermediate users require effective methods to optimize the performance of their unique bicycle identification systems to maintain security.
+    content_type: category-products
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-03-01T154756
+    status: archived
+  - problem: Beginners lack guidance on how to implement a unique bicycle identification system to ensure bike security effectively.
+    content_type: best-in-category
+    category_slug: Bicycle Theft
+    audience_type: professional
+    batch_id: 2026-03-01T173101
+    status: generated
+  - problem: Intermediate users require effective strategies to monitor the performance of their unique bicycle identification systems to ensure security.
+    content_type: category-products
+    category_slug: Bicycle Theft
+    audience_type: professional
+    batch_id: 2026-03-01T173101
+    status: generated
+  - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability across larger bike security networks.
+    content_type: best-in-category
+    category_slug: Bicycle Theft
+    audience_type: professional
+    batch_id: 2026-03-01T173101
+    status: generated
