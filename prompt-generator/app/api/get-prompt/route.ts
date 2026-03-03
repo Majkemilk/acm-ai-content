@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const stripe = new Stripe(STRIPE_SECRET_KEY);
+  const stripe = new Stripe(STRIPE_SECRET_KEY, {
+    httpClient: Stripe.createFetchHttpClient(),
+  });
 
   let session: Stripe.Checkout.Session;
   try {

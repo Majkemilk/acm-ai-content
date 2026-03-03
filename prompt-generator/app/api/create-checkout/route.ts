@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
     request.nextUrl.origin ||
     "http://localhost:3000";
 
-  const stripe = new Stripe(STRIPE_SECRET_KEY);
+  const stripe = new Stripe(STRIPE_SECRET_KEY, {
+    httpClient: Stripe.createFetchHttpClient(),
+  });
 
   try {
     const session = await stripe.checkout.sessions.create({
