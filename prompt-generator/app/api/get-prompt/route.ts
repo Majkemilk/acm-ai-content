@@ -123,7 +123,10 @@ export async function GET(request: NextRequest) {
 
   const userContent = buildUserMessage(metadata);
 
-  const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+  const openai = new OpenAI({
+    apiKey: OPENAI_API_KEY,
+    fetch: globalThis.fetch,
+  });
 
   try {
     const completion = await openai.chat.completions.create({
