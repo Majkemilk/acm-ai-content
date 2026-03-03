@@ -48,6 +48,8 @@ Before publishing, verify the following:
 
 ---
 
+To create a tailored prompt for your use case, try the [Flowtaro Prompt Generator](https://generator.flowtaro.com).
+
 ## When NOT to use this
 
 ---

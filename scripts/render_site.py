@@ -232,7 +232,7 @@ def _escape(s: str) -> str:
 
 
 def _build_nav_html(hubs: list[dict]) -> str:
-    """Build site nav HTML: Home | hub1 | hub2 | Prompt Generator | Privacy Policy."""
+    """Build site nav HTML: Home | hub1 | hub2 | Prompt Generator."""
     parts: list[str] = []
     parts.append('<a href="/" class="site-nav-link">Home</a>')
     for h in hubs:
@@ -245,7 +245,6 @@ def _build_nav_html(hubs: list[dict]) -> str:
     parts.append(
         '<a href="https://generator.flowtaro.com" class="site-nav-link" target="_blank" rel="noopener noreferrer">Prompt Generator</a>'
     )
-    parts.append('<a href="/privacy.html" class="site-nav-link">Privacy Policy</a>')
     return '<nav class="site-nav" aria-label="Main">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join(parts) + "</nav>"
 
 
@@ -369,6 +368,30 @@ def enhance_article(html: str) -> str:
 def _strip_leading_h1(html: str) -> str:
     """Remove the first <h1>...</h1> from html so we can show a single title from frontmatter above meta."""
     return re.sub(r"^\s*<h1(?:\s[^>]*)?>.*?</h1>\s*", "", html, count=1, flags=re.DOTALL | re.IGNORECASE).lstrip()
+
+
+# CTA block inserted above "When NOT to use this" in articles
+_PROMPT_GENERATOR_CTA_HTML = (
+    '<div class="my-6 p-4 bg-gray-50 rounded-lg border border-gray-200">'
+    '<p class="mb-0">To create a tailored prompt for your use case, try the '
+    '<a href="https://generator.flowtaro.com" target="_blank" rel="noopener noreferrer">Flowtaro Prompt Generator</a>.</p>'
+    "</div>\n\n"
+)
+
+
+def _inject_prompt_generator_cta(body_html: str) -> str:
+    """Insert the Prompt Generator CTA block immediately above the first 'When NOT to use this' H2, if present."""
+    # Match <h2 ...>When NOT to use this</h2> with optional attributes and whitespace
+    pattern = re.compile(
+        r"(\s*)(<h2(?:\s[^>]*)?>\s*When NOT to use this\s*</h2>)",
+        re.IGNORECASE,
+    )
+    match = pattern.search(body_html)
+    if not match:
+        return body_html
+    prefix_ws, h2_tag = match.group(1), match.group(2)
+    insert = prefix_ws + _PROMPT_GENERATOR_CTA_HTML + h2_tag
+    return pattern.sub(insert, body_html, count=1)
 
 
 def _article_title_h1(title: str) -> str:
@@ -744,6 +767,8 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     body_html = _strip_disclosure_from_html(body_html)
     # Remove leading <h1> from body so we show one title from frontmatter above meta (avoids duplicate for .md)
     body_html = _strip_leading_h1(body_html)
+    # Insert Prompt Generator CTA block above "When NOT to use this" when that section exists
+    body_html = _inject_prompt_generator_cta(body_html)
 
     html_path = out_dir / "articles" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
