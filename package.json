@@ -1,0 +1,5 @@
+{
+  "name": "acm-ai-content",
+  "private": true,
+  "description": "Flowtaro static site (build: python scripts/render_site.py)"
+}
