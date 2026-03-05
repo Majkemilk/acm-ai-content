@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Canva"
+---
+
 ﻿---
 title: "Best strategies for enhancing automation frameworks to maintain lead generation under rate limits"
 content_type: "best"

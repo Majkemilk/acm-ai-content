@@ -771,6 +771,8 @@ def build_workflow_tab(parent, last_output_holder: list):
     ttk.Label(right_frame, text=t("wf.log")).pack(anchor=tk.W, pady=(0, 2))
     step_label = ttk.Label(right_frame, text="", foreground="gray")
     step_label.pack(anchor=tk.W, pady=(0, 2))
+    progress_label = ttk.Label(right_frame, text="", foreground="gray")
+    progress_label.pack(anchor=tk.W, pady=(0, 2))
     progress_bar = ttk.Progressbar(right_frame, maximum=len(SEQUENCE_ACTIONS), value=0, length=280)
     progress_bar.pack(fill=tk.X, pady=(0, 5))
     log_area = scrolledtext.ScrolledText(right_frame, height=14, wrap=tk.WORD, state=tk.DISABLED)
@@ -842,6 +844,7 @@ def build_workflow_tab(parent, last_output_holder: list):
                     progress_bar["value"] = len(SEQUENCE_ACTIONS) if not remaining else completed
                     if not remaining:
                         step_label.config(text=t("wf.step_done"))
+                        progress_label.config(text="")
                     if sequence_cancelled[0]:
                         status_text = t("wf.status_cancelled")
                     elif code == 0:
@@ -884,8 +887,10 @@ def build_workflow_tab(parent, last_output_holder: list):
                 progress_bar["value"] = completed
                 if next_fill_total > 0:
                     step_label.config(text=t("wf.step_progress_fill", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action)), 0, next_fill_total))
+                    progress_label.config(text=t("wf.progress_of", 0, next_fill_total))
                 else:
                     step_label.config(text=t("wf.step_progress", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action))))
+                    progress_label.config(text="")
                 next_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(next_action, next_action)) + " ---", ""]
                 for h in next_header:
                     root.after(0, lambda line=h: append_log(line))
@@ -901,6 +906,7 @@ def build_workflow_tab(parent, last_output_holder: list):
                     fill_done[0] += 1
                     completed = len(SEQUENCE_ACTIONS) - len(remaining) - 1
                     step_label.config(text=t("wf.step_progress_fill", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get("fill_articles", "fill_articles")), fill_done[0], fill_total))
+                    progress_label.config(text=t("wf.progress_of", fill_done[0], fill_total))
                     progress_bar["value"] = completed + (fill_done[0] / fill_total)
                 current_out_lines.append(line)
                 root.after(0, lambda l=line: append_log(l))
@@ -931,6 +937,7 @@ def build_workflow_tab(parent, last_output_holder: list):
         cancel_btn.config(state=tk.NORMAL)
         status_label.config(text=t("wf.running"), foreground="gray")
         progress_bar["value"] = 0
+        progress_label.config(text="")
         log_area.config(state=tk.NORMAL)
         log_area.delete("1.0", tk.END)
         log_area.insert(tk.END, t("wf.running") + "\n")
@@ -941,8 +948,10 @@ def build_workflow_tab(parent, last_output_holder: list):
         first_fill_done = [0]
         if first_fill_total > 0:
             step_label.config(text=t("wf.step_progress_fill", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, first_fill_total))
+            progress_label.config(text=t("wf.progress_of", 0, first_fill_total))
         else:
             step_label.config(text=t("wf.step_progress", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+            progress_label.config(text="")
         first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
         for h in first_header:
             root.after(0, lambda line=h: append_log(line))
@@ -965,6 +974,7 @@ def build_workflow_tab(parent, last_output_holder: list):
         cancel_btn.config(state=tk.NORMAL)
         status_label.config(text=t("wf.running"), foreground="gray")
         progress_bar["value"] = 0
+        progress_label.config(text="")
         log_area.config(state=tk.NORMAL)
         log_area.delete("1.0", tk.END)
         log_area.insert(tk.END, t("wf.running") + "\n")
@@ -975,8 +985,10 @@ def build_workflow_tab(parent, last_output_holder: list):
         first_fill_done = [0]
         if first_fill_total > 0:
             step_label.config(text=t("wf.step_progress_fill", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, first_fill_total))
+            progress_label.config(text=t("wf.progress_of", 0, first_fill_total))
         else:
             step_label.config(text=t("wf.step_progress", 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+            progress_label.config(text="")
         first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
         for h in first_header:
             root.after(0, lambda line=h: append_log(line))
@@ -1032,8 +1044,10 @@ def build_workflow_tab(parent, last_output_holder: list):
         fill_done = [0]
         if fill_total > 0:
             step_label.config(text=t("wf.step_progress_fill", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, fill_total))
+            progress_label.config(text=t("wf.progress_of", 0, fill_total))
         else:
             step_label.config(text=t("wf.step_progress", completed + 1, len(SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+            progress_label.config(text="")
         first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
         accumulated = prev_output.splitlines()
         if deleted:
@@ -2075,7 +2089,8 @@ def build_config_tab(parent, ideas_tab=None):
                 suggested_problems=suggested,
                 category_mode=category_mode,
             )
-            # Auto-sync use_case_allowed_categories.json so pipeline uses current categories
+            # Sync use_case_allowed_categories.json from config (production + sandbox + hubs)
+            # so generate_use_cases and workflow category dropdown use up-to-date categories.
             try:
                 if str(SCRIPTS_DIR) not in sys.path:
                     sys.path.insert(0, str(SCRIPTS_DIR))

@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make"
+---
+
 ﻿---
 title: "How to integrate multiple AI tools for advanced customer journey mapping analysis"
 content_type: "how-to"

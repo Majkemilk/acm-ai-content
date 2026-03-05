@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "ChatGPT, Copy.ai, Google Workspace"
+---
+
 ﻿---
 title: "Best scale ai marketing automations to handle increased lead volume without failures"
 content_type: "best"

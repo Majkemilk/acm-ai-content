@@ -164,29 +164,38 @@ def _articles_for_hub(
     return out
 
 
+def get_hub_intro(hub: dict) -> str:
+    """
+    Return intro text for a hub. Precedence:
+    1. config hub["description"] if present
+    2. content/hubs/<slug>.intro.txt if file exists
+    3. empty string
+    """
+    slug = (hub.get("slug") or hub.get("category") or "").strip()
+    desc = (hub.get("description") or "").strip()
+    if desc:
+        return desc
+    intro_path = HUBS_DIR / f"{slug}.intro.txt"
+    if intro_path.exists():
+        try:
+            return intro_path.read_text(encoding="utf-8").strip()
+        except OSError:
+            pass
+    return ""
+
+
 def main() -> None:
     config = load_config(CONFIG_PATH)
     hubs = get_hubs_list(config)
     all_articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
     first_hub_category = hubs[0]["category"] if hubs else None
     HUBS_DIR.mkdir(parents=True, exist_ok=True)
-    hub_intros: dict[str, str] = {
-        "ai-marketing-automation": (
-            "This hub collects guides, how-tos, reviews, and comparisons for AI-powered marketing and automation. "
-            "Whether you are evaluating tools, designing workflows, or looking for step-by-step help, the articles below "
-            "are organized by type so you can find what fits your goal."
-        ),
-        "marketplaces-products": (
-            "This hub focuses on marketplaces and popular physical products sold on them. "
-            "Find guides, comparisons, and how-tos to choose and sell better on major marketplaces."
-        ),
-    }
     for hub in hubs:
         slug = hub["slug"]
         category = hub["category"]
         title = hub["title"] or slug
         articles = _articles_for_hub(all_articles, category, first_hub_category)
-        intro = hub_intros.get(slug, hub_intros.get(category, ""))
+        intro = get_hub_intro(hub)
         html_body = build_hub_content(title, intro, articles)
         frontmatter = f'---\ntitle: "{title}"\n---\n\n'
         content = frontmatter + html_body

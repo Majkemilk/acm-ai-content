@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make, Zapier"
+---
+
 ﻿---
 title: "Guide to troubleshoot unpredictable responses from agentic automations during campaigns"
 content_type: "guide"

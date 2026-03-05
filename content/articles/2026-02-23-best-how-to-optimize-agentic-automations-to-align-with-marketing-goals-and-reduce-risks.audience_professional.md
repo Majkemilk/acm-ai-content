@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make, UptimeRobot"
+---
+
 ﻿---
 title: "Best optimize agentic automations to align with marketing goals and reduce risks"
 content_type: "best"

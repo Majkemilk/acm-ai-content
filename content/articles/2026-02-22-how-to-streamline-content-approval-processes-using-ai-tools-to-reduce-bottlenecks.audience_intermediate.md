@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Jasper, Pictory"
+---
+
 ﻿---
 title: "How to streamline content approval processes using AI tools to reduce bottlenecks"
 content_type: "how-to"

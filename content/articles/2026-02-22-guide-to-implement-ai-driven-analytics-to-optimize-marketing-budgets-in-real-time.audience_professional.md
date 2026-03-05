@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, ChatGPT"
+---
+
 ﻿---
 title: "Guide to implement AI-driven analytics to optimize marketing budgets in real-time"
 content_type: "guide"

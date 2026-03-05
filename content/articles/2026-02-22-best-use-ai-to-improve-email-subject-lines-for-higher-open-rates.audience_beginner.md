@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make, Descript"
+---
+
 ﻿---
 title: "Best use AI to improve email subject lines for higher open rates"
 content_type: "best"

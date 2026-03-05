@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make"
+---
+
 ﻿---
 title: "Best leverage AI to create personalized marketing campaigns"
 content_type: "best"

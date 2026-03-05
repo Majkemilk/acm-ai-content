@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make"
+---
+
 ﻿---
 title: "Best integrate AI to streamline multi-channel marketing efforts"
 content_type: "best"

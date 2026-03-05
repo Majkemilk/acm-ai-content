@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make"
+---
+
 ﻿---
 title: "Guide to monitor compliance risks associated with AI agents in marketing workflows"
 content_type: "guide"

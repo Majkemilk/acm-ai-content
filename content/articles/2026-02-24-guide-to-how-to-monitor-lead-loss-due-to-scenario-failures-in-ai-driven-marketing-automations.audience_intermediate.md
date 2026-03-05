@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Pictory"
+---
+
 ﻿---
 title: "Guide to monitor lead loss due to scenario failures in ai-driven marketing automations"
 content_type: "guide"

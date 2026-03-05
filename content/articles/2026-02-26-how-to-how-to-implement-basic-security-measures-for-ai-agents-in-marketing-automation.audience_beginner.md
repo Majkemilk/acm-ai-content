@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, ChatGPT"
+---
+
 ﻿---
 title: "How to implement basic security measures for AI agents in marketing automation"
 content_type: "how-to"

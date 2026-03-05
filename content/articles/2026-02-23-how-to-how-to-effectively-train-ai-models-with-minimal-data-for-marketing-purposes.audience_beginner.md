@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make, Descript"
+---
+
 ﻿---
 title: "How to effectively train AI models with minimal data for marketing purposes"
 content_type: "how-to"

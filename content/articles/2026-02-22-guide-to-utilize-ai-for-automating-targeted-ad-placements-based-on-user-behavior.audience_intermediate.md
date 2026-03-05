@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make, Opus Clip, Jasper, Canva"
+---
+
 ﻿---
 title: "Guide to utilize AI for automating targeted ad placements based on user behavior"
 content_type: "guide"

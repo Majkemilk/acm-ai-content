@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make, Opus Clip"
+---
+
 ﻿---
 title: "How to automate troubleshooting workflows for API error handling in marketing tools"
 content_type: "how-to"

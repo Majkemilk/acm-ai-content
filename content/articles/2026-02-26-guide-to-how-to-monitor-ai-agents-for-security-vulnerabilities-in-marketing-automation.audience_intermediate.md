@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, CustomGPT"
+---
+
 ﻿---
 title: "Guide to monitor AI agents for security vulnerabilities in marketing automation"
 content_type: "guide"

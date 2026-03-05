@@ -176,12 +176,15 @@ def sanitize_filled_body(text: str, skip_headings: bool = True) -> tuple[str, li
     best_count = 0
     guarantee_count = 0
     unlimited_count = 0
+    per_year_count = 0
     out_lines: list[str] = []
     dollar_count = 0
     for line in text.split("\n"):
         if skip_headings and line.lstrip().startswith("#"):
             out_lines.append(line)
             continue
+        line, n = re.subn(r"\bper year\b", "yearly", line, flags=re.IGNORECASE)
+        per_year_count += n
         line, n = re.subn(r"\bpricing\b", "cost", line, flags=re.IGNORECASE)
         pricing_count += n
         line, n = re.subn(r"\bthe\s+best\b", "a strong option", line, flags=re.IGNORECASE)
@@ -209,6 +212,8 @@ def sanitize_filled_body(text: str, skip_headings: bool = True) -> tuple[str, li
         notes.append(f"replaced guarantee(d)->assure(d) ({guarantee_count}x)")
     if dollar_count:
         notes.append(f"replaced $ amount->cost ({dollar_count}x)")
+    if per_year_count:
+        notes.append(f"replaced 'per year'->'yearly' ({per_year_count}x)")
     return ("\n".join(out_lines), notes)
 
 
@@ -880,6 +885,7 @@ LANGUAGE AND TONE: Use a conversational, natural tone. Address the reader as "yo
 SECTION TITLES: Each H2 must be a concrete, reader-friendly title in English that describes what the section covers. Do NOT use generic labels like "Key benefits" or "Comparison criteria" as the exact H2 text. Use descriptive titles adapted to the article topic, e.g. "What to look for when choosing bicycle accessories", "Examples of products available on marketplaces", "Cost comparison", "Which option fits your budget?". Use the article title and category to choose appropriate section titles.
 
 REQUIRED SECTIONS (H2/H3): {sections}
+You MUST include an H2 section titled "FAQ" or "Frequently Asked Questions" (or very similar, e.g. "Common questions"). You MUST include a section that explains what this product category is (e.g. "What this category is", "About this category", "What is [category]").
 {comparison_table_instruction}
 COST COMPARISON: Include a "Cost comparison" (or similar) section with approximate price ranges typical for the category and practical tips (e.g. loyalty programs, seasonal promotions, "it's worth searching"). You may use ranges like "10–30 EUR" or "from around X"; do not state unverified exact prices for specific products. Do not claim "best price" or "#1".
 
@@ -958,7 +964,7 @@ REQUIRED SECTIONS (include every one, in a logical order; use H2 for main sectio
 - Failure modes: (what can go wrong and how to avoid it; use the special box style)
 - SOP checklist: (step-by-step checklist; use the special box style)
 - Template 1: (a ready-to-use template with real example content; use the template card style below). Use only concrete examples or (variable) slots; no [bracket] placeholders.
-- Template 2: (a second template with different real example content; use the template card style). Use only concrete examples or (variable) slots; no [bracket] placeholders. The workflow sentence (Human → Prompt #1 → …) must be inside a <pre>…</pre> block closed with </pre> only (never </p>).
+- Template 2: (a second template with different real example content; use the template card style). Use only concrete examples or (variable) slots; no [bracket] placeholders. The workflow sentence (Human → Prompt #1 → …) must be inside a <pre>…</pre> block closed with </pre> only (never </p>). Do not add closing list tags (</ol>, </ul>) without a matching opening <ol> or <ul> in the same section.
 - Step-by-step workflow (numbered steps for the main process)
 - When NOT to use this (when to avoid this approach)
 - FAQ (at least 2–3 questions and answers)
@@ -992,7 +998,7 @@ STYLE (Tailwind CSS utility classes):
     <h3 class="text-xl font-semibold mb-3">Decision rules:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">...</ul>
   </div>
-- Template 1 / Template 2 cards: wrap in <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow mb-4">. Put real example content inside <pre> or structured <p>/<ul>, never [Insert ...]. Use only concrete examples or (variable) slots; no [bracket] placeholders. CRITICAL — <pre> closing: Every <pre> block MUST be closed with the tag </pre> only. Never close a <pre> with </p> or any other tag. In Template 2, the workflow sentence (Human → Prompt #1 → …) goes inside a single <pre>…</pre> block; you MUST end that block with </pre> (not </p>). Example:
+- Template 1 / Template 2 cards: wrap in <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow mb-4">. Put real example content inside <pre> or structured <p>/<ul>, never [Insert ...]. Use only concrete examples or (variable) slots; no [bracket] placeholders. CRITICAL — <pre> closing: Every <pre> block MUST be closed with the tag </pre> only. Never close a <pre> with </p> or any other tag. In Template 2, the workflow sentence (Human → Prompt #1 → …) goes inside a single <pre>…</pre> block; you MUST end that block with </pre> (not </p>). Do not add </ol> or </ul> without a matching <ol> or <ul> in the same section. Example:
   <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
     <h3 class="text-xl font-semibold mb-3">Template 1:</h3>
     <p class="text-lg text-gray-700 mb-2">Use this to...</p>
@@ -1086,13 +1092,35 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
                 missing.append("best-in-category must contain an HTML comparison table (<table>)")
         else:
             # category-products
-            if "category" not in bl and "what this" not in bl:
+            has_category_section = any(
+                phrase in bl
+                for phrase in (
+                    "category",
+                    "what this",
+                    "about this category",
+                    "category overview",
+                    "overview of the category",
+                    "about the category",
+                )
+            )
+            if not has_category_section:
                 missing.append("missing section: what this category is (or similar)")
             if "product" not in bl and "list" not in bl:
                 missing.append("missing section: product list (or similar)")
             if "cost" not in bl or ("comparison" not in bl and "price" not in bl):
                 missing.append("missing section: cost comparison (or similar)")
-        if "faq" not in bl and "frequently asked" not in bl:
+        has_faq_section = any(
+            phrase in bl
+            for phrase in (
+                "faq",
+                "frequently asked",
+                "questions and answers",
+                "q&a",
+                "common questions",
+                "asked questions",
+            )
+        )
+        if not has_faq_section:
             missing.append("missing section: FAQ (or similar)")
         # CTA: require engaging phrase + link in closing (last ~1500 chars)
         tail = body[-1500:] if len(body) > 1500 else body
@@ -1710,9 +1738,63 @@ def _validate_html_pre_blocks(body: str) -> list[str]:
     return reasons
 
 
+def _validate_html_orphan_list_tags(body: str) -> list[str]:
+    """Check for orphan </ol> or </ul> (closing tag without matching open in same section). Returns list of reasons."""
+    reasons: list[str] = []
+    sections = re.split(r"<h2\s", body, flags=re.IGNORECASE)
+    for i, sec in enumerate(sections):
+        head = (sec[:300] if len(sec) > 300 else sec).lower()
+        if "template 2" in head or "try it yourself" in head:
+            open_ol = len(re.findall(r"<ol\b", sec, flags=re.IGNORECASE))
+            close_ol = len(re.findall(r"</ol\s*>", sec, flags=re.IGNORECASE))
+            open_ul = len(re.findall(r"<ul\b", sec, flags=re.IGNORECASE))
+            close_ul = len(re.findall(r"</ul\s*>", sec, flags=re.IGNORECASE))
+            if close_ol > open_ol:
+                reasons.append("invalid HTML: orphan </ol> in section (more </ol> than <ol>)")
+            if close_ul > open_ul:
+                reasons.append("invalid HTML: orphan </ul> in section (more </ul> than <ul>)")
+    return reasons
+
+
+def _remove_orphan_list_tags(body: str) -> tuple[str, bool]:
+    """In Template 2 and Try it yourself sections, remove excess </ol> and </ul> so closes match opens. Returns (new_body, was_fixed)."""
+    sections = re.split(r"(<h2\s)", body, flags=re.IGNORECASE)
+    if len(sections) < 2:
+        return body, False
+    fixed = False
+    out = [sections[0]]
+    for i in range(1, len(sections), 2):
+        if i + 1 >= len(sections):
+            out.append(sections[i])
+            break
+        out.append(sections[i])  # "<h2 " delimiter
+        sec = sections[i + 1]  # content until next <h2
+        head = (sec[:300] if len(sec) > 300 else sec).lower()
+        if "template 2" in head or "try it yourself" in head:
+            open_ol = len(re.findall(r"<ol\b", sec, flags=re.IGNORECASE))
+            close_ol = len(re.findall(r"</ol\s*>", sec, flags=re.IGNORECASE))
+            open_ul = len(re.findall(r"<ul\b", sec, flags=re.IGNORECASE))
+            close_ul = len(re.findall(r"</ul\s*>", sec, flags=re.IGNORECASE))
+            for _ in range(close_ol - open_ol):
+                sec = sec.replace("</ol>", "", 1)
+                fixed = True
+            for _ in range(close_ul - open_ul):
+                sec = sec.replace("</ul>", "", 1)
+                fixed = True
+        out.append(sec)
+    new_body = "".join(out) if fixed else body
+    return new_body, fixed
+
+
 # Template 2 <pre> that model sometimes closes with </p> instead of </pre> (breaks DOM).
+# Primary: Unicode arrow and exact spacing; alternates: ASCII arrow, flexible spaces/parens.
 _TEMPLATE2_PRE_CLOSED_WITH_P = re.compile(
-    r'(<pre\s+class="bg-gray-100[^"]*"[^>]*>.*?Human\s+→\s+Prompt\s+#1\s+\(to\s+AI\s+chat\)\s+→[^<]*)</p>',
+    r'(<pre\s+class="bg-gray-100[^"]*"[^>]*>.*?Human\s+[→\-]\s+Prompt\s*#?\s*1\s*\(to\s+AI\s+chat\)\s+[→\-][^<]*)</p>',
+    re.IGNORECASE | re.DOTALL,
+)
+# Fallback: in Template 2 section, <pre>...content...</p> where content has no </pre>
+_TEMPLATE2_SECTION_PRE_THEN_P = re.compile(
+    r"(<pre[^>]*>)((?:(?!</pre>).)*?)</p>",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -1726,13 +1808,27 @@ def _count_pre_balance(body: str) -> tuple[int, int]:
 
 def _fix_template2_pre_closing(body: str) -> tuple[str, bool]:
     """Replace mistaken </p> with </pre> for Template 2 workflow block only when there is exactly
-    one unclosed <pre> (opens - closes == 1). Otherwise the regex might match a wrong </p> and
-    add an extra </pre>, breaking balance (e.g. open=4, close=5). Returns (new_body, was_fixed)."""
+    one unclosed <pre> (opens - closes == 1). Tries main regex first (Human → Prompt #1…), then
+    fallback: in section between 'Template 2:' and next <h2, replace first <pre>...content...</p>
+    with <pre>...content...</pre>. Returns (new_body, was_fixed)."""
     opens, closes = _count_pre_balance(body)
     if opens - closes != 1:
         return body, False
     new_body, n = _TEMPLATE2_PRE_CLOSED_WITH_P.subn(r"\1</pre>", body, count=1)
     if n == 0:
+        # Heuristic fallback: restrict to Template 2 section to avoid touching Template 1
+        t2_start = body.lower().find("template 2:")
+        if t2_start != -1:
+            h2_after = body.find("<h2", t2_start + 1)
+            if h2_after == -1:
+                h2_after = len(body)
+            section = body[t2_start:h2_after]
+            section_new, sub_n = _TEMPLATE2_SECTION_PRE_THEN_P.subn(r"\1\2</pre>", section, count=1)
+            if sub_n == 1:
+                new_body = body[:t2_start] + section_new + body[h2_after:]
+                new_opens, new_closes = _count_pre_balance(new_body)
+                if new_opens == new_closes:
+                    return new_body, True
         return body, False
     new_opens, new_closes = _count_pre_balance(new_body)
     if new_opens != new_closes:
@@ -2355,7 +2451,7 @@ A) You MUST include these exact marker labels somewhere under existing sections 
 - "Template 1:"
 - "Template 2:"
 
-B) Formatting: Under "Decision rules:" at least 6 bullet lines starting with "If " or "When " or "Avoid ". Under "Tradeoffs:" at least 3 bullets containing a tradeoff (e.g. "vs", "at the cost of", "tradeoff"). Under "Failure modes:" at least 3 bullets (failure + mitigation). Under "SOP checklist:" 5–9 plain bullets (do NOT use markdown [ ] checkboxes). Under "Template 1:" and "Template 2:" short copy-ready blocks (5–10 lines each). In Template 2, if you use a fenced code block (triple backticks) for the workflow sentence, close it with ``` only; do not use </p> or any other character. No external links, no pricing, no "best/#1".
+B) Formatting: Under "Decision rules:" at least 6 bullet lines starting with "If " or "When " or "Avoid ". Under "Tradeoffs:" at least 3 bullets containing a tradeoff (e.g. "vs", "at the cost of", "tradeoff"). Under "Failure modes:" at least 3 bullets (failure + mitigation). Under "SOP checklist:" 5–9 plain bullets (do NOT use markdown [ ] checkboxes). Under "Template 1:" and "Template 2:" short copy-ready blocks (5–10 lines each). In Template 2, if you use a fenced code block (triple backticks) for the workflow sentence, close it with ``` only; do not use </p> or any other character. Never add closing list tags (</ol>, </ul>) without a matching opening tag in the same section. No external links, no pricing, no "best/#1".
 
 C) No [bracket] tokens in output: QA will reject the article if any remain. Use only concrete values or round parentheses ( ) for example slots.
 
@@ -2464,17 +2560,21 @@ def fill_one(
             new_body, remaining_notes = replace_remaining_bracket_placeholders_with_quoted(new_body)
             if remaining_notes:
                 print(f"  Replaced remaining placeholders: {path.name} — {'; '.join(remaining_notes)}")
-            # Safety layer for HTML: fix Template 2 </p> then sanitize and validate <pre> blocks.
+            # Safety layer for HTML: fix Template 2 </p>, remove orphan list tags, then sanitize and validate.
             if use_html:
                 new_body, template2_fixed = _fix_template2_pre_closing(new_body)
                 if template2_fixed:
                     print(f"  Fixed Template 2 <pre> closing: {path.name}")
+                new_body, orphan_fixed = _remove_orphan_list_tags(new_body)
+                if orphan_fixed:
+                    print(f"  Removed orphan list tags: {path.name}")
                 new_body, pre_notes = _sanitize_pre_blocks_html(new_body)
                 if pre_notes:
                     print(f"  HTML <pre> sanitized: {path.name} — {'; '.join(pre_notes)}")
             last_reasons = check_output_contract(new_body, meta.get("content_type", ""), quality_strict)
             if use_html:
                 last_reasons += _validate_html_pre_blocks(new_body)
+                last_reasons += _validate_html_orphan_list_tags(new_body)
             if not last_reasons:
                 if attempt > 0:
                     print(f"  Quality Gate PASS: {path.name}")
@@ -2531,15 +2631,18 @@ def fill_one(
         if remaining_notes:
             print(f"  Replaced remaining placeholders: {path.name} — {'; '.join(remaining_notes)}")
 
-        # Safety layer for HTML even when quality_gate is off: fix Template 2 </p> then sanitize.
+        # Safety layer for HTML even when quality_gate is off: fix Template 2 </p>, remove orphans, then sanitize.
         if use_html:
             new_body, template2_fixed = _fix_template2_pre_closing(new_body)
             if template2_fixed:
                 print(f"  Fixed Template 2 <pre> closing: {path.name}")
+            new_body, orphan_fixed = _remove_orphan_list_tags(new_body)
+            if orphan_fixed:
+                print(f"  Removed orphan list tags: {path.name}")
             new_body, pre_notes = _sanitize_pre_blocks_html(new_body)
             if pre_notes:
                 print(f"  HTML <pre> sanitized: {path.name} — {'; '.join(pre_notes)}")
-            html_reasons = _validate_html_pre_blocks(new_body)
+            html_reasons = _validate_html_pre_blocks(new_body) + _validate_html_orphan_list_tags(new_body)
             if html_reasons:
                 print(f"  HTML validation FAIL: {path.name} — {'; '.join(html_reasons)}")
                 _append_error_log(path.stem, "ERROR", f"HTML validation fail: {'; '.join(html_reasons)}")

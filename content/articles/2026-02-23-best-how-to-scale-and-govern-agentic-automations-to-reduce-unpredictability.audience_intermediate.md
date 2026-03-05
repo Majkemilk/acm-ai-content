@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Descript"
+---
+
 ﻿---
 title: "Best scale and govern agentic automations to reduce unpredictability"
 content_type: "best"

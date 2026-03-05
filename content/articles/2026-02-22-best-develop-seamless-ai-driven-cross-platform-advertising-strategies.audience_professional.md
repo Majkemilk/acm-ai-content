@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make"
+---
+
 ﻿---
 title: "Best develop seamless AI-driven cross-platform advertising strategies"
 content_type: "best"

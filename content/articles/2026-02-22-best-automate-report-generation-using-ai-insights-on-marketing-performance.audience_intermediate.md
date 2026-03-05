@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make, Canva"
+---
+
 ﻿---
 title: "Best automate report generation using AI insights on marketing performance"
 content_type: "best"

@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make"
+---
+
 ﻿---
 title: "Guide to develop troubleshooting processes for unexpected agentic automation failures"
 content_type: "guide"

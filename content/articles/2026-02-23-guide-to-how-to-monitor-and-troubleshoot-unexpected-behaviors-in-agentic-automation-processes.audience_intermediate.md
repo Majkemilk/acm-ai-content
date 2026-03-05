@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make"
+---
+
 ﻿---
 title: "Guide to monitor and troubleshoot unexpected behaviors in agentic automation processes"
 content_type: "guide"

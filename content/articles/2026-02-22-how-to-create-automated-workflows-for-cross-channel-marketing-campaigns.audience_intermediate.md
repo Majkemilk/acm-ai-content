@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Canva, Copy.ai, Zapier"
+---
+
 ﻿---
 title: "How to create automated workflows for cross-channel marketing campaigns"
 content_type: "how-to"

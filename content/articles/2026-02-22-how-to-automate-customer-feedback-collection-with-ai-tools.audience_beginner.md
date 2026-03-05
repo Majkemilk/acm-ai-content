@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make"
+---
+
 ﻿---
 title: "How to automate customer feedback collection with AI tools"
 content_type: "how-to"

@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Zapier"
+---
+
 ﻿---
 title: "Guide to develop an AI-integrated platform for tracking influencer marketing effectiveness"
 content_type: "guide"

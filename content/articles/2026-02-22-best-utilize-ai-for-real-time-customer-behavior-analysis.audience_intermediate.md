@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Copy.ai, Blogify"
+---
+
 ﻿---
 title: "Best utilize AI for real-time customer behavior analysis"
 content_type: "best"

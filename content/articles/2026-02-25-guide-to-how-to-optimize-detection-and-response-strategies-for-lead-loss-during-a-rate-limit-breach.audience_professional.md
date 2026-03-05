@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Zapier, Opus Clip"
+---
+
 ﻿---
 title: "Guide to optimize detection and response strategies for lead loss during a rate limit breach"
 content_type: "guide"

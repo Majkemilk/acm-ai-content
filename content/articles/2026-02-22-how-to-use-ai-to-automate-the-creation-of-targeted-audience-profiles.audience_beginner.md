@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Descript, Copy.ai, Make"
+---
+
 ﻿---
 title: "How to use AI to automate the creation of targeted audience profiles"
 content_type: "how-to"

@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make, Canva"
+---
+
 ﻿---
 title: "How to govern and ensure reliability in complex agentic automation systems"
 content_type: "how-to"

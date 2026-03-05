@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Writesonic, Zapier, Pictory, Canva"
+---
+
 ﻿---
 title: "Best automate social media content posting with AI"
 content_type: "best"

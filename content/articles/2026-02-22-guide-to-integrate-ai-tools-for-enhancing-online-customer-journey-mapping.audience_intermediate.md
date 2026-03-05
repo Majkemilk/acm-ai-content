@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make"
+---
+
 ﻿---
 title: "Guide to integrate AI tools for enhancing online customer journey mapping"
 content_type: "guide"

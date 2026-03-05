@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make"
+---
+
 ﻿---
 title: "How to implement robust AI systems for real-time error monitoring and adjustments in marketing automation processes"
 content_type: "how-to"

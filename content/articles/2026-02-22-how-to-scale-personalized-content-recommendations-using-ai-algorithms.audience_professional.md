@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Copy.ai, Jasper"
+---
+
 ﻿---
 title: "How to scale personalized content recommendations using AI algorithms"
 content_type: "how-to"

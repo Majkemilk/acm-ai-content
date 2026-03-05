@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Descript, Opus Clip"
+---
+
 ﻿---
 title: "Guide to implement security measures for AI agents in basic marketing tasks"
 content_type: "guide"

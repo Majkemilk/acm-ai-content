@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make"
+---
+
 ﻿---
 title: "Best utilize AI for predictive analytics in customer retention strategies"
 content_type: "best"

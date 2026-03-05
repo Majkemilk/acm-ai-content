@@ -4,6 +4,7 @@ Minimal static renderer: Markdown (content/) -> HTML (public/). Stdlib only.
 Renders production articles and production hub; updates public/index.html.
 """
 
+import hashlib
 import html
 import json
 import math
@@ -13,6 +14,9 @@ import shutil
 from datetime import date, datetime
 from html.parser import HTMLParser
 from pathlib import Path
+
+# Windows path length limit (MAX_PATH 260); keep under to avoid FileNotFoundError 206
+MAX_PATH_LEN = 250
 
 from content_index import get_production_articles, get_hubs_list, load_config
 
@@ -40,6 +44,78 @@ INTERNAL_ARTICLE_LINK = re.compile(r"\[([^\]]*)\]\((/articles/[^)]*)\)")
 
 # Tags inside which we do not replace tool names with links
 TOOL_LINK_SKIP_TAGS = frozenset(("a", "h1", "h2", "h3", "h4", "h5", "h6", "code", "pre"))
+
+
+def _slug_for_path(slug: str, out_dir: Path) -> str:
+    """Return a filesystem-safe slug: same as slug if path fits in MAX_PATH_LEN, else shortened with hash suffix."""
+    candidate = (out_dir / "articles" / slug / "index.html").resolve()
+    if len(str(candidate)) <= MAX_PATH_LEN:
+        return slug
+    # Keep start of slug (date + start of title) and add short hash to keep unique and under limit
+    prefix_len = min(80, len(slug))
+    prefix = slug[:prefix_len].rstrip("-")
+    digest = hashlib.md5(slug.encode("utf-8")).hexdigest()[:12]
+    short = f"{prefix}-{digest}"
+    return short
+
+
+def _article_body_has_html_issues(body: str) -> bool:
+    """True if article body has <pre> imbalance or orphan </ol>/</ul> in Template 2 / Try it yourself sections."""
+    if "<pre" not in body:
+        return False
+    opens = len(re.findall(r"<pre\b", body, flags=re.IGNORECASE))
+    closes = len(re.findall(r"</pre\s*>", body, flags=re.IGNORECASE))
+    if opens != closes:
+        return True
+    sections = re.split(r"<h2\s", body, flags=re.IGNORECASE)
+    for i, sec in enumerate(sections):
+        head = (sec[:300] if len(sec) > 300 else sec).lower()
+        if "template 2" in head or "try it yourself" in head:
+            open_ol = len(re.findall(r"<ol\b", sec, flags=re.IGNORECASE))
+            close_ol = len(re.findall(r"</ol\s*>", sec, flags=re.IGNORECASE))
+            open_ul = len(re.findall(r"<ul\b", sec, flags=re.IGNORECASE))
+            close_ul = len(re.findall(r"</ul\s*>", sec, flags=re.IGNORECASE))
+            if close_ol > open_ol or close_ul > open_ul:
+                return True
+    return False
+
+
+def _sanitize_article_html_body(body: str) -> str:
+    """Last-line fix: Template 2 </p> -> </pre> (heuristic) and remove orphan </ol>/</ul> in Template 2 / Try it yourself sections."""
+    # Fix unclosed <pre> in Template 2 section: first <pre>...content...</p> -> ...</pre>
+    t2_start = body.lower().find("template 2:")
+    if t2_start != -1 and "</p>" in body:
+        h2_after = body.find("<h2", t2_start + 1)
+        if h2_after == -1:
+            h2_after = len(body)
+        section = body[t2_start:h2_after]
+        pre_then_p = re.compile(r"(<pre[^>]*>)((?:(?!</pre>).)*?)</p>", re.IGNORECASE | re.DOTALL)
+        section_new, n = pre_then_p.subn(r"\1\2</pre>", section, count=1)
+        if n == 1:
+            body = body[:t2_start] + section_new + body[h2_after:]
+    # Remove orphan </ol>/</ul> in Template 2 and Try it yourself sections
+    sections = re.split(r"(<h2\s)", body, flags=re.IGNORECASE)
+    if len(sections) >= 2:
+        out = [sections[0]]
+        for i in range(1, len(sections), 2):
+            if i + 1 >= len(sections):
+                out.append(sections[i])
+                break
+            out.append(sections[i])
+            sec = sections[i + 1]
+            head = (sec[:300] if len(sec) > 300 else sec).lower()
+            if "template 2" in head or "try it yourself" in head:
+                open_ol = len(re.findall(r"<ol\b", sec, flags=re.IGNORECASE))
+                close_ol = len(re.findall(r"</ol\s*>", sec, flags=re.IGNORECASE))
+                open_ul = len(re.findall(r"<ul\b", sec, flags=re.IGNORECASE))
+                close_ul = len(re.findall(r"</ul\s*>", sec, flags=re.IGNORECASE))
+                for _ in range(close_ol - open_ol):
+                    sec = sec.replace("</ol>", "", 1)
+                for _ in range(close_ul - open_ul):
+                    sec = sec.replace("</ul>", "", 1)
+            out.append(sec)
+        body = "".join(out)
+    return body
 
 
 def _parse_quoted_yaml_value(val: str) -> str:
@@ -448,8 +524,13 @@ def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str |
     return meta_html
 
 
-def _strip_invalid_internal_links(body: str, existing_slugs: set[str] | None) -> str:
-    """Replace [text](/articles/slug/) with just text when slug is not in existing_slugs. Keeps valid links unchanged."""
+def _strip_invalid_internal_links(
+    body: str,
+    existing_slugs: set[str] | None,
+    slug_to_fs: dict[str, str] | None = None,
+) -> str:
+    """Replace [text](/articles/slug/) with just text when slug is not in existing_slugs.
+    If slug_to_fs is provided, rewrite valid links to use filesystem slug (for Windows path length)."""
     if existing_slugs is None:
         return body
 
@@ -457,11 +538,13 @@ def _strip_invalid_internal_links(body: str, existing_slugs: set[str] | None) ->
         link_text, url = match.group(1), match.group(2)
         if not url.startswith("/articles/"):
             return match.group(0)
-        # Slug: path after /articles/ up to # or end, trailing / stripped
         slug = url[10:].split("#")[0].strip("/")
-        if slug in existing_slugs:
-            return match.group(0)
-        return link_text
+        if slug not in existing_slugs:
+            return link_text
+        fs_slug = (slug_to_fs or {}).get(slug, slug)
+        suffix = url[10 + len(slug) :] or "/"
+        new_url = f"/articles/{fs_slug}{suffix}"
+        return f"[{link_text}]({new_url})"
 
     return INTERNAL_ARTICLE_LINK.sub(repl, body)
 
@@ -472,9 +555,13 @@ AFFILIATE_DISCLOSURE_TEXT = (
 )
 
 
-def _md_to_html(body: str, existing_slugs: set[str] | None = None) -> str:
+def _md_to_html(
+    body: str,
+    existing_slugs: set[str] | None = None,
+    slug_to_fs: dict[str, str] | None = None,
+) -> str:
     """Minimal markdown to HTML: headings, - and 1. lists, paragraphs, [text](url), ``` code."""
-    body = _strip_invalid_internal_links(body, existing_slugs)
+    body = _strip_invalid_internal_links(body, existing_slugs, slug_to_fs)
     # Replace affiliate disclosure placeholder with standard text (before generic mustache removal)
     body = body.replace("{{AFFILIATE_DISCLOSURE}}", AFFILIATE_DISCLOSURE_TEXT)
     # Usuń mustache placeholdery {{...}}
@@ -738,7 +825,13 @@ def _strip_disclosure_from_html(body: str) -> str:
     )
 
 
-def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None = None, nav_html: str = "") -> None:
+def _render_article(
+    path: Path,
+    out_dir: Path,
+    existing_slugs: set[str] | None = None,
+    slug_to_fs: dict[str, str] | None = None,
+    nav_html: str = "",
+) -> None:
     is_html = path.suffix.lower() == ".html"
     if is_html:
         parsed = _parse_html_article(path)
@@ -756,13 +849,16 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
         slug = meta.get("slug") or path.stem
         title = (meta.get("title") or slug).strip()
         updated_iso = _updated_date_iso(meta, path)
-        body_html = _md_to_html(body, existing_slugs)
+        body_html = _md_to_html(body, existing_slugs, slug_to_fs)
         body_html = enhance_article(body_html)
         tool_list = _load_affiliate_tools(AFFILIATE_TOOLS_PATH)
         body_html = replace_tool_names_with_links(body_html, tool_list)
         words = _word_count_md(body)
         reading_min = _reading_time_min(words)
 
+    # Last-line defense: fix Template 2 </p> and orphan list tags if inconsistencies detected
+    if _article_body_has_html_issues(body_html):
+        body_html = _sanitize_article_html_body(body_html)
     # Remove any Disclosure section from body; the script adds it in a yellow box at the end.
     body_html = _strip_disclosure_from_html(body_html)
     # Remove leading <h1> from body so we show one title from frontmatter above meta (avoids duplicate for .md)
@@ -770,7 +866,8 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
     # Insert Prompt Generator CTA block above "When NOT to use this" when that section exists
     body_html = _inject_prompt_generator_cta(body_html)
 
-    html_path = out_dir / "articles" / slug / "index.html"
+    slug_fs = (slug_to_fs or {}).get(slug, slug)
+    html_path = out_dir / "articles" / slug_fs / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
 
     category_slug = (meta.get("category") or meta.get("category_slug") or "").strip() or None
@@ -795,7 +892,8 @@ def _render_article(path: Path, out_dir: Path, existing_slugs: set[str] | None =
             read_next_html += '<ul class="space-y-2">'
             for art_meta, art_path in selected:
                 art_title = _escape(art_meta.get("title") or "Untitled")
-                article_slug = _escape(art_meta.get("slug") or art_path.stem)
+                art_slug = art_meta.get("slug") or art_path.stem
+                article_slug = _escape((slug_to_fs or {}).get(art_slug, art_slug))
                 read_next_html += f'<li><a href="/articles/{article_slug}/" class="text-indigo-600 hover:text-indigo-800 hover:underline transition-colors">{art_title}</a></li>'
             read_next_html += "</ul></section>"
     except Exception as e:
@@ -861,8 +959,10 @@ def _build_hub_content(
     intro_html: str,
     sections: list[tuple[str, list[tuple[str, str]]]],
     slug_to_meta: dict[str, dict],
+    slug_to_fs: dict[str, str] | None = None,
 ) -> str:
     """Build HTML for hub DYNAMIC_CONTENT: link home, title, intro, then per-section h2 + card grid."""
+    slug_to_fs = slug_to_fs or {}
     out_parts: list[str] = []
     out_parts.append(
         '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">'
@@ -881,7 +981,7 @@ def _build_hub_content(
                 meta = slug_to_meta.get(slug) or {}
                 title_esc = _escape(link_text)
                 date_esc = _escape(meta.get("last_updated") or meta.get("updated") or "")
-                slug_esc = _escape(slug)
+                slug_esc = _escape(slug_to_fs.get(slug, slug))
                 out_parts.append(
                     f'''        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
@@ -903,6 +1003,7 @@ def _render_hub(
     out_dir: Path,
     articles: list[tuple[dict, Path]],
     existing_slugs: set[str] | None = None,
+    slug_to_fs: dict[str, str] | None = None,
     output_slug: str | None = None,
     nav_html: str = "",
 ) -> None:
@@ -920,14 +1021,25 @@ def _render_hub(
             '<a href="/" class="text-[rgb(23,38,107)] hover:underline">Home</a></h2>\n'
         )
         dynamic_content = home_link + body
+        # Rewrite long article slugs to filesystem slugs in prebuilt HTML
+        if slug_to_fs:
+            for logical, fs in slug_to_fs.items():
+                if logical != fs:
+                    dynamic_content = dynamic_content.replace(
+                        f'href="/articles/{logical}/"',
+                        f'href="/articles/{fs}/"',
+                    ).replace(
+                        f'href="/articles/{logical}"',
+                        f'href="/articles/{fs}/"',
+                    )
     else:
         intro_md, sections = _parse_hub_body(body)
-        intro_html = _md_to_html(intro_md, existing_slugs) if intro_md else ""
+        intro_html = _md_to_html(intro_md, existing_slugs, slug_to_fs) if intro_md else ""
         slug_to_meta = {}
         for art_meta, art_path in articles:
             s = art_meta.get("slug") or art_path.stem
             slug_to_meta[s] = {**art_meta, "last_updated": _updated_date_iso(art_meta, art_path)}
-        dynamic_content = _build_hub_content(title, intro_html, sections, slug_to_meta)
+        dynamic_content = _build_hub_content(title, intro_html, sections, slug_to_meta, slug_to_fs)
     html_path = out_dir / "hubs" / slug / "index.html"
     html_path.parent.mkdir(parents=True, exist_ok=True)
     if HUB_TEMPLATE_PATH.exists():
@@ -955,7 +1067,14 @@ def _render_hub(
     print(f"  {html_path.relative_to(out_dir)}")
 
 
-def _update_index(out_dir: Path, hubs: list[dict], articles: list[tuple[dict, Path]], nav_html: str) -> None:
+def _update_index(
+    out_dir: Path,
+    hubs: list[dict],
+    articles: list[tuple[dict, Path]],
+    nav_html: str,
+    slug_to_fs: dict[str, str] | None = None,
+) -> None:
+    slug_to_fs = slug_to_fs or {}
     index_path = out_dir / "index.html"
     newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:12]
     hub_links: list[str] = []
@@ -974,7 +1093,7 @@ def _update_index(out_dir: Path, hubs: list[dict], articles: list[tuple[dict, Pa
             slug = meta.get("slug") or path.stem
             title_esc = _escape((meta.get("title") or slug).strip())
             date_esc = _escape(meta.get("last_updated") or _updated_date_iso(meta, path))
-            slug_esc = _escape(slug)
+            slug_esc = _escape(slug_to_fs.get(slug, slug))
             articles_html += f'''        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <h3 class="text-xl font-semibold mb-2">
                 <a href="/articles/{slug_esc}/" class="text-gray-900 hover:text-[#17266B]">{title_esc}</a>
@@ -1095,8 +1214,9 @@ def main() -> None:
     print("Rendering production articles...")
     articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
     existing_slugs = {meta.get("slug") or path.stem for meta, path in articles}
+    slug_to_fs = {meta.get("slug") or path.stem: _slug_for_path(meta.get("slug") or path.stem, public) for meta, path in articles}
     for meta, path in articles:
-        _render_article(path, public, existing_slugs, nav_html)
+        _render_article(path, public, existing_slugs, slug_to_fs, nav_html)
 
     print("Rendering hubs...")
     for hub in hubs:
@@ -1105,12 +1225,12 @@ def main() -> None:
         hub_path = HUBS_DIR / f"{slug}.md"
         if hub_path.exists():
             hub_articles = _articles_for_hub(articles, category, first_hub_category)
-            _render_hub(hub_path, public, hub_articles, existing_slugs, output_slug=slug, nav_html=nav_html)
+            _render_hub(hub_path, public, hub_articles, existing_slugs, slug_to_fs, output_slug=slug, nav_html=nav_html)
         else:
             print(f"  (no {hub_path.name})")
 
     print("Updating public/index.html...")
-    _update_index(public, hubs, articles, nav_html)
+    _update_index(public, hubs, articles, nav_html, slug_to_fs)
 
     print("Writing privacy page...")
     _write_privacy_page(public, nav_html)

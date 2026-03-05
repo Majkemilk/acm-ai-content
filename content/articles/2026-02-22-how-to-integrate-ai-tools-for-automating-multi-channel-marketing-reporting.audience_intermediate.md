@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Make, Copy.ai"
+---
+
 ﻿---
 title: "How to integrate AI tools for automating multi-channel marketing reporting"
 content_type: "how-to"

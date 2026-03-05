@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Opus Clip, Make"
+---
+
 ﻿---
 title: "How to set up predictable workflows using agentic automations"
 content_type: "how-to"

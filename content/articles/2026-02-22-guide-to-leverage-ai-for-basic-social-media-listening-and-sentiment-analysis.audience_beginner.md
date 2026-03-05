@@ -1,3 +1,8 @@
+---
+status: "filled"
+tools: "Descript"
+---
+
 ﻿---
 title: "Guide to leverage AI for basic social media listening and sentiment analysis"
 content_type: "guide"

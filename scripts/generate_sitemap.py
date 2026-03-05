@@ -8,11 +8,13 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from content_index import get_production_articles, get_hubs_list, load_config
+from render_site import _slug_for_path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
-OUT_PATH = PROJECT_ROOT / "public" / "sitemap.xml"
+PUBLIC_DIR = PROJECT_ROOT / "public"
+OUT_PATH = PUBLIC_DIR / "sitemap.xml"
 
 BASE_URL = "https://flowtaro.com"
 SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -67,7 +69,8 @@ def main() -> None:
         urls.append((f"/hubs/{hub['slug']}/", None))
     for meta, path in articles_sorted:
         slug = meta.get("slug") or path.stem
-        urls.append((f"/articles/{slug}/", _lastmod_for_article(meta, path)))
+        slug_fs = _slug_for_path(slug, PUBLIC_DIR)
+        urls.append((f"/articles/{slug_fs}/", _lastmod_for_article(meta, path)))
 
     xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + _write_sitemap_xml(urls)
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)

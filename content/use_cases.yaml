@@ -508,7 +508,7 @@ use_cases:
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
-    status: archived
+    status: discarded
   - problem: Beginners need to learn how to set up unique bicycle identification systems to prevent theft effectively.
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
@@ -520,34 +520,94 @@ use_cases:
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
-    status: archived
+    status: discarded
   - problem: Professional users need guidelines on ensuring governance in their unique bicycle identification systems for enhanced scalability.
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
-    status: archived
+    status: discarded
   - problem: Intermediate users require effective methods to optimize the performance of their unique bicycle identification systems to maintain security.
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
-    status: archived
+    status: discarded
   - problem: Beginners lack guidance on how to implement a unique bicycle identification system to ensure bike security effectively.
     content_type: best-in-category
     category_slug: Bicycle Theft
     audience_type: professional
     batch_id: 2026-03-01T173101
-    status: generated
+    status: archived
   - problem: Intermediate users require effective strategies to monitor the performance of their unique bicycle identification systems to ensure security.
     content_type: category-products
     category_slug: Bicycle Theft
     audience_type: professional
     batch_id: 2026-03-01T173101
-    status: generated
+    status: discarded
   - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability across larger bike security networks.
     content_type: best-in-category
     category_slug: Bicycle Theft
     audience_type: professional
     batch_id: 2026-03-01T173101
+    status: archived
+  - problem: Beginners need guidance on how to effectively design prompts for AI agents that analyze market trends to improve initial engagement strategies.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: beginner
+    batch_id: 2026-03-04T194627
+    status: archived
+  - problem: Intermediate users are looking for strategies to monitor and troubleshoot the performance of their AI agents analyzing market data for optimized prompt effectiveness.
+    content_type: guide
+    category_slug: agentic-ai-geo
+    audience_type: intermediate
+    batch_id: 2026-03-04T194627
+    status: archived
+  - problem: Professional users face challenges in scaling the governance of prompt designs for AI agents to enhance market analysis reliability across multiple regions.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: professional
+    batch_id: 2026-03-04T194627
+    status: archived
+  - problem: Beginners require a simple guide on implementing a structured approach to prompt design for AI marketing agents to ensure successful market analysis.
+    content_type: guide
+    category_slug: agentic-ai-geo
+    audience_type: professional
+    batch_id: 2026-03-04T194627
+    status: archived
+  - problem: Professional users need advanced methodologies for optimizing and scaling prompt governance in AI agents to maintain consistent market analysis performance.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: professional
+    batch_id: 2026-03-04T194627
+    status: archived
+  - problem: Beginners need a clear process for designing effective prompts for AI agents that analyze market data to enhance performance.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: beginner
+    batch_id: 2026-03-04T194752
+    status: generated
+  - problem: Intermediate users require strategies to troubleshoot and optimize prompt designs for better market analysis efficiency in AI agents.
+    content_type: guide
+    category_slug: agentic-ai-geo
+    audience_type: intermediate
+    batch_id: 2026-03-04T194752
+    status: generated
+  - problem: Professional users seek best practices for scaling the governance of prompt designs in AI agents to ensure reliability in market analysis across multiple regions.
+    content_type: guide
+    category_slug: agentic-ai-geo
+    audience_type: professional
+    batch_id: 2026-03-04T194752
+    status: generated
+  - problem: Beginners need guidance on integrating contextual insights into prompt design for AI agents that examine market trends.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: professional
+    batch_id: 2026-03-04T194752
+    status: generated
+  - problem: Professional users face challenges in ensuring consistent reliability of prompts for AI agents in large-scale market analysis across diverse markets.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: professional
+    batch_id: 2026-03-04T194752
     status: generated

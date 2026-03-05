@@ -85,7 +85,10 @@ def write_config(
 ) -> None:
     """
     Write content/config.yaml. Preserves use_case_batch_size, use_case_audience_pyramid,
-    and suggested_problems from existing file when not provided. No comments preserved.
+    suggested_problems and hubs from existing file when not provided.
+    Hubs (list of slug/category/title) are always read from existing config and written
+    back so that saving from Flowtaro Monitor does not remove the hubs section.
+    No comments preserved.
     """
     production_category = _validate_production_category(production_category)
     hub_slug = _validate_hub_slug(hub_slug)
