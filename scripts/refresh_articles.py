@@ -398,7 +398,7 @@ def main() -> None:
             "--limit", "1",
             "--quality_gate",
             "--quality_retries", str(args.quality_retries),
-            "--min-words-override", "600",
+            "--min-words-override", "500",
         ]
         if args.block_on_fail:
             cmd.append("--block_on_fail")

@@ -1,7 +1,7 @@
 """
 One-off script: scan content/articles/*.html (or public/articles/*/index.html) and report files where
 (1) the first <pre> in "Try it yourself" section contains Prompt #2 or other foreign content, or
-(2) Template 2 contains <pre> closed with </p> (unclosed <pre>), which breaks DOM and makes "section 1" render wrong.
+(2) Try it yourself contains <pre> closed with </p> (unclosed <pre>), which breaks DOM and makes "section 1" render wrong.
 
 Usage:
   python check_try_it_yourself_pre.py                    # scan content/articles
@@ -93,8 +93,8 @@ def has_prompt2_or_foreign_in_first_pre(html: str) -> tuple[bool, list[str]]:
     return bool(reasons), reasons
 
 
-def has_template2_pre_closed_with_p(html: str) -> bool:
-    """True if any <pre> in Template 2 is closed with </p> instead of </pre> (same line)."""
+def has_try_it_yourself_pre_closed_with_p(html: str) -> bool:
+    """True if any <pre> in Try it yourself (workflow block) is closed with </p> instead of </pre> (same line)."""
     return bool(
         re.search(
             r'<pre\s+class="bg-gray-100[^"]*"[^>]*>.*?Human\s+→\s+Prompt\s+#1\s+\(to\s+AI\s+chat\)\s+→[^<]*</p>',
@@ -132,8 +132,8 @@ def main() -> None:
         reasons: list[str] = []
         is_buggy, pre_reasons = has_prompt2_or_foreign_in_first_pre(html)
         reasons.extend(pre_reasons)
-        if has_template2_pre_closed_with_p(html):
-            reasons.append("Template 2 <pre> closed with </p> instead of </pre> (unclosed <pre>, breaks DOM; section 1 renders wrong)")
+        if has_try_it_yourself_pre_closed_with_p(html):
+            reasons.append("Try it yourself <pre> closed with </p> instead of </pre> (unclosed <pre>, breaks DOM; section 1 renders wrong)")
         if reasons:
             buggy.append((path, reasons))
 

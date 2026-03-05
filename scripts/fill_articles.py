@@ -394,19 +394,7 @@ def run_preflight_qa(
         body_no_pre = re.sub(r"<pre[^>]*>.*?</pre>", "", filled_body, flags=re.DOTALL | re.IGNORECASE)
         body_without_templates = _strip_html_tags(body_no_pre)
     else:
-        # MD: usuń sekcje Template 1/2 i fenced code blocks (```...```)
-        body_without_templates = re.sub(
-            r"^#{1,3}\s*Template\s*1:.*?(?=^#{1,3}|\Z)",
-            "",
-            body_without_templates,
-            flags=re.DOTALL | re.MULTILINE,
-        )
-        body_without_templates = re.sub(
-            r"^#{1,3}\s*Template\s*2:.*?(?=^#{1,3}|\Z)",
-            "",
-            body_without_templates,
-            flags=re.DOTALL | re.MULTILINE,
-        )
+        # MD: usuń fenced code blocks (```...```) — placeholdery w blokach kodu są dopuszczalne
         body_without_templates = re.sub(r"```[^`]*?```", "", body_without_templates, flags=re.DOTALL)
     all_bracket = BRACKET_PLACEHOLDER.findall(body_without_templates)
     remaining = [m for m in all_bracket if not is_checkbox_token(m)]
@@ -519,8 +507,6 @@ CONTRACT_MARKERS = [
     "Tradeoffs:",
     "Failure modes:",
     "SOP checklist:",
-    "Template 1:",
-    "Template 2:",
 ]
 
 
@@ -956,16 +942,16 @@ def _build_html_prompt(
     instructions = f"""You are a documentation writer. Generate the BODY of an article as HTML only. The output will be inserted inside an <article> tag; the page already has header, footer, and the article title (H1). Do NOT output <html>, <head>, <body>, or an H1 — start with the first section (e.g. Introduction or first H2). Do not generate any part of the page layout (header, footer, navigation); only the article content.
 IMPORTANT: Do NOT include a "Disclosure" section. The site template adds a disclosure box automatically at the end of every article.
 
-REQUIRED SECTIONS (include every one, in a logical order; use H2 for main sections, H3 for subsections):
+HEADLINE (MUST output): The "Article title" in the input may be a raw use-case description (e.g. "How to Beginners need a clear process for..."). You MUST output a reader-friendly headline, not the raw description. At the end of your response you will add a line HEADLINE: <your headline> (one line, sentence case, e.g. "How to design effective prompts for AI market analysis"). The pipeline uses this as the article H1; do not copy the raw title verbatim.
+
+REQUIRED SECTIONS (include every one, in this order; use H2 for main sections, H3 for subsections):
 - Introduction (brief context and what the reader will learn)
 - What you need to know first (prerequisites or key concepts)
 - Decision rules: (when to use this approach; use the special box style below)
 - Tradeoffs: (pros/cons; use the special box style)
 - Failure modes: (what can go wrong and how to avoid it; use the special box style)
-- SOP checklist: (step-by-step checklist; use the special box style)
-- Template 1: (a ready-to-use template with real example content; use the template card style below). Use only concrete examples or (variable) slots; no [bracket] placeholders.
-- Template 2: (a second template with different real example content; use the template card style). Use only concrete examples or (variable) slots; no [bracket] placeholders. The workflow sentence (Human → Prompt #1 → …) must be inside a <pre>…</pre> block closed with </pre> only (never </p>). Do not add closing list tags (</ol>, </ul>) without a matching opening <ol> or <ul> in the same section.
-- Step-by-step workflow (numbered steps for the main process)
+- SOP checklist: (step-by-step checklist; use the special box style). In SOP or Decision rules, mention at least once the use of the Try it yourself section or the numbered workflow steps (e.g. "In step 4 use Prompt #1 from Try it yourself").
+- Step-by-step workflow — MUST be an H2 section titled "Step-by-step workflow" or "Step-by-step workflow (practical)". Structure it exactly as follows (in this order): (1) A numbered list of 7–10 concrete steps for the main process (use <ol> or explicit "1." "2." …). (2) A subsection "Inputs / Outputs" (or "Inputs/Outputs") with bullet points or short list for Inputs: and Outputs:. (3) A subsection "Common pitfalls" with at least 3 bullets (pitfall + mitigation). (4) As the last subsection only, an H3 "Try it yourself: Build your own AI prompt". Do NOT put Try it yourself under any other H2. Do not omit the numbered steps, Inputs/Outputs, or Common pitfalls.
 - When NOT to use this (when to avoid this approach)
 - FAQ (at least 2–3 questions and answers)
 - Internal links (1–2 sentences suggesting related reads; you may use placeholder URLs like # or /blog/ for now)
@@ -981,10 +967,7 @@ Include a section titled "List of platforms and tools mentioned in this article"
 - Description rules: When a description was provided after | in the tool list above, use that exact description here and in the article body; do not invent a different one. Only when no description is given after |, write a factual one-sentence description in English. Avoid vague phrases like "powerful tool". Do not invent tools.
 - Format: Use H2 for the section title. Use <ul class="list-disc list-inside space-y-2 text-gray-700"> for the list. Each item: <a href="URL">Tool Name</a> — description sentence. Include only tools that appear in the article body; do not invent tools. If both lists are empty, omit this section.
 
-IMPORTANT — LENGTH: Follow the audience-based length rule (see Audience and Length below). To achieve the required word count:
-- Expand "Template 1" and "Template 2" with rich, detailed examples (multiple lines or bullets each; real company names, metrics, and scenarios).
-- Consider adding a "Case study" section after the templates: a concrete example of someone using the described AI tools, with specific data, challenges, and outcomes (a few paragraphs long).
-Example case study tone: "A small e-commerce company, ShopSmart, used Descript to analyze competitor social media videos. They discovered that competitors were heavily using influencer marketing, which led them to pivot their strategy. Within three months, their engagement increased by 40%."
+IMPORTANT — LENGTH: Follow the audience-based length rule (see Audience and Length below). To achieve the required word count, consider adding a "Case study" section: a concrete example of someone using the described AI tools, with specific data, challenges, and outcomes (a few paragraphs long). Example tone: "A small e-commerce company, ShopSmart, used Descript to analyze competitor social media videos. They discovered that competitors were heavily using influencer marketing, which led them to pivot their strategy. Within three months, their engagement increased by 40%."
 
 LENGTH AND CONTENT RULES:
 - Do not output any text in square brackets [like this]. Replace every [placeholder] with a concrete example. If you need a variable slot, use round parentheses (e.g. (product name)) instead. NEVER use square-bracket placeholders (e.g. [Name], [Date], [Customer Name], [Your Company], [Insert URL]). Every template field, example, and sentence must be filled with concrete, realistic content. Use real-looking example names, dates, product names — never leave or introduce any [bracket] token. No [bracket] tokens in output; QA will reject the article if any remain. If you need to indicate a variable or example slot, use round parentheses ( ) instead of square brackets, e.g. (video title) or (your product name).
@@ -998,24 +981,18 @@ STYLE (Tailwind CSS utility classes):
     <h3 class="text-xl font-semibold mb-3">Decision rules:</h3>
     <ul class="list-disc list-inside space-y-2 text-gray-700">...</ul>
   </div>
-- Template 1 / Template 2 cards: wrap in <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow mb-4">. Put real example content inside <pre> or structured <p>/<ul>, never [Insert ...]. Use only concrete examples or (variable) slots; no [bracket] placeholders. CRITICAL — <pre> closing: Every <pre> block MUST be closed with the tag </pre> only. Never close a <pre> with </p> or any other tag. In Template 2, the workflow sentence (Human → Prompt #1 → …) goes inside a single <pre>…</pre> block; you MUST end that block with </pre> (not </p>). Do not add </ol> or </ul> without a matching <ol> or <ul> in the same section. Example:
-  <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm mb-4">
-    <h3 class="text-xl font-semibold mb-3">Template 1:</h3>
-    <p class="text-lg text-gray-700 mb-2">Use this to...</p>
-    <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">Competitor: Acme Corp
-Strengths: Strong social presence, fast shipping
-Weaknesses: Limited international
-...</pre>
-  </div>
+- CRITICAL — <pre> closing: Every <pre> block (e.g. in Try it yourself) MUST be closed with </pre> only. Never close a <pre> with </p>. Do not add </ol> or </ul> without a matching <ol> or <ul> in the same section.
 - Blockquotes: <blockquote class="border-l-4 border-indigo-500 pl-4 italic text-gray-600 my-4">. Inline code: <code class="bg-gray-100 px-1 py-0.5 rounded text-sm">. Code blocks: <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto">.
 
 {tools_blob}
 
 Output ONLY the HTML fragment that goes inside the article (no wrapper tags, no markdown).
 
-At the very end of your response (after the HTML), add one plain-text line:
+At the very end of your response (after the HTML), add exactly two plain-text lines in this order:
+HEADLINE: Your reader-friendly article headline (one line; not the raw use-case title from the input)
 TOOLS_SELECTED: ToolName1, ToolName2, ...
-- minimum 1, maximum 5 tools; names must match exactly one of the tools from the lists above; do not invent tool names."""
+- HEADLINE: one line, sentence case; the pipeline uses it as the article title (H1).
+- TOOLS_SELECTED: minimum 1, maximum 5 tools; names must match exactly one of the tools from the lists above; do not invent tool names."""
     audience_line = _audience_instruction(audience_type)
     if audience_line:
         instructions += "\n\nAudience (MUST follow): " + audience_line
@@ -1139,20 +1116,40 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
         return missing
 
     # Try-it-yourself: require two code blocks when section is present (how-to, guide, best, comparison)
-    if ct_lower in ("how-to", "guide", "best", "comparison") and "try it yourself" in body.lower():
-        section_re = re.compile(
-            r"(?si)(?:Try it yourself|Build your own AI prompt).*?(?=<h2[^>]*>|\n##\s|\Z)",
-        )
-        m_section = section_re.search(body)
-        section = m_section.group(0) if m_section else ""
-        if "<pre" in body:
-            block_count = len(re.findall(r"<pre[^>]*>.*?</pre>", section, re.DOTALL | re.IGNORECASE))
-        else:
-            block_count = len(re.findall(r"```[^`]*?```", section, re.DOTALL))
-        if block_count < 2:
-            missing.append(
-                "Try-it-yourself section must contain two code blocks (Prompt #1 and Prompt #2)"
+    # Use structural H3 (subsection heading) to find the real section, not any text mention of "try it yourself"
+    if ct_lower in ("how-to", "guide", "best", "comparison"):
+        section = ""
+        if "<h3" in body and ("try it yourself" in body.lower() or "build your own ai prompt" in body.lower()):
+            # HTML: section = from <h3>Try it yourself... to next <h2 or end
+            h3_section_re = re.compile(
+                r"<h3[^>]*>\s*Try\s+it\s+yourself\s*:?\s*Build\s+your\s+own\s+AI\s+prompt\s*</h3>(.*?)(?=<h2\s|\Z)",
+                re.DOTALL | re.IGNORECASE,
             )
+            m = h3_section_re.search(body)
+            if m:
+                section = m.group(0)
+            else:
+                # Fallback: first occurrence of phrase to next H2 (may be wrong if phrase appears in prose)
+                section_re = re.compile(
+                    r"(?si)(?:Try it yourself|Build your own AI prompt).*?(?=<h2[^>]*>|\n##\s|\Z)",
+                )
+                m_section = section_re.search(body)
+                section = m_section.group(0) if m_section else ""
+        elif "try it yourself" in body.lower() or "build your own ai prompt" in body.lower():
+            section_re = re.compile(
+                r"(?si)(?:Try it yourself|Build your own AI prompt).*?(?=<h2[^>]*>|\n##\s|\Z)",
+            )
+            m_section = section_re.search(body)
+            section = m_section.group(0) if m_section else ""
+        if section:
+            if "<pre" in body:
+                block_count = len(re.findall(r"<pre[^>]*>.*?</pre>", section, re.DOTALL | re.IGNORECASE))
+            else:
+                block_count = len(re.findall(r"```[^`]*?```", section, re.DOTALL))
+            if block_count < 2:
+                missing.append(
+                    "Try-it-yourself section must contain two code blocks (Prompt #1 and Prompt #2)"
+                )
 
     # Strip HTML tags so markers inside <h3> etc. are found
     if "<" in body and ">" in body:
@@ -1171,15 +1168,21 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
 
     # Dodatkowe markery tylko dla 'how-to' i 'guide'
     if ct_lower in ["how-to", "guide"]:
-        required_all.extend([
-            "SOP checklist:",
-            "Template 1:",
-            "Template 2:",
-        ])
+        required_all.append("SOP checklist:")
 
     for marker in required_all:
         if marker.lower() not in body_lower:
             missing.append(f"missing marker: '{marker}'")
+
+    # Step-by-step workflow: required for how-to, guide, best, comparison (section must appear and contain structure)
+    if ct_lower in ("how-to", "guide", "best", "comparison"):
+        if "step-by-step workflow" not in body_lower and "step by step workflow" not in body_lower:
+            missing.append("missing section: 'Step-by-step workflow' (mandatory for how-to, guide, best, and comparison)")
+        # Require Inputs/Outputs and Common pitfalls within the article (structure of Step-by-step workflow)
+        if "input" not in body_lower or "output" not in body_lower:
+            missing.append("Step-by-step workflow must include Inputs/Outputs (or Inputs and Outputs)")
+        if "pitfall" not in body_lower:
+            missing.append("Step-by-step workflow must include Common pitfalls")
 
     # "Try it yourself" validation: required for how-to, guide, best, and comparison
     try_marker = "try it yourself"
@@ -1197,6 +1200,76 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
             missing.append("'Try it yourself' section missing Prompt #2 (ready-to-paste output)")
 
     return missing
+
+
+def _get_try_it_yourself_placement_warning(body: str, content_type: str) -> str | None:
+    """
+    Sprawdza, czy sekcja „Try it yourself” jest wewnątrz „Step-by-step workflow”.
+    Tylko dla content_type in (how-to, guide, best, comparison) i gdy w body jest ta sekcja.
+    Zwraca None jeśli OK, w przeciwnym razie komunikat błędu (dopisywany do last_reasons → blokuje quality gate).
+    """
+    ct_lower = (content_type or "").strip().lower()
+    if ct_lower not in ("how-to", "guide", "best", "comparison"):
+        return None
+    body_lower = body.lower()
+    # Use position of the structural H3 subsection, not any text mention (e.g. "In the Try it yourself section...")
+    pos_try = -1
+    if "<h3" in body:
+        h3_match = re.search(
+            r"<h3[^>]*>\s*Try\s+it\s+yourself\s*:?\s*Build\s+your\s+own\s+AI\s+prompt",
+            body,
+            re.IGNORECASE,
+        )
+        if h3_match:
+            pos_try = h3_match.start()
+    if pos_try == -1:
+        pos_try = body_lower.find("try it yourself")
+    if pos_try == -1:
+        pos_try = body_lower.find("build your own ai prompt")
+    if pos_try == -1:
+        return None
+
+    if "<h2" in body or "<h3" in body:
+        # HTML: ostatni H2 przed pozycją „Try it yourself” (H3) to sekcja nadrzędna
+        h2_re = re.compile(r"<h2[^>]*>(.*?)</h2>", re.DOTALL | re.IGNORECASE)
+        matches = list(h2_re.finditer(body))
+        before_p = [m for m in matches if m.start() < pos_try]
+        if not before_p:
+            return "Try it yourself section appears before any H2 (expected inside 'Step-by-step workflow')"
+        last_h2 = before_p[-1]
+        heading_inner = last_h2.group(1)
+        heading_plain = re.sub(r"<[^>]+>", "", heading_inner).strip()
+        if "step" not in heading_plain.lower() or "workflow" not in heading_plain.lower():
+            h = heading_plain[:60] + "..." if len(heading_plain) > 60 else heading_plain
+            return (
+                f"Try it yourself section is under H2 '{h}' "
+                "(expected inside 'Step-by-step workflow')"
+            )
+        return None
+
+    # Markdown: ostatni nagłówek ## przed linią z „Try it yourself”
+    lines = body.split("\n")
+    try_line_idx = None
+    for i, line in enumerate(lines):
+        if "try it yourself" in line.lower() or "build your own ai prompt" in line.lower():
+            try_line_idx = i
+            break
+    if try_line_idx is None:
+        return None
+    last_h2_line = None
+    for i in range(try_line_idx - 1, -1, -1):
+        if lines[i].strip().startswith("## "):
+            last_h2_line = lines[i].strip()
+            break
+    if last_h2_line is None:
+        return "Try it yourself section appears before any ## heading (expected inside 'Step-by-step workflow')"
+    if "step" not in last_h2_line.lower() or "workflow" not in last_h2_line.lower():
+        h = (last_h2_line[:60] + "...") if len(last_h2_line) > 60 else last_h2_line
+        return (
+            f"Try it yourself section is under '{h}' "
+            "(expected inside 'Step-by-step workflow')"
+        )
+    return None
 
 
 def call_responses_api(
@@ -1512,7 +1585,7 @@ def _extract_tools_from_prompt1(prompt1_text: str) -> list[tuple[str, tuple[str,
     if match:
         list_part = (match.group(1) or match.group(2) or "").strip()
         for part in re.split(r"[,;]", list_part):
-            raw = part.strip()
+            raw = part.strip().rstrip(".") or part.strip()  # normalize "Descript." -> "Descript" to avoid duplicates
             if not raw or raw.lower() in seen:
                 continue
             seen.add(raw.lower())
@@ -1702,6 +1775,8 @@ def _sanitize_pre_blocks_html(body: str) -> tuple[str, list[str]]:
         cleaned = re.sub(r"</?\s*section\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"</?\s*article\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"</?\s*blockquote\b[^>]*>", "", cleaned, flags=re.IGNORECASE)
+        # Normalize line breaks: invalid </br> and <br>/<br/> → newline so Prompt #1 is plain text.
+        cleaned = re.sub(r"</?\s*br\s*/?>", "\n", cleaned, flags=re.IGNORECASE)
 
         # Escape any remaining angle brackets so nothing inside <pre> is interpreted as HTML.
         cleaned = cleaned.replace("<", "&lt;").replace(">", "&gt;")
@@ -1757,7 +1832,7 @@ def _validate_html_orphan_list_tags(body: str) -> list[str]:
 
 
 def _remove_orphan_list_tags(body: str) -> tuple[str, bool]:
-    """In Template 2 and Try it yourself sections, remove excess </ol> and </ul> so closes match opens. Returns (new_body, was_fixed)."""
+    """In Try it yourself section, remove excess </ol> and </ul> so closes match opens. Returns (new_body, was_fixed)."""
     sections = re.split(r"(<h2\s)", body, flags=re.IGNORECASE)
     if len(sections) < 2:
         return body, False
@@ -1786,14 +1861,14 @@ def _remove_orphan_list_tags(body: str) -> tuple[str, bool]:
     return new_body, fixed
 
 
-# Template 2 <pre> that model sometimes closes with </p> instead of </pre> (breaks DOM).
+# Try it yourself <pre> that model sometimes closes with </p> instead of </pre> (breaks DOM).
 # Primary: Unicode arrow and exact spacing; alternates: ASCII arrow, flexible spaces/parens.
-_TEMPLATE2_PRE_CLOSED_WITH_P = re.compile(
+_TRY_IT_YOURSELF_PRE_CLOSED_WITH_P = re.compile(
     r'(<pre\s+class="bg-gray-100[^"]*"[^>]*>.*?Human\s+[→\-]\s+Prompt\s*#?\s*1\s*\(to\s+AI\s+chat\)\s+[→\-][^<]*)</p>',
     re.IGNORECASE | re.DOTALL,
 )
-# Fallback: in Template 2 section, <pre>...content...</p> where content has no </pre>
-_TEMPLATE2_SECTION_PRE_THEN_P = re.compile(
+# Fallback: in Try it yourself section, <pre>...content...</p> where content has no </pre>
+_TRY_IT_SECTION_PRE_THEN_P = re.compile(
     r"(<pre[^>]*>)((?:(?!</pre>).)*?)</p>",
     re.IGNORECASE | re.DOTALL,
 )
@@ -1807,25 +1882,27 @@ def _count_pre_balance(body: str) -> tuple[int, int]:
 
 
 def _fix_template2_pre_closing(body: str) -> tuple[str, bool]:
-    """Replace mistaken </p> with </pre> for Template 2 workflow block only when there is exactly
+    """Replace mistaken </p> with </pre> for Try it yourself workflow block only when there is exactly
     one unclosed <pre> (opens - closes == 1). Tries main regex first (Human → Prompt #1…), then
-    fallback: in section between 'Template 2:' and next <h2, replace first <pre>...content...</p>
+    fallback: in section between 'Try it yourself' and next <h2, replace first <pre>...content...</p>
     with <pre>...content...</pre>. Returns (new_body, was_fixed)."""
     opens, closes = _count_pre_balance(body)
     if opens - closes != 1:
         return body, False
-    new_body, n = _TEMPLATE2_PRE_CLOSED_WITH_P.subn(r"\1</pre>", body, count=1)
+    new_body, n = _TRY_IT_YOURSELF_PRE_CLOSED_WITH_P.subn(r"\1</pre>", body, count=1)
     if n == 0:
-        # Heuristic fallback: restrict to Template 2 section to avoid touching Template 1
-        t2_start = body.lower().find("template 2:")
-        if t2_start != -1:
-            h2_after = body.find("<h2", t2_start + 1)
+        # Heuristic fallback: restrict to Try it yourself section
+        try_start = body.lower().find("try it yourself")
+        if try_start == -1:
+            try_start = body.lower().find("build your own ai prompt")
+        if try_start != -1:
+            h2_after = body.find("<h2", try_start + 1)
             if h2_after == -1:
                 h2_after = len(body)
-            section = body[t2_start:h2_after]
-            section_new, sub_n = _TEMPLATE2_SECTION_PRE_THEN_P.subn(r"\1\2</pre>", section, count=1)
+            section = body[try_start:h2_after]
+            section_new, sub_n = _TRY_IT_SECTION_PRE_THEN_P.subn(r"\1\2</pre>", section, count=1)
             if sub_n == 1:
-                new_body = body[:t2_start] + section_new + body[h2_after:]
+                new_body = body[:try_start] + section_new + body[h2_after:]
                 new_opens, new_closes = _count_pre_balance(new_body)
                 if new_opens == new_closes:
                     return new_body, True
@@ -2100,6 +2177,17 @@ def _audience_length_guidance(audience_type: str) -> str:
 
 
 _TOOLS_SELECTED_RE = re.compile(r"^TOOLS_SELECTED:\s*(.+)$", re.MULTILINE)
+_HEADLINE_RE = re.compile(r"^\s*HEADLINE:\s*(.+)$", re.MULTILINE)
+
+
+def _extract_headline(body: str) -> tuple[str, str | None]:
+    """Extract HEADLINE: line from body. Returns (body without that line, headline text or None)."""
+    match = _HEADLINE_RE.search(body)
+    if not match:
+        return body, None
+    headline = match.group(1).strip()
+    body_clean = _HEADLINE_RE.sub("", body).rstrip("\n").rstrip()
+    return body_clean, headline if headline else None
 
 
 def _extract_tools_selected(body: str, valid_names: set[str]) -> tuple[str, list[str], str | None]:
@@ -2394,7 +2482,7 @@ Defensible Content Rules (MUST follow):
 
 3) Use-case specificity — Pick exactly ONE primary persona from: Solo creator / Agency / Small business marketing lead / SaaS founder (based on title/keyword). Mention that persona explicitly in the Introduction (1 line). In the workflow, include at least 2 constraints that persona commonly has (time, budget, tools, approvals, compliance).
 
-4) SOP / Template — In Step-by-step workflow: include a short SOP checklist (5–9 items as plain bullet list; do NOT use markdown [ ] checkboxes). Include 2 ready-to-copy templates/snippets (e.g. "Content brief template", "Repurposing prompt template", "QA checklist template", "Publishing checklist"). Keep them short and clearly labeled. In Template 1 and Template 2 use only concrete examples or (variable) slots; no [bracket] placeholders.
+4) SOP — In Step-by-step workflow: include a short SOP checklist (5–9 items as plain bullet list; do NOT use markdown [ ] checkboxes). In SOP or Decision rules, mention at least once the use of the Try it yourself section or the numbered workflow steps (e.g. "In step 4 use Prompt #1 from Try it yourself"). Use only concrete examples or (variable) slots; no [bracket] placeholders.
 
 5) Comparisons without facts — Allowed: criteria-based (speed vs control, quality vs volume, learning curve). Not allowed: pricing numbers, limits, "best/#1" claims, release dates. Never claim features as facts unless already in provided body/context.
 
@@ -2410,13 +2498,11 @@ The required headings are:
 - "Tradeoffs:"
 - "Failure modes:"
 - "SOP checklist:"
-- "Template 1:"
-- "Template 2:"
 
 Do not omit any of these sections. Each section must contain at least 3-5 bullet points (or detailed content) relevant to the article topic.
 Failure to include all these headings will result in rejection.
 
-IMPORTANT: In the "Template 1" and "Template 2" sections, you MUST generate concrete, realistic examples relevant to the article topic. Never leave or introduce any [bracket] token in the entire output. Forbidden examples: [Name], [Date], [Month], [Customer Name], [Your Company], [Product], [Insert title], [Key Point 1], [user's email], [Personalized ...], or any [Anything]. Replace every such placeholder with a concrete value (real example names, dates, product names, email examples). The QA check will reject the article if any [bracket] text remains. If you must show a slot, use round parentheses ( ) e.g. (video title), not square brackets. The templates should be immediately usable by the reader as examples.
+IMPORTANT: Never leave or introduce any [bracket] token in the entire output. Forbidden examples: [Name], [Date], [Month], [Customer Name], [Your Company], [Product], [Insert title], [Key Point 1], [user's email], [Personalized ...], or any [Anything]. Replace every such placeholder with a concrete value (real example names, dates, product names, email examples). The QA check will reject the article if any [bracket] text remains. If you must show a slot, use round parentheses ( ) e.g. (video title), not square brackets.
 
 Section Rules (each section must include at least one of: constraint, tradeoff, failure mode, decision rule):
 
@@ -2426,7 +2512,7 @@ B) What you need to know first — 4–6 bullet points. At least 2 bullets must 
 
 C) Main content (e.g. Section 1/2/3) — Must include a "Decision rules" bullet list (see Defensible rule 2). Must include a "Tradeoffs" bullet list (at least 3). 2–4 subsections (H3 optional), concrete and actionable. Mention tools only if in article context; do not invent tools.
 
-D) Step-by-step workflow — Numbered list of 7–10 steps. Must include: SOP checklist (plain bullets, no markdown checkboxes). Inputs/Outputs and 3 Common pitfalls with mitigations. Two templates/snippets (see Defensible rule 4). Action-oriented steps.
+D) Step-by-step workflow — Numbered list of 7–10 steps. Must include: SOP checklist (plain bullets, no markdown checkboxes). Inputs/Outputs and 3 Common pitfalls with mitigations. Action-oriented steps. Try it yourself must be the last subsection (H3) inside this section.
 
 E) When NOT to use this — 4–6 bullets with concrete "avoid when … because …" (no generic statements).
 
@@ -2448,10 +2534,8 @@ A) You MUST include these exact marker labels somewhere under existing sections 
 - "Tradeoffs:"
 - "Failure modes:"
 - "SOP checklist:"
-- "Template 1:"
-- "Template 2:"
 
-B) Formatting: Under "Decision rules:" at least 6 bullet lines starting with "If " or "When " or "Avoid ". Under "Tradeoffs:" at least 3 bullets containing a tradeoff (e.g. "vs", "at the cost of", "tradeoff"). Under "Failure modes:" at least 3 bullets (failure + mitigation). Under "SOP checklist:" 5–9 plain bullets (do NOT use markdown [ ] checkboxes). Under "Template 1:" and "Template 2:" short copy-ready blocks (5–10 lines each). In Template 2, if you use a fenced code block (triple backticks) for the workflow sentence, close it with ``` only; do not use </p> or any other character. Never add closing list tags (</ol>, </ul>) without a matching opening tag in the same section. No external links, no pricing, no "best/#1".
+B) Formatting: Under "Decision rules:" at least 6 bullet lines starting with "If " or "When " or "Avoid ". Under "Tradeoffs:" at least 3 bullets containing a tradeoff (e.g. "vs", "at the cost of", "tradeoff"). Under "Failure modes:" at least 3 bullets (failure + mitigation). Under "SOP checklist:" 5–9 plain bullets (do NOT use markdown [ ] checkboxes). Never add closing list tags (</ol>, </ul>) without a matching opening tag in the same section. No external links, no pricing, no "best/#1".
 
 C) No [bracket] tokens in output: QA will reject the article if any remain. Use only concrete values or round parentheses ( ) for example slots.
 
@@ -2461,7 +2545,7 @@ E) Never use the phrase "the best" in any generated article content. Do not use 
 
 F) If you cannot comply with the OUTPUT CONTRACT, regenerate until you can. Do not omit the markers.
 
-Output must feel like an internal playbook: decisions + steps + templates."""
+Output must feel like an internal playbook: decisions + steps."""
     audience_line = _audience_instruction(audience_type)
     if audience_line:
         instructions += "\n\nAudience (MUST follow): " + audience_line
@@ -2560,11 +2644,11 @@ def fill_one(
             new_body, remaining_notes = replace_remaining_bracket_placeholders_with_quoted(new_body)
             if remaining_notes:
                 print(f"  Replaced remaining placeholders: {path.name} — {'; '.join(remaining_notes)}")
-            # Safety layer for HTML: fix Template 2 </p>, remove orphan list tags, then sanitize and validate.
+            # Safety layer for HTML: fix Try it yourself <pre> closing, remove orphan list tags, then sanitize and validate.
             if use_html:
                 new_body, template2_fixed = _fix_template2_pre_closing(new_body)
                 if template2_fixed:
-                    print(f"  Fixed Template 2 <pre> closing: {path.name}")
+                    print(f"  Fixed Try it yourself <pre> closing: {path.name}")
                 new_body, orphan_fixed = _remove_orphan_list_tags(new_body)
                 if orphan_fixed:
                     print(f"  Removed orphan list tags: {path.name}")
@@ -2575,6 +2659,9 @@ def fill_one(
             if use_html:
                 last_reasons += _validate_html_pre_blocks(new_body)
                 last_reasons += _validate_html_orphan_list_tags(new_body)
+            try_it_warning = _get_try_it_yourself_placement_warning(new_body, meta.get("content_type", ""))
+            if try_it_warning:
+                last_reasons.append(try_it_warning)
             if not last_reasons:
                 if attempt > 0:
                     print(f"  Quality Gate PASS: {path.name}")
@@ -2631,11 +2718,11 @@ def fill_one(
         if remaining_notes:
             print(f"  Replaced remaining placeholders: {path.name} — {'; '.join(remaining_notes)}")
 
-        # Safety layer for HTML even when quality_gate is off: fix Template 2 </p>, remove orphans, then sanitize.
+        # Safety layer for HTML even when quality_gate is off: fix Try it yourself <pre> closing, remove orphans, then sanitize.
         if use_html:
             new_body, template2_fixed = _fix_template2_pre_closing(new_body)
             if template2_fixed:
-                print(f"  Fixed Template 2 <pre> closing: {path.name}")
+                print(f"  Fixed Try it yourself <pre> closing: {path.name}")
             new_body, orphan_fixed = _remove_orphan_list_tags(new_body)
             if orphan_fixed:
                 print(f"  Removed orphan list tags: {path.name}")
@@ -2667,6 +2754,13 @@ def fill_one(
                 else:
                     new_body = section_text + "\n\n---\n\n" + new_body
                 print(f"  Restored static section: {heading}")
+
+    # --- Headline normalization (HTML): use model-output HEADLINE as human title ---
+    if use_html:
+        new_body, headline = _extract_headline(new_body)
+        if headline:
+            meta["title"] = headline
+            print(f"  Title set from HEADLINE: {headline[:60]}{'...' if len(headline) > 60 else ''}")
 
     # --- Tool selection post-processing ---
     valid_names = {t[0].strip() for t in _load_affiliate_tools() if (t[0] or "").strip()}

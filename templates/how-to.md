@@ -36,10 +36,6 @@ Before publishing, verify the following:
 
 ### SOP checklist:
 
-### Template 1:
-
-### Template 2:
-
 ---
 
 ## Step-by-step workflow (practical)

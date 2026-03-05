@@ -1,5 +1,5 @@
 """
-Fix Template 2 <pre> closed with </p> → </pre> in content/articles/*.html or public/articles/*/index.html.
+Fix Try it yourself <pre> closed with </p> → </pre> in content/articles/*.html or public/articles/*/index.html.
 Run after check_try_it_yourself_pre.py to fix all reported files.
 
 Usage:
@@ -13,16 +13,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT_ARTICLES = ROOT / "content" / "articles"
 
-# Template 2 <pre> that ends with </p> instead of </pre> (same line)
-TEMPLATE2_PRE_CLOSED_WITH_P = re.compile(
+# Try it yourself workflow <pre> that ends with </p> instead of </pre> (same line)
+TRY_IT_YOURSELF_PRE_CLOSED_WITH_P = re.compile(
     r'(<pre\s+class="bg-gray-100[^"]*"[^>]*>.*?Human\s+→\s+Prompt\s+#1\s+\(to\s+AI\s+chat\)\s+→[^<]*)</p>',
     re.IGNORECASE | re.DOTALL,
 )
 
 
 def fix_one(html: str) -> tuple[str, int]:
-    """Replace mistaken </p> with </pre> for Template 2 block. Returns (new_html, number of replacements)."""
-    new_html, n = TEMPLATE2_PRE_CLOSED_WITH_P.subn(r"\1</pre>", html, count=1)
+    """Replace mistaken </p> with </pre> for Try it yourself workflow block. Returns (new_html, number of replacements)."""
+    new_html, n = TRY_IT_YOURSELF_PRE_CLOSED_WITH_P.subn(r"\1</pre>", html, count=1)
     return new_html, n
 
 

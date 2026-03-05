@@ -60,7 +60,7 @@ def _slug_for_path(slug: str, out_dir: Path) -> str:
 
 
 def _article_body_has_html_issues(body: str) -> bool:
-    """True if article body has <pre> imbalance or orphan </ol>/</ul> in Template 2 / Try it yourself sections."""
+    """True if article body has <pre> imbalance or orphan </ol>/</ul> in Try it yourself section."""
     if "<pre" not in body:
         return False
     opens = len(re.findall(r"<pre\b", body, flags=re.IGNORECASE))
@@ -70,7 +70,7 @@ def _article_body_has_html_issues(body: str) -> bool:
     sections = re.split(r"<h2\s", body, flags=re.IGNORECASE)
     for i, sec in enumerate(sections):
         head = (sec[:300] if len(sec) > 300 else sec).lower()
-        if "template 2" in head or "try it yourself" in head:
+        if "try it yourself" in head or "build your own ai prompt" in head:
             open_ol = len(re.findall(r"<ol\b", sec, flags=re.IGNORECASE))
             close_ol = len(re.findall(r"</ol\s*>", sec, flags=re.IGNORECASE))
             open_ul = len(re.findall(r"<ul\b", sec, flags=re.IGNORECASE))
@@ -81,19 +81,21 @@ def _article_body_has_html_issues(body: str) -> bool:
 
 
 def _sanitize_article_html_body(body: str) -> str:
-    """Last-line fix: Template 2 </p> -> </pre> (heuristic) and remove orphan </ol>/</ul> in Template 2 / Try it yourself sections."""
-    # Fix unclosed <pre> in Template 2 section: first <pre>...content...</p> -> ...</pre>
-    t2_start = body.lower().find("template 2:")
-    if t2_start != -1 and "</p>" in body:
-        h2_after = body.find("<h2", t2_start + 1)
+    """Last-line fix: Try it yourself <pre> </p> -> </pre> (heuristic) and remove orphan </ol>/</ul> in Try it yourself section."""
+    # Fix unclosed <pre> in Try it yourself section: first <pre>...content...</p> -> ...</pre>
+    try_start = body.lower().find("try it yourself")
+    if try_start == -1:
+        try_start = body.lower().find("build your own ai prompt")
+    if try_start != -1 and "</p>" in body:
+        h2_after = body.find("<h2", try_start + 1)
         if h2_after == -1:
             h2_after = len(body)
-        section = body[t2_start:h2_after]
+        section = body[try_start:h2_after]
         pre_then_p = re.compile(r"(<pre[^>]*>)((?:(?!</pre>).)*?)</p>", re.IGNORECASE | re.DOTALL)
         section_new, n = pre_then_p.subn(r"\1\2</pre>", section, count=1)
         if n == 1:
-            body = body[:t2_start] + section_new + body[h2_after:]
-    # Remove orphan </ol>/</ul> in Template 2 and Try it yourself sections
+            body = body[:try_start] + section_new + body[h2_after:]
+    # Remove orphan </ol>/</ul> in Try it yourself section
     sections = re.split(r"(<h2\s)", body, flags=re.IGNORECASE)
     if len(sections) >= 2:
         out = [sections[0]]
@@ -104,7 +106,7 @@ def _sanitize_article_html_body(body: str) -> str:
             out.append(sections[i])
             sec = sections[i + 1]
             head = (sec[:300] if len(sec) > 300 else sec).lower()
-            if "template 2" in head or "try it yourself" in head:
+            if "try it yourself" in head or "build your own ai prompt" in head:
                 open_ol = len(re.findall(r"<ol\b", sec, flags=re.IGNORECASE))
                 close_ol = len(re.findall(r"</ol\s*>", sec, flags=re.IGNORECASE))
                 open_ul = len(re.findall(r"<ul\b", sec, flags=re.IGNORECASE))
@@ -400,17 +402,13 @@ def _extract_lead(meta: dict, body_html: str) -> str:
 def enhance_article(html: str) -> str:
     """
     Wraps special sections (Decision rules, Tradeoffs, Failure modes,
-    SOP checklist, Template 1, Template 2) with styled divs.
+    SOP checklist) with styled divs.
     """
     decision_sections = [
         "Decision rules:",
         "Tradeoffs:",
         "Failure modes:",
         "SOP checklist:",
-    ]
-    template_sections = [
-        "Template 1:",
-        "Template 2:",
     ]
 
     def wrap_section(match: re.Match[str], section_class: str) -> str:
@@ -424,16 +422,6 @@ def enhance_article(html: str) -> str:
         html = re.sub(
             pattern,
             lambda m, c=decision_class: wrap_section(m, c),
-            html,
-            flags=re.DOTALL | re.IGNORECASE,
-        )
-
-    template_class = "bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow mb-4"
-    for sec in template_sections:
-        pattern = rf"(<h3[^>]*>{re.escape(sec)}</h3>)(.*?)(?=<h[23]|\Z)"
-        html = re.sub(
-            pattern,
-            lambda m, c=template_class: wrap_section(m, c),
             html,
             flags=re.DOTALL | re.IGNORECASE,
         )
@@ -856,7 +844,7 @@ def _render_article(
         words = _word_count_md(body)
         reading_min = _reading_time_min(words)
 
-    # Last-line defense: fix Template 2 </p> and orphan list tags if inconsistencies detected
+    # Last-line defense: fix Try it yourself <pre> closing and orphan list tags if inconsistencies detected
     if _article_body_has_html_issues(body_html):
         body_html = _sanitize_article_html_body(body_html)
     # Remove any Disclosure section from body; the script adds it in a yellow box at the end.
