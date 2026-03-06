@@ -1,9 +1,8 @@
 {
   "allowed_categories": [
-    "ai-marketing-automation",
-    "Agentic AI and Generative Engine Optimization",
     "marketplaces-products",
+    "ai-marketing-automation",
     "agentic-ai-geo"
   ],
-  "scope_description": "AI Marketing Automation Tools & Workflows, Marketplaces & Popular Physical Products, Agentic AI / GEO, Agentic AI and Generative Engine Optimization"
+  "scope_description": "AI Marketing Automation Tools & Workflows, Marketplaces & Popular Physical Products, Agentic AI / GEO"
 }

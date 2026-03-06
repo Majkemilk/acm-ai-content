@@ -59,6 +59,7 @@ CONTENT_TYPE_CHOICES_WORKFLOW = [
     ("guide", "guide"),
     ("best", "best"),
     ("comparison", "comparison"),
+    ("wf.content_type_review", "review"),
     ("wf.content_type_sales", "sales"),
     ("wf.content_type_product_comparison", "product-comparison"),
     ("wf.content_type_best_in_category", "best-in-category"),
@@ -1170,6 +1171,721 @@ def build_workflow_tab(parent, last_output_holder: list):
     return f
 
 
+# Pierwsze 4 kroki pipeline (Generuj łatwo artykuły)
+EASY_SEQUENCE_ACTIONS = SEQUENCE_ACTIONS[:4]
+
+# Tooltip keys per content_type for easy tab (easy.tt_*)
+EASY_CONTENT_TYPE_TOOLTIP_KEYS = {
+    "how-to": "easy.tt_howto",
+    "guide": "easy.tt_guide",
+    "best": "easy.tt_best",
+    "comparison": "easy.tt_comparison",
+    "review": "easy.tt_review",
+    "sales": "easy.tt_sales",
+    "product-comparison": "easy.tt_product_comparison",
+    "best-in-category": "easy.tt_best_in_category",
+    "category-products": "easy.tt_category_products",
+}
+
+# Grupy typów treści w zakładce easy: (klucz etykiety, klucz tooltipa, tuple typów)
+EASY_CONTENT_GROUPS = [
+    ("easy.group_playbook_label", "easy.group_playbook", ("how-to", "guide", "best", "comparison")),
+    ("easy.group_product_label", "easy.group_product", ("sales", "product-comparison", "best-in-category", "category-products")),
+    ("easy.group_review_label", "easy.group_review", ("review",)),
+]
+
+
+def build_easy_workflow_tab(parent, last_output_holder: list):
+    """Zakładka Generuj łatwo artykuły: uproszczony formularz (kategoria, problemy, limit, typy treści) + te same przyciski Uruchom / Generuj z podglądem co w Generuj artykuły."""
+    f = ttk.Frame(parent, padding=10)
+    f.pack(fill=tk.BOTH, expand=True)
+
+    if str(SCRIPTS_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+    try:
+        from content_index import get_hubs_list, load_config
+        from config_manager import write_config
+    except ImportError as e:
+        ttk.Label(f, text=f"Błąd importu: {e}", foreground="red").pack(anchor=tk.W)
+        return f
+
+    italic_font = ("TkDefaultFont", 9, "italic")
+    config_path = get_project_root() / "content" / "config.yaml"
+    section_widgets: list = [None, [], [], []]  # step1 from A+D; steps 2,3,4 from param widgets
+    easy_hint_labels: list = []
+
+    paned_h = ttk.PanedWindow(f, orient=tk.HORIZONTAL)
+    paned_h.pack(fill=tk.BOTH, expand=True)
+    left_frame = ttk.Frame(paned_h)
+    paned_h.add(left_frame, weight=2)
+    content_frame = ttk.Frame(left_frame)
+    content_frame.pack(fill=tk.BOTH, expand=True)
+    canvas = tk.Canvas(content_frame, highlightthickness=0)
+    scrollbar = ttk.Scrollbar(content_frame, orient=tk.VERTICAL, command=canvas.yview)
+    inner = ttk.Frame(canvas)
+    inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas_window = canvas.create_window((0, 0), window=inner, anchor=tk.NW)
+
+    def _on_canvas_configure(ev):
+        canvas.itemconfig(canvas_window, width=ev.width)
+        wrap_w = max(80, ev.width - 260)
+        for lbl in easy_hint_labels:
+            try:
+                lbl.configure(wraplength=wrap_w)
+            except tk.TclError:
+                pass
+    canvas.bind("<Configure>", _on_canvas_configure)
+    def _on_mousewheel(ev):
+        canvas.yview_scroll(int(-1 * (ev.delta / 120)), "units")
+    canvas.bind("<MouseWheel>", _on_mousewheel)
+
+    # --- Sekcja A: Gdzie trafią artykuły ---
+    lf_a = ttk.LabelFrame(inner, text=t("easy.section_where"))
+    lf_a.pack(fill=tk.X, pady=(0, 10))
+    inner_a = ttk.Frame(lf_a, padding=5)
+    inner_a.pack(fill=tk.X)
+    defaults_uc = get_use_case_defaults()
+    cat_vals = list(defaults_uc.get("categories", []) or ["ai-marketing-automation"])
+    e_prod = ttk.Combobox(inner_a, values=cat_vals, state="readonly", width=min(40, max(20, len(max(cat_vals, key=len)) + 2)))
+    e_prod.pack(side=tk.LEFT, padx=(0, 5))
+    if cat_vals:
+        e_prod.set(cat_vals[0])
+    lbl_a_hint = tk.Label(inner_a, text=t("easy.category_hint"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=520)
+    lbl_a_hint.pack(anchor=tk.W, padx=(0, 5))
+    easy_hint_labels.append(lbl_a_hint)
+
+    # --- Sekcja B: Problemy i obszar tematyczny ---
+    lf_b = ttk.LabelFrame(inner, text=t("easy.section_problems"))
+    lf_b.pack(fill=tk.X, pady=(0, 10))
+    inner_b = ttk.Frame(lf_b, padding=5)
+    inner_b.pack(fill=tk.X)
+    row_base = ttk.Frame(inner_b)
+    row_base.pack(fill=tk.X)
+    ttk.Label(row_base, text=t("config.base_problem"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    e_base = ttk.Entry(row_base, width=45)
+    e_base.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+    ttk.Button(row_base, text=t("btn.add"), command=lambda: _lb_add(lb_suggested, e_base)).pack(side=tk.LEFT, padx=2)
+    ttk.Button(row_base, text=t("btn.remove"), command=lambda: e_base.delete(0, tk.END)).pack(side=tk.LEFT, padx=2)
+    row_sug = ttk.Frame(inner_b)
+    row_sug.pack(fill=tk.X, pady=(4, 0))
+    ttk.Label(row_sug, text=t("config.suggested_list"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    lb_suggested = tk.Listbox(row_sug, height=3, selectmode=tk.EXTENDED, width=45)
+    lb_suggested.pack(side=tk.LEFT, fill=tk.X, expand=True)
+    e_sug_new = ttk.Entry(row_sug, width=30)
+    e_sug_new.pack(side=tk.LEFT, padx=(5, 2))
+    ttk.Button(row_sug, text=t("btn.add"), command=lambda: _lb_add(lb_suggested, e_sug_new)).pack(side=tk.LEFT, padx=2)
+    ttk.Button(row_sug, text=t("btn.remove"), command=lambda: _lb_remove(lb_suggested)).pack(side=tk.LEFT, padx=2)
+    row_sand = ttk.Frame(inner_b)
+    row_sand.pack(fill=tk.X, pady=(4, 0))
+    ttk.Label(row_sand, text=t("config.sandbox"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    lb_sandbox = tk.Listbox(row_sand, height=2, selectmode=tk.EXTENDED, width=45)
+    lb_sandbox.pack(side=tk.LEFT, fill=tk.X, expand=True)
+    e_sand_new = ttk.Entry(row_sand, width=30)
+    e_sand_new.pack(side=tk.LEFT, padx=(5, 2))
+    ttk.Button(row_sand, text=t("btn.add"), command=lambda: _lb_add(lb_sandbox, e_sand_new)).pack(side=tk.LEFT, padx=2)
+    ttk.Button(row_sand, text=t("btn.remove"), command=lambda: _lb_remove(lb_sandbox)).pack(side=tk.LEFT, padx=2)
+
+    def _lb_add(lb, entry):
+        val = entry.get().strip()
+        if val:
+            lb.insert(tk.END, val)
+            entry.delete(0, tk.END)
+    def _lb_remove(lb):
+        for i in reversed(lb.curselection()):
+            lb.delete(i)
+
+    # --- Sekcja C: Limit pomysłów i odbiorcy (podpowiedzi jak w Konfiguracji) ---
+    lf_c = ttk.LabelFrame(inner, text=t("easy.section_limit"))
+    lf_c.pack(fill=tk.X, pady=(0, 10))
+    inner_c = ttk.Frame(lf_c, padding=5)
+    inner_c.pack(fill=tk.X)
+    row_c_batch = ttk.Frame(inner_c)
+    row_c_batch.pack(fill=tk.X)
+    ttk.Label(row_c_batch, text=t("config.batch_friendly"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    hint_batch_c = ttk.Frame(row_c_batch)
+    hint_batch_c.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+    lbl_batch_hint = tk.Label(hint_batch_c, text=t("config.batch_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
+    lbl_batch_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+    easy_hint_labels.append(lbl_batch_hint)
+    row_c_spin = ttk.Frame(inner_c)
+    row_c_spin.pack(fill=tk.X, pady=(2, 6))
+    e_batch = ttk.Spinbox(row_c_spin, from_=1, to=12, width=6)
+    e_batch.pack(side=tk.LEFT, padx=(33, 15))
+    row_c_pyr = ttk.Frame(inner_c)
+    row_c_pyr.pack(fill=tk.X)
+    ttk.Label(row_c_pyr, text=t("config.pyramid_friendly"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
+    hint_pyr_c = ttk.Frame(row_c_pyr)
+    hint_pyr_c.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+    lbl_pyr_hint = tk.Label(hint_pyr_c, text=t("config.pyramid_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
+    lbl_pyr_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+    easy_hint_labels.append(lbl_pyr_hint)
+    sp_beg = tk.IntVar(value=3)
+    sp_int = tk.IntVar(value=3)
+    sp_pro = tk.IntVar(value=3)
+    lbl_sum = tk.StringVar(value="")
+
+    def _pyr_update_sum_easy(*_args):
+        try:
+            total = int(e_batch.get())
+        except (ValueError, TypeError):
+            total = 9
+        b, i, p = sp_beg.get(), sp_int.get(), sp_pro.get()
+        s = b + i + p
+        lbl_sum.set(f"{t('config.pyr_sum')}: {s} / {total}")
+        color = "green" if s == total else ("red" if s > total else "orange")
+        sum_label_c.config(fg=color)
+
+    def _pyr_clamp_easy(var: tk.IntVar, *_args):
+        try:
+            total = int(e_batch.get())
+        except (ValueError, TypeError):
+            total = 9
+        b, i, p = sp_beg.get(), sp_int.get(), sp_pro.get()
+        if var is sp_beg:
+            sp_beg.set(max(0, min(total, b)))
+            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
+        elif var is sp_int:
+            sp_int.set(max(0, min(total, i)))
+            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
+        else:
+            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
+        _pyr_update_sum_easy()
+
+    row_c_pyr_sum = ttk.Frame(inner_c)
+    row_c_pyr_sum.pack(fill=tk.X, pady=(2, 0))
+    sum_label_c = tk.Label(row_c_pyr_sum, textvariable=lbl_sum, font=italic_font, anchor=tk.W)
+    sum_label_c.pack(side=tk.LEFT, padx=(33, 12))
+    ttk.Label(row_c_pyr_sum, text=t("config.pyr_beginner"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Spinbox(row_c_pyr_sum, from_=0, to=12, width=5, textvariable=sp_beg, command=lambda: _pyr_clamp_easy(sp_beg)).pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(row_c_pyr_sum, text=t("config.pyr_intermediate"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Spinbox(row_c_pyr_sum, from_=0, to=12, width=5, textvariable=sp_int, command=lambda: _pyr_clamp_easy(sp_int)).pack(side=tk.LEFT, padx=(0, 12))
+    ttk.Label(row_c_pyr_sum, text=t("config.pyr_professional"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
+    ttk.Spinbox(row_c_pyr_sum, from_=0, to=12, width=5, textvariable=sp_pro, command=lambda: _pyr_clamp_easy(sp_pro)).pack(side=tk.LEFT, padx=2)
+    sp_beg.trace_add("write", lambda *a: _pyr_clamp_easy(sp_beg))
+    sp_int.trace_add("write", lambda *a: _pyr_clamp_easy(sp_int))
+    sp_pro.trace_add("write", lambda *a: _pyr_clamp_easy(sp_pro))
+    e_batch.config(command=lambda: _pyr_update_sum_easy())
+    _pyr_update_sum_easy()
+
+    # --- Sekcja D: Typy treści (grupy: Playbook, Produktowe, Recenzja) ---
+    def _display_for_content_type(ct: str) -> str:
+        for disp, val in CONTENT_TYPE_CHOICES_WORKFLOW[1:]:
+            if val == ct:
+                return t(disp) if disp and "." in disp else (disp or ct)
+        return ct
+
+    lf_d = ttk.LabelFrame(inner, text=t("easy.section_content_types"))
+    lf_d.pack(fill=tk.X, pady=(0, 10))
+    inner_d = ttk.Frame(lf_d, padding=5)
+    inner_d.pack(fill=tk.X)
+    allowed_types_set = set(get_content_types_all())
+    content_type_vars: list = []
+    var_all = tk.BooleanVar(value=True)
+    content_type_vars.append(("wf.content_all", None, var_all))
+
+    # Wiersz: ALL
+    row_d_all = ttk.Frame(inner_d)
+    row_d_all.pack(fill=tk.X)
+    ttk.Label(row_d_all, text="", width=28).pack(side=tk.LEFT, padx=(0, 5))
+    cb_all = ttk.Checkbutton(row_d_all, text=t("wf.content_all_short"), variable=var_all)
+    cb_all.pack(side=tk.LEFT, padx=(0, 12))
+    _create_tooltip(cb_all, t("wf.content_type_desc"))
+
+    # Wiersze grup: etykieta + wyjaśnienie (wyszarzone, kursywa) + checkboxy typów
+    for label_key, tooltip_key, group_types in EASY_CONTENT_GROUPS:
+        row_grp = ttk.Frame(inner_d)
+        row_grp.pack(fill=tk.X, pady=(6, 0))
+        row_grp_top = ttk.Frame(row_grp)
+        row_grp_top.pack(fill=tk.X)
+        lbl_grp = ttk.Label(row_grp_top, text=t(label_key), width=28, anchor=tk.W)
+        lbl_grp.pack(side=tk.LEFT, padx=(0, 5))
+        hint_grp_frame = ttk.Frame(row_grp_top)
+        hint_grp_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        lbl_grp_hint = tk.Label(hint_grp_frame, text=t(tooltip_key), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
+        lbl_grp_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
+        easy_hint_labels.append(lbl_grp_hint)
+        row_grp_cb = ttk.Frame(row_grp)
+        row_grp_cb.pack(fill=tk.X, pady=(2, 0))
+        ttk.Label(row_grp_cb, text="", width=28).pack(side=tk.LEFT, padx=(0, 5))
+        cb_frame = ttk.Frame(row_grp_cb)
+        cb_frame.pack(side=tk.LEFT, anchor=tk.W)
+        for ct in group_types:
+            if ct not in allowed_types_set:
+                continue
+            display = _display_for_content_type(ct)
+            var = tk.BooleanVar(value=False)
+            content_type_vars.append((display, ct, var))
+            cb = ttk.Checkbutton(cb_frame, text=display, variable=var)
+            cb.pack(side=tk.LEFT, padx=(0, 12))
+            tip_key = EASY_CONTENT_TYPE_TOOLTIP_KEYS.get(ct, "")
+            if tip_key:
+                _create_tooltip(cb, t(tip_key))
+
+    def _on_all_ct():
+        if var_all.get():
+            for _d, _v, vb in content_type_vars[1:]:
+                vb.set(False)
+    def _on_single_ct():
+        if any(vb.get() for _d, _v, vb in content_type_vars[1:]):
+            var_all.set(False)
+    var_all.trace_add("write", lambda *a: _on_all_ct())
+    for _d, _v, vb in content_type_vars[1:]:
+        vb.trace_add("write", lambda *a: _on_single_ct())
+
+    # --- Sekcja E: Kroki 2–4 (parametry) ---
+    for idx, action in enumerate(EASY_SEQUENCE_ACTIONS[1:], 1):
+        lf_e = ttk.LabelFrame(inner, text=t(WORKFLOW_LABEL_KEYS.get(action, action)))
+        lf_e.pack(fill=tk.X, pady=(0, 10))
+        section_inner = ttk.Frame(lf_e, padding=5)
+        section_inner.pack(fill=tk.X)
+        widgets = _build_param_widgets_for_action(section_inner, action, italic_font, easy_hint_labels, 14)
+        section_widgets[idx] = widgets
+
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    row_btn = ttk.Frame(left_frame)
+    row_btn.pack(fill=tk.X, pady=(8, 0))
+    right_frame = ttk.Frame(paned_h)
+    paned_h.add(right_frame, weight=1)
+    ttk.Label(right_frame, text=t("wf.log")).pack(anchor=tk.W, pady=(0, 2))
+    step_label = ttk.Label(right_frame, text="", foreground="gray")
+    step_label.pack(anchor=tk.W, pady=(0, 2))
+    progress_label = ttk.Label(right_frame, text="", foreground="gray")
+    progress_label.pack(anchor=tk.W, pady=(0, 2))
+    progress_bar = ttk.Progressbar(right_frame, maximum=len(EASY_SEQUENCE_ACTIONS), value=0, length=280)
+    progress_bar.pack(fill=tk.X, pady=(0, 5))
+    log_area = scrolledtext.ScrolledText(right_frame, height=14, wrap=tk.WORD, state=tk.DISABLED)
+    log_area.pack(fill=tk.BOTH, expand=True, pady=5)
+    status_label = ttk.Label(right_frame, text="", foreground="gray")
+    status_label.pack(anchor=tk.W)
+
+    process_holder = []
+    sequence_cancelled = [False]
+    preview_mode = [False]
+    preview_remaining_steps = [[]]
+    root = parent.winfo_toplevel()
+    _generated_re = re.compile(r"^Generated:\s+(.+\.md)\s*$")
+
+    def _parse_generated_articles(output: str) -> list[tuple[str, str]]:
+        items = []
+        for line in output.splitlines():
+            m = _generated_re.match(line)
+            if m:
+                p = Path(m.group(1).strip())
+                items.append((p.name, p.stem))
+        return items
+
+    def append_log(line):
+        log_area.config(state=tk.NORMAL)
+        log_area.insert(tk.END, line + "\n")
+        log_area.see(tk.END)
+        log_area.config(state=tk.DISABLED)
+
+    def _parse_fill_limit(extra: list) -> int:
+        for i, x in enumerate(extra):
+            if x == "--limit" and i + 1 < len(extra):
+                try:
+                    return int(extra[i + 1])
+                except ValueError:
+                    pass
+        return 0
+
+    def _collect_step1_extra() -> list:
+        prod = (e_prod.get() or "").strip() or (cat_vals[0] if cat_vals else "ai-marketing-automation")
+        extra = ["--category", prod]
+        if not var_all.get():
+            for _d, val, vb in content_type_vars[1:]:
+                if val and vb.get():
+                    extra.extend(["--content-type", val])
+        return extra
+
+    def _save_config_and_sync():
+        prod = (e_prod.get() or "").strip() or (cat_vals[0] if cat_vals else "ai-marketing-automation")
+        sandbox = [lb_sandbox.get(i) for i in range(lb_sandbox.size()) if lb_sandbox.get(i).strip()]
+        base_val = e_base.get().strip()
+        rest_suggested = [lb_suggested.get(i) for i in range(lb_suggested.size()) if lb_suggested.get(i).strip()]
+        suggested = [base_val] + rest_suggested if base_val else rest_suggested
+        if not suggested and rest_suggested:
+            suggested = [""] + rest_suggested
+        try:
+            batch = int(e_batch.get().strip() or 9)
+        except ValueError:
+            batch = 9
+        batch = max(1, min(12, batch))
+        try:
+            beg = int(sp_beg.get())
+            inte = int(sp_int.get())
+        except (ValueError, tk.TclError):
+            beg, inte = 3, 0
+        pyramid = [beg, inte]
+        write_config(
+            config_path,
+            prod,
+            prod,
+            sandbox,
+            use_case_batch_size=batch,
+            use_case_audience_pyramid=pyramid,
+            suggested_problems=suggested,
+            category_mode="production_only",
+        )
+        try:
+            from generate_use_cases import sync_allowed_categories_file
+            sync_allowed_categories_file(config_path, get_project_root() / "content" / "use_case_allowed_categories.json")
+        except Exception:
+            pass
+
+    def run():
+        _save_config_and_sync()
+        step1_extra = _collect_step1_extra()
+        steps = [
+            (EASY_SEQUENCE_ACTIONS[0], step1_extra),
+            (EASY_SEQUENCE_ACTIONS[1], _collect_extra_from_widgets(section_widgets[1])),
+            (EASY_SEQUENCE_ACTIONS[2], _collect_extra_from_widgets(section_widgets[2])),
+            (EASY_SEQUENCE_ACTIONS[3], _collect_extra_from_widgets(section_widgets[3])),
+        ]
+        preview_mode[0] = False
+        sequence_cancelled[0] = False
+        run_btn.config(state=tk.DISABLED)
+        preview_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("wf.running"), foreground="gray")
+        progress_bar["value"] = 0
+        progress_label.config(text="")
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, t("wf.running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        process_holder.clear()
+        first_action, first_extra = steps[0]
+        first_fill_total = _parse_fill_limit(first_extra) if first_action == "fill_articles" else 0
+        first_fill_done = [0]
+        if first_fill_total > 0:
+            step_label.config(text=t("wf.step_progress_fill", 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, first_fill_total))
+            progress_label.config(text=t("wf.progress_of", 0, first_fill_total))
+        else:
+            step_label.config(text=t("wf.step_progress", 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+        first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
+        for h in first_header:
+            root.after(0, lambda line=h: append_log(line))
+        proc, q = run_workflow_streaming(first_action, first_extra)
+        process_holder.append((first_action, proc))
+        remaining = steps[1:]
+        root.after(50, lambda: _poll_easy_sequence(remaining, first_header, [], q, run_btn, cancel_btn, first_fill_total, first_fill_done))
+
+    def run_preview():
+        _save_config_and_sync()
+        step1_extra = _collect_step1_extra()
+        steps = [
+            (EASY_SEQUENCE_ACTIONS[0], step1_extra),
+            (EASY_SEQUENCE_ACTIONS[1], _collect_extra_from_widgets(section_widgets[1])),
+            (EASY_SEQUENCE_ACTIONS[2], _collect_extra_from_widgets(section_widgets[2])),
+            (EASY_SEQUENCE_ACTIONS[3], _collect_extra_from_widgets(section_widgets[3])),
+        ]
+        preview_remaining_steps[0] = steps[3:]
+        preview_mode[0] = True
+        sequence_cancelled[0] = False
+        run_btn.config(state=tk.DISABLED)
+        preview_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("wf.running"), foreground="gray")
+        progress_bar["value"] = 0
+        progress_label.config(text="")
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, t("wf.running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        process_holder.clear()
+        first_action, first_extra = steps[0]
+        first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
+        for h in first_header:
+            root.after(0, lambda line=h: append_log(line))
+        proc, q = run_workflow_streaming(first_action, first_extra)
+        process_holder.append((first_action, proc))
+        root.after(50, lambda: _poll_easy_sequence(steps[1:3], first_header, [], q, run_btn, cancel_btn, 0, [0]))
+
+    def _poll_easy_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn, fill_total=0, fill_done=None):
+        if fill_done is None:
+            fill_done = [0]
+        try:
+            item = q.get_nowait()
+            if item[1] is not None:
+                code = item[1]
+                new_accumulated = accumulated + current_out_lines
+                full_text = "\n".join(new_accumulated)
+                if sequence_cancelled[0]:
+                    full_text += "\n\n" + t("wf.status_cancelled_msg")
+                    code = -1
+                completed_index = len(EASY_SEQUENCE_ACTIONS) - len(remaining) - 1
+                failed_action = EASY_SEQUENCE_ACTIONS[completed_index] if 0 <= completed_index < len(EASY_SEQUENCE_ACTIONS) else None
+                def done():
+                    log_area.config(state=tk.NORMAL)
+                    log_area.delete("1.0", tk.END)
+                    log_area.insert(tk.END, full_text)
+                    log_area.insert(tk.END, f"\n\n[Kod powrotu: {code}]")
+                    log_area.config(state=tk.DISABLED)
+                    rbtn.config(state=tk.NORMAL)
+                    try:
+                        preview_btn.config(state=tk.NORMAL)
+                    except Exception:
+                        pass
+                    cbtn.config(state=tk.DISABLED)
+                    completed = len(EASY_SEQUENCE_ACTIONS) - len(remaining)
+                    progress_bar["value"] = len(EASY_SEQUENCE_ACTIONS) if not remaining else completed
+                    if not remaining:
+                        step_label.config(text=t("wf.step_done"))
+                        progress_label.config(text="")
+                    if sequence_cancelled[0]:
+                        status_text = t("wf.status_cancelled")
+                    elif code == 0:
+                        status_text = t("wf.status_ok")
+                    elif code == 2:
+                        status_text = t("wf.status_error_exit2") if failed_action == "generate_use_cases" else t("wf.status_error_exit2_other")
+                    else:
+                        status_text = t("wf.status_error_exit1")
+                    status_label.config(text=status_text, foreground="red" if (sequence_cancelled[0] or code != 0) else "green")
+                    process_holder.clear()
+                    last_output_holder.clear()
+                    last_output_holder.append((full_text, "easy_sequence"))
+                    if preview_mode[0] and code == 0 and not sequence_cancelled[0]:
+                        preview_mode[0] = False
+                        items = _parse_generated_articles(full_text)
+                        if items:
+                            step_label.config(text=t("wf.preview_done"))
+                            status_label.config(text=t("wf.preview_done"), foreground="blue")
+                            root.after(100, lambda: _show_article_selector(
+                                root, t("sel.title_fill"), items,
+                                t("sel.confirm_fill"),
+                                lambda selected, remove_unselected=False: _fill_selected_easy(selected, items, full_text, remove_unselected),
+                                description_text=t("sel.preview_fill_desc"),
+                                delete_label=t("sel.delete_selected"),
+                                on_delete_selected=lambda selected: _delete_selected_easy(selected),
+                                remove_unselected_var=tk.BooleanVar(value=False)))
+                        else:
+                            status_label.config(text=t("wf.status_ok"), foreground="green")
+                if sequence_cancelled[0] or code != 0 or not remaining:
+                    root.after(0, done)
+                    return
+                next_action, next_extra = remaining.pop(0)
+                completed = len(EASY_SEQUENCE_ACTIONS) - len(remaining) - 1
+                progress_bar["value"] = completed
+                next_fill_total = _parse_fill_limit(next_extra) if next_action == "fill_articles" else 0
+                next_fill_done = [0]
+                if next_fill_total > 0:
+                    step_label.config(text=t("wf.step_progress_fill", completed + 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action)), 0, next_fill_total))
+                    progress_label.config(text=t("wf.progress_of", 0, next_fill_total))
+                else:
+                    step_label.config(text=t("wf.step_progress", completed + 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(next_action, next_action))))
+                next_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(next_action, next_action)) + " ---", ""]
+                for h in next_header:
+                    root.after(0, lambda line=h: append_log(line))
+                proc, new_q = run_workflow_streaming(next_action, next_extra)
+                process_holder[0] = (next_action, proc)
+                root.after(50, lambda: _poll_easy_sequence(remaining, new_accumulated + next_header, [], new_q, rbtn, cbtn, next_fill_total, next_fill_done))
+                return
+            line = item[0]
+            if line is not None:
+                current_action = process_holder[0][0] if process_holder else None
+                if current_action == "fill_articles" and fill_total > 0 and "  Filled:" in line:
+                    fill_done[0] += 1
+                    completed = len(EASY_SEQUENCE_ACTIONS) - len(remaining) - 1
+                    step_label.config(text=t("wf.step_progress_fill", completed + 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get("fill_articles", "fill_articles")), fill_done[0], fill_total))
+                    progress_label.config(text=t("wf.progress_of", fill_done[0], fill_total))
+                    progress_bar["value"] = completed + (fill_done[0] / fill_total)
+                current_out_lines.append(line)
+                root.after(0, lambda l=line: append_log(l))
+        except queue.Empty:
+            pass
+        root.after(50, lambda: _poll_easy_sequence(remaining, accumulated, current_out_lines, q, rbtn, cbtn, fill_total, fill_done))
+
+    def cancel_run():
+        sequence_cancelled[0] = True
+        if process_holder and isinstance(process_holder[0], tuple):
+            _, proc = process_holder[0]
+            if proc is not None:
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+
+    def _fill_selected_easy(selected_stems: list[str], all_items: list[tuple[str, str]], prev_output: str, remove_unselected: bool = False):
+        articles_dir = get_project_root() / "content" / "articles"
+        all_stems = {stem for _, stem in all_items}
+        rejected = all_stems - set(selected_stems)
+        deleted = 0
+        queue_path = get_project_root() / "content" / "queue.yaml"
+        if remove_unselected and _queue_use_cases_available and queue_path.exists() and rejected:
+            try:
+                queue_items = load_existing_queue(queue_path)
+                for stem in rejected:
+                    idx = _find_queue_index_by_stem(queue_items, stem)
+                    if idx is not None:
+                        queue_items[idx]["status"] = "todo"
+                save_queue(queue_path, queue_items)
+            except Exception:
+                pass
+        if remove_unselected:
+            for stem in rejected:
+                p = articles_dir / (stem + ".md")
+                if p.exists():
+                    try:
+                        p.unlink()
+                        deleted += 1
+                    except OSError:
+                        pass
+        remaining_steps = list(preview_remaining_steps[0])
+        sequence_cancelled[0] = False
+        run_btn.config(state=tk.DISABLED)
+        preview_btn.config(state=tk.DISABLED)
+        cancel_btn.config(state=tk.NORMAL)
+        status_label.config(text=t("wf.fill_selected_running"), foreground="gray")
+        log_area.config(state=tk.NORMAL)
+        log_area.delete("1.0", tk.END)
+        log_area.insert(tk.END, prev_output + "\n")
+        if deleted:
+            log_area.insert(tk.END, "\n" + t("sel.deleted_skeletons", deleted) + "\n")
+        log_area.insert(tk.END, "\n" + t("wf.fill_selected_running") + "\n")
+        log_area.config(state=tk.DISABLED)
+        process_holder.clear()
+        if not remaining_steps:
+            return
+        first_action, first_extra = remaining_steps.pop(0)
+        completed = len(EASY_SEQUENCE_ACTIONS) - len(remaining_steps) - 1
+        progress_bar["value"] = completed
+        fill_total = _parse_fill_limit(first_extra) if first_action == "fill_articles" else 0
+        fill_done = [0]
+        if fill_total > 0:
+            step_label.config(text=t("wf.step_progress_fill", completed + 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)), 0, fill_total))
+            progress_label.config(text=t("wf.progress_of", 0, fill_total))
+        else:
+            step_label.config(text=t("wf.step_progress", completed + 1, len(EASY_SEQUENCE_ACTIONS), t(WORKFLOW_LABEL_KEYS.get(first_action, first_action))))
+            progress_label.config(text="")
+        first_header = ["", "--- " + t(WORKFLOW_LABEL_KEYS.get(first_action, first_action)) + " ---", ""]
+        accumulated = prev_output.splitlines()
+        if deleted:
+            accumulated.append(t("sel.deleted_skeletons", deleted))
+        accumulated += ["", t("wf.fill_selected_running")]
+        for h in first_header:
+            root.after(0, lambda line=h: append_log(line))
+        accumulated += first_header
+        proc, q = run_workflow_streaming(first_action, extra_args=first_extra)
+        process_holder.append((first_action, proc))
+        root.after(50, lambda: _poll_easy_sequence(remaining_steps, accumulated, [], q, run_btn, cancel_btn, fill_total, fill_done))
+
+    def _delete_selected_easy(selected_stems: list[str]):
+        if not selected_stems or not _queue_use_cases_available:
+            if selected_stems and not _queue_use_cases_available:
+                messagebox.showerror(t("msg.error"), t("sel.queue_use_cases_unavailable"))
+            return
+        if not messagebox.askokcancel(t("sel.delete_confirm_title"), t("sel.delete_confirm_msg").format(len(selected_stems)), icon=messagebox.WARNING):
+            return
+        root_dir = get_project_root()
+        articles_dir = root_dir / "content" / "articles"
+        queue_path = root_dir / "content" / "queue.yaml"
+        use_cases_path = root_dir / "content" / "use_cases.yaml"
+        try:
+            queue_items = load_existing_queue(queue_path)
+            use_cases = load_use_cases(use_cases_path)
+        except Exception as e:
+            messagebox.showerror(t("msg.error"), str(e))
+            return
+        to_remove = set()
+        deleted_count = 0
+        for stem in selected_stems:
+            p = articles_dir / (stem + ".md")
+            if p.exists():
+                try:
+                    p.unlink()
+                    deleted_count += 1
+                except OSError:
+                    pass
+            idx = _find_queue_index_by_stem(queue_items, stem)
+            if idx is not None:
+                to_remove.add(idx)
+        removed_entries = [queue_items[i] for i in sorted(to_remove)]
+        queue_new = [e for i, e in enumerate(queue_items) if i not in to_remove]
+        discarded_count = 0
+        for entry in removed_entries:
+            uc_idx = _find_use_case_index_by_queue_entry(use_cases, entry)
+            if uc_idx is not None:
+                use_cases[uc_idx]["status"] = "discarded"
+                discarded_count += 1
+        save_queue(queue_path, queue_new)
+        _save_use_cases(use_cases_path, use_cases)
+        try:
+            log_area.config(state=tk.NORMAL)
+            log_area.insert(tk.END, "\n" + t("sel.deleted_selected_log", deleted_count, discarded_count) + "\n")
+            log_area.see(tk.END)
+            log_area.config(state=tk.DISABLED)
+        except tk.TclError:
+            pass
+        messagebox.showinfo(t("msg.info"), t("sel.deleted_selected_done", deleted_count, discarded_count))
+
+    run_btn = ttk.Button(row_btn, text=t("btn.run"), command=run)
+    run_btn.pack(side=tk.LEFT, padx=(0, 5))
+    preview_btn = ttk.Button(row_btn, text=t("wf.preview_btn"), command=run_preview)
+    preview_btn.pack(side=tk.LEFT, padx=(0, 5))
+    cancel_btn = ttk.Button(row_btn, text=t("btn.cancel"), command=cancel_run, state=tk.DISABLED)
+    cancel_btn.pack(side=tk.LEFT, padx=5)
+
+    def _set_initial_sash():
+        paned_h.update_idletasks()
+        w = paned_h.winfo_width()
+        if w > 100:
+            paned_h.sashpos(0, int(0.7 * w))
+    f.after(400, _set_initial_sash)
+    f.bind("<Map>", lambda e: f.after(100, _set_initial_sash))
+
+    def load_ui():
+        if not config_path.exists():
+            return
+        cfg = load_config(config_path)
+        prod = (cfg.get("production_category") or "").strip()
+        hub = (cfg.get("hub_slug") or "").strip()
+        cats = [prod] if prod else []
+        for h in get_hubs_list(cfg) or []:
+            if isinstance(h, dict):
+                c = (h.get("category") or h.get("slug") or "").strip()
+                if c and c not in cats:
+                    cats.append(c)
+        if cats and prod in cats:
+            e_prod["values"] = cats
+            e_prod.set(prod)
+        suggested = cfg.get("suggested_problems") or []
+        base_val = suggested[0] if suggested else ""
+        e_base.delete(0, tk.END)
+        e_base.insert(0, base_val if isinstance(base_val, str) else str(base_val))
+        lb_suggested.delete(0, tk.END)
+        for s in (suggested[1:] if len(suggested) > 1 else []):
+            lb_suggested.insert(tk.END, s if isinstance(s, str) else str(s))
+        sandbox = cfg.get("sandbox_categories") or []
+        lb_sandbox.delete(0, tk.END)
+        for s in sandbox:
+            lb_sandbox.insert(tk.END, s if isinstance(s, str) else str(s))
+        try:
+            e_batch.delete(0, tk.END)
+            e_batch.insert(0, str(cfg.get("use_case_batch_size") or 9))
+        except tk.TclError:
+            pass
+        pyramid = cfg.get("use_case_audience_pyramid") or [3, 3]
+        batch_int = int(cfg.get("use_case_batch_size") or 9)
+        beg_count = int(pyramid[0]) if len(pyramid) >= 1 else 3
+        inter_count = int(pyramid[1]) if len(pyramid) >= 2 else 0
+        pro_count = batch_int - beg_count - inter_count
+        if pro_count < 0:
+            pro_count = 0
+        try:
+            sp_beg.set(beg_count)
+            sp_int.set(inter_count)
+            sp_pro.set(pro_count)
+            _pyr_update_sum_easy()
+        except (tk.TclError, ValueError):
+            pass
+
+    load_ui()
+    return f
+
+
 def build_refresh_tab(parent, last_output_holder: list):
     """Zakładka Odśwież artykuły — sekcjonowany layout z Canvas+Scrollbar, progress bar."""
     f = ttk.Frame(parent, padding=10)
@@ -1987,13 +2703,9 @@ def build_config_tab(parent, ideas_tab=None):
         prod = (cfg.get("production_category") or "").strip()
         hub = (cfg.get("hub_slug") or "").strip()
         sandbox = cfg.get("sandbox_categories") or []
-        suggested = cfg.get("suggested_problems") or []
         category_mode = (cfg.get("category_mode") or "production_only").strip().lower()
         if category_mode not in {"production_only", "preserve_sandbox"}:
             category_mode = "production_only"
-        batch = str(cfg.get("use_case_batch_size") or 9)
-        pyramid = cfg.get("use_case_audience_pyramid") or [3, 3]
-        pyramid_str = ", ".join(str(x) for x in pyramid)
         # production: lista [prod] + sandbox (bez duplikatów)
         cats = [prod] if prod else []
         for s in sandbox:
@@ -2030,33 +2742,12 @@ def build_config_tab(parent, ideas_tab=None):
         for s in sandbox:
             lb_sandbox.insert(tk.END, s if isinstance(s, str) else str(s))
         e_sandbox_new.delete(0, tk.END)
-        # Problem bazowy = first element (max 1 wpis); reszta = problemy sugerowane
-        base_problem = suggested[0] if suggested else ""
-        lb_base_problem.delete(0, tk.END)
-        if base_problem is not None and str(base_problem).strip():
-            lb_base_problem.insert(tk.END, base_problem if isinstance(base_problem, str) else str(base_problem))
-        e_base_new.delete(0, tk.END)
-        _update_base_add_state()
-        lb_suggested.delete(0, tk.END)
-        for s in (suggested[1:] if len(suggested) > 1 else []):
-            lb_suggested.insert(tk.END, s if isinstance(s, str) else str(s))
-        e_suggested_new.delete(0, tk.END)
-        e_batch.set(batch)
-        batch_int = int(batch)
-        # config/store: pyramid = [n_beginner, n_intermediate]; professional = batch - n_beginner - n_intermediate
-        beg_count = int(pyramid[0]) if len(pyramid) >= 1 else 3
-        inter_count = int(pyramid[1]) if len(pyramid) >= 2 else 3
-        pro_count = batch_int - beg_count - inter_count
-        if pro_count < 0:
-            pro_count = 0
-        sp_beg.set(beg_count)
-        sp_int.set(inter_count)
-        sp_pro.set(pro_count)
-        _pyr_update_sum()
         _validate_hub()
 
     def save_ui():
         try:
+            config_path = get_project_root() / "content" / "config.yaml"
+            cfg = load_config(config_path) if config_path.exists() else {}
             if e_prod.get().strip() == t("config.other"):
                 prod = e_prod_other.get().strip() or "ai-marketing-automation"
             else:
@@ -2065,27 +2756,20 @@ def build_config_tab(parent, ideas_tab=None):
                     prod = (e_prod["values"] or ["ai-marketing-automation"])[0]
             hub = e_hub.get().strip()
             sandbox = [lb_sandbox.get(i) for i in range(lb_sandbox.size()) if lb_sandbox.get(i).strip()]
-            base_val = lb_base_problem.get(0).strip() if lb_base_problem.size() > 0 else ""
-            rest_suggested = [lb_suggested.get(i) for i in range(lb_suggested.size()) if lb_suggested.get(i).strip()]
-            if base_val:
-                suggested = [base_val] + rest_suggested
-            elif rest_suggested:
-                suggested = [""] + rest_suggested
-            else:
-                suggested = []
             mode_display = (e_category_mode.get() or "").strip()
             category_mode = "preserve_sandbox" if mode_display == t("config.category_mode_preserve_sandbox") else "production_only"
-            batch = int(e_batch.get().strip() or 9)
-            # config: pyramid = [n_beginner, n_intermediate]; professional = batch - beg - int
-            pyramid = [sp_beg.get(), sp_int.get()]
-            config_path = get_project_root() / "content" / "config.yaml"
+            batch = int(cfg.get("use_case_batch_size") or 9)
+            pyramid = cfg.get("use_case_audience_pyramid") or [3, 3]
+            if not isinstance(pyramid, list) or len(pyramid) < 2:
+                pyramid = [3, 3]
+            suggested = cfg.get("suggested_problems") or []
             write_config(
                 config_path,
                 prod,
                 hub,
                 sandbox,
                 use_case_batch_size=batch,
-                use_case_audience_pyramid=pyramid,
+                use_case_audience_pyramid=pyramid[:2],
                 suggested_problems=suggested,
                 category_mode=category_mode,
             )
@@ -2177,183 +2861,6 @@ def build_config_tab(parent, ideas_tab=None):
         state="readonly",
     )
     e_category_mode.pack(side=tk.LEFT)
-
-    def _go_to_ideas():
-        if ideas_tab is not None and parent.winfo_ismapped():
-            parent.select(ideas_tab)
-
-    # Pomysły (limit i piramida): Limit + tooltip w kol. 0; przycisk Pomysły (wyrównany do podglądów) + tooltip w kol. 1
-    lf_uc = ttk.LabelFrame(inner, text=t("config.section_use_cases"), padding=5)
-    lf_uc.pack(fill=tk.X, pady=(0, 10))
-    row_batch = ttk.Frame(lf_uc)
-    row_batch.pack(fill=tk.X, pady=(0, 2))
-    row_batch.columnconfigure(0, weight=4)
-    row_batch.columnconfigure(1, weight=6)
-    col_batch_left = ttk.Frame(row_batch)
-    col_batch_left.grid(row=0, column=0, sticky=tk.EW)
-    ttk.Label(col_batch_left, text=t("config.batch_friendly"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
-    hint_batch = ttk.Frame(col_batch_left)
-    hint_batch.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    lbl_batch_hint = tk.Label(hint_batch, text=t("config.batch_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
-    lbl_batch_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
-    config_hint_labels.append(lbl_batch_hint)
-    col_batch_right = ttk.Frame(row_batch)
-    col_batch_right.grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
-    ttk.Button(col_batch_right, text=t("config.goto_ideas_btn"), command=_go_to_ideas).pack(side=tk.LEFT)
-    lbl_ideas_info = tk.Label(col_batch_right, text=t("config.ideas_info"), font=("TkDefaultFont", 9), fg="gray", anchor=tk.W)
-    lbl_ideas_info.pack(side=tk.LEFT, padx=(6, 0))
-    row_batch_spin = ttk.Frame(lf_uc)
-    row_batch_spin.pack(fill=tk.X, pady=(0, 6))
-    e_batch = ttk.Spinbox(row_batch_spin, from_=1, to=12, width=5, increment=1)
-    e_batch.pack(side=tk.LEFT, padx=(33, 0))
-
-    row_pyr = ttk.Frame(lf_uc)
-    row_pyr.pack(fill=tk.X, pady=(0, 6))
-    ttk.Label(row_pyr, text=t("config.pyramid_friendly"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
-    hint_pyr = ttk.Frame(row_pyr)
-    hint_pyr.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    lbl_pyr_hint = tk.Label(hint_pyr, text=t("config.pyramid_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
-    lbl_pyr_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
-    config_hint_labels.append(lbl_pyr_hint)
-
-    sp_beg = tk.IntVar(value=3)
-    sp_int = tk.IntVar(value=3)
-    sp_pro = tk.IntVar(value=3)
-    lbl_sum = tk.StringVar(value="")
-
-    def _pyr_update_sum(*_args):
-        try:
-            total = int(e_batch.get())
-        except (ValueError, TypeError):
-            total = 9
-        b, i, p = sp_beg.get(), sp_int.get(), sp_pro.get()
-        s = b + i + p
-        lbl_sum.set(f"{t('config.pyr_sum')}: {s} / {total}")
-        color = "green" if s == total else ("red" if s > total else "orange")
-        sum_label.config(fg=color)
-
-    def _pyr_clamp(var: tk.IntVar, *_args):
-        try:
-            total = int(e_batch.get())
-        except (ValueError, TypeError):
-            total = 9
-        b, i, p = sp_beg.get(), sp_int.get(), sp_pro.get()
-        # Keep sum equal to total: Professional is the remainder when Beginner or Intermediate change.
-        if var is sp_beg:
-            sp_beg.set(max(0, min(total, b)))
-            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
-        elif var is sp_int:
-            sp_int.set(max(0, min(total, i)))
-            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
-        else:
-            # sp_pro: always sync to remainder so save [sp_beg, sp_int] is correct
-            sp_pro.set(max(0, total - sp_beg.get() - sp_int.get()))
-        _pyr_update_sum()
-
-    # Suma oraz Beginner / Intermediate / Professional w jednej linii
-    pyr_frame = ttk.Frame(lf_uc)
-    pyr_frame.pack(fill=tk.X, pady=(0, 6))
-    sum_label = tk.Label(pyr_frame, textvariable=lbl_sum, font=italic_font, anchor=tk.W)
-    sum_label.pack(side=tk.LEFT, padx=(33, 12))
-    ttk.Label(pyr_frame, text=t("config.pyr_beginner"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
-    ttk.Spinbox(pyr_frame, from_=0, to=12, width=5, textvariable=sp_beg, command=lambda: _pyr_clamp(sp_beg)).pack(side=tk.LEFT, padx=(0, 12))
-    ttk.Label(pyr_frame, text=t("config.pyr_intermediate"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
-    ttk.Spinbox(pyr_frame, from_=0, to=12, width=5, textvariable=sp_int, command=lambda: _pyr_clamp(sp_int)).pack(side=tk.LEFT, padx=(0, 12))
-    ttk.Label(pyr_frame, text=t("config.pyr_professional"), width=12, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 4))
-    ttk.Spinbox(pyr_frame, from_=0, to=12, width=5, textvariable=sp_pro, command=lambda: _pyr_clamp(sp_pro)).pack(side=tk.LEFT)
-
-    sp_beg.trace_add("write", lambda *a: _pyr_clamp(sp_beg))
-    sp_int.trace_add("write", lambda *a: _pyr_clamp(sp_int))
-    sp_pro.trace_add("write", lambda *a: _pyr_clamp(sp_pro))
-    e_batch.config(command=lambda: _pyr_update_sum())
-
-    # Problem bazowy i problemy sugerowane
-    lf_base_sugg = ttk.LabelFrame(inner, text=t("config.section_base_and_suggested"), padding=5)
-    lf_base_sugg.pack(fill=tk.X, pady=(0, 10))
-
-    # --- Problem bazowy: etykieta + tooltip w jednej linii (jak górny obszar)
-    row_base = ttk.Frame(lf_base_sugg)
-    row_base.pack(fill=tk.X, pady=(0, 6))
-    ttk.Label(row_base, text=t("config.base_problem"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
-    hint_base = ttk.Frame(row_base)
-    hint_base.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    lbl_base_hint = tk.Label(hint_base, text=t("config.base_problem_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
-    lbl_base_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
-    config_hint_labels.append(lbl_base_hint)
-    # Szerokości: wpisywanie 40%, podgląd 60%. Podetykiety nad polami, przyciski pod polami.
-    row_base_grid = ttk.Frame(lf_base_sugg)
-    row_base_grid.pack(fill=tk.X, pady=(0, 6))
-    row_base_grid.columnconfigure(0, weight=4)
-    row_base_grid.columnconfigure(1, weight=6)
-    ttk.Label(row_base_grid, text=t("config.sub_label_type"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=0, sticky=tk.W, pady=(0, 2))
-    ttk.Label(row_base_grid, text=t("config.sub_label_preview"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=1, sticky=tk.W, padx=(10, 0), pady=(0, 2))
-    col_base_left = ttk.Frame(row_base_grid)
-    col_base_left.grid(row=1, column=0, sticky=tk.EW)
-    e_base_new = ttk.Entry(col_base_left, width=config_entry_width)
-    e_base_new.pack(fill=tk.X, expand=True)
-    fr_base = ttk.Frame(row_base_grid)
-    fr_base.grid(row=1, column=1, sticky=tk.EW, padx=(10, 0))
-    lb_base_problem = tk.Listbox(fr_base, height=1, width=20, selectmode=tk.SINGLE)
-    lb_base_problem.pack(side=tk.LEFT, fill=tk.X, expand=True)
-    sb_base = ttk.Scrollbar(fr_base, orient=tk.VERTICAL, command=lb_base_problem.yview)
-    sb_base.pack(side=tk.RIGHT, fill=tk.Y)
-    lb_base_problem.config(yscrollcommand=sb_base.set)
-    col_base_btn_left = ttk.Frame(row_base_grid)
-    col_base_btn_left.grid(row=2, column=0, sticky=tk.W, pady=(4, 0))
-    col_base_btn_right = ttk.Frame(row_base_grid)
-    col_base_btn_right.grid(row=2, column=1, sticky=tk.W, padx=(10, 0), pady=(4, 0))
-    btn_base_add = ttk.Button(col_base_btn_left, text=t("btn.add"), width=8)
-    btn_base_add.pack()
-    def _remove_base():
-        _list_remove_selected(lb_base_problem)
-        _update_base_add_state()
-
-    def _update_base_add_state():
-        if lb_base_problem.size() >= 1:
-            btn_base_add.config(state=tk.DISABLED)
-        else:
-            btn_base_add.config(state=tk.NORMAL)
-
-    def _add_base():
-        _list_add(lb_base_problem, e_base_new)
-        _update_base_add_state()
-
-    btn_base_add.config(command=_add_base)
-    _create_tooltip(btn_base_add, t("config.base_problem_one_only"))
-    ttk.Button(col_base_btn_right, text=t("btn.remove"), width=18, command=_remove_base).pack()
-
-    # --- Problemy sugerowane
-    row_sugg = ttk.Frame(lf_base_sugg)
-    row_sugg.pack(fill=tk.X, pady=(0, 6))
-    ttk.Label(row_sugg, text=t("config.suggested_list"), width=28, anchor=tk.W).pack(side=tk.LEFT, padx=(0, 5))
-    hint_sugg = ttk.Frame(row_sugg)
-    hint_sugg.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-    lbl_sugg_hint = tk.Label(hint_sugg, text=t("config.suggested_list_desc"), font=italic_font, fg="gray", anchor=tk.W, justify=tk.LEFT, wraplength=450)
-    lbl_sugg_hint.pack(anchor=tk.W, fill=tk.X, expand=True)
-    config_hint_labels.append(lbl_sugg_hint)
-    row_sugg_grid = ttk.Frame(lf_base_sugg)
-    row_sugg_grid.pack(fill=tk.X, pady=(0, 6))
-    row_sugg_grid.columnconfigure(0, weight=4)
-    row_sugg_grid.columnconfigure(1, weight=6)
-    ttk.Label(row_sugg_grid, text=t("config.sub_label_type"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=0, sticky=tk.W, pady=(0, 2))
-    ttk.Label(row_sugg_grid, text=t("config.sub_label_preview"), font=("TkDefaultFont", 9), anchor=tk.W).grid(row=0, column=1, sticky=tk.W, padx=(10, 0), pady=(0, 2))
-    col_sugg_left = ttk.Frame(row_sugg_grid)
-    col_sugg_left.grid(row=1, column=0, sticky=tk.EW)
-    e_suggested_new = ttk.Entry(col_sugg_left, width=config_entry_width)
-    e_suggested_new.pack(fill=tk.X, expand=True)
-    fr_sugg = ttk.Frame(row_sugg_grid)
-    fr_sugg.grid(row=1, column=1, sticky=tk.NSEW, padx=(10, 0))
-    lb_suggested = tk.Listbox(fr_sugg, height=3, width=20)
-    lb_suggested.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    sb_sugg = ttk.Scrollbar(fr_sugg, orient=tk.VERTICAL, command=lb_suggested.yview)
-    sb_sugg.pack(side=tk.RIGHT, fill=tk.Y)
-    lb_suggested.config(yscrollcommand=sb_sugg.set)
-    col_sugg_btn_left = ttk.Frame(row_sugg_grid)
-    col_sugg_btn_left.grid(row=2, column=0, sticky=tk.W, pady=(4, 0))
-    col_sugg_btn_right = ttk.Frame(row_sugg_grid)
-    col_sugg_btn_right.grid(row=2, column=1, sticky=tk.W, padx=(10, 0), pady=(4, 0))
-    ttk.Button(col_sugg_btn_left, text=t("btn.add"), width=8, command=lambda: _list_add(lb_suggested, e_suggested_new)).pack()
-    ttk.Button(col_sugg_btn_right, text=t("btn.remove"), width=18, command=lambda: _list_remove_selected(lb_suggested)).pack()
 
     # --- Obszary tematyczne (na dole, tuż nad przyciskami)
     lf_sand = ttk.LabelFrame(inner, text=t("config.section_sandbox"), padding=5)
@@ -3610,6 +4117,8 @@ def main():
         nb.add(tab_use_cases, text=t("tab.use_cases"))
         tab_work = build_workflow_tab(nb, last_output_holder)
         nb.add(tab_work, text=t("tab.workflow"))
+        tab_easy_work = build_easy_workflow_tab(nb, last_output_holder)
+        nb.add(tab_easy_work, text=t("tab.easy_workflow"))
         tab_refresh = build_refresh_tab(nb, last_output_holder)
         nb.add(tab_refresh, text=t("tab.refresh"))
         tab_git = build_git_tab(nb)

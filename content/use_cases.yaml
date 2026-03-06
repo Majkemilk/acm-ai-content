@@ -586,28 +586,46 @@ use_cases:
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-04T194752
-    status: generated
+    status: archived
   - problem: Intermediate users require strategies to troubleshoot and optimize prompt designs for better market analysis efficiency in AI agents.
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: intermediate
     batch_id: 2026-03-04T194752
-    status: generated
+    status: archived
   - problem: Professional users seek best practices for scaling the governance of prompt designs in AI agents to ensure reliability in market analysis across multiple regions.
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194752
-    status: generated
+    status: archived
   - problem: Beginners need guidance on integrating contextual insights into prompt design for AI agents that examine market trends.
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194752
-    status: generated
+    status: archived
   - problem: Professional users face challenges in ensuring consistent reliability of prompts for AI agents in large-scale market analysis across diverse markets.
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194752
+    status: archived
+  - problem: Beginners lack guidance on implementing anti-theft hardware that can withstand angle grinder attacks on bike locks.
+    content_type: how-to
+    category_slug: agentic-ai-geo
+    audience_type: beginner
+    batch_id: 2026-03-06T102744
+    status: generated
+  - problem: Beginners need strategies to monitor the effectiveness of their anti-theft hardware against angle grinder attacks.
+    content_type: guide
+    category_slug: agentic-ai-geo
+    audience_type: beginner
+    batch_id: 2026-03-06T102744
+    status: generated
+  - problem: Professional users face challenges in scaling their anti-theft hardware solutions to ensure reliability across multiple locations against angle grinder attacks.
+    content_type: guide
+    category_slug: agentic-ai-geo
+    audience_type: beginner
+    batch_id: 2026-03-06T102744
     status: generated

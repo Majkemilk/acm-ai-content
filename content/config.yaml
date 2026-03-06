@@ -1,5 +1,5 @@
-production_category: "ai-marketing-automation"
-hub_slug: "agentic-ai-geo"
+production_category: "marketplaces-products"
+hub_slug: "marketplaces-products"
 hub_title: "AI Marketing Automation Tools & Workflows"
 
 # Lista hubów (slug, category, title). Używana przez generate_hubs, render_site, sitemap.
@@ -13,12 +13,11 @@ hubs:
   - slug: "agentic-ai-geo"
     category: "agentic-ai-geo"
     title: "Agentic AI / GEO"
-category_mode: "preserve_sandbox"
+category_mode: "production_only"
 sandbox_categories:
-  - "Agentic AI and Generative Engine Optimization"
-use_case_batch_size: 5
+use_case_batch_size: 3
 use_case_audience_pyramid:
-  - 1
-  - 1
+  - 3
+  - 0
 suggested_problems:
-  - "Design Prompts for AI Agents That Autonomously Analyze Markets"
+  - "Angle Grinder Attacks Destroy Bike Locks"
