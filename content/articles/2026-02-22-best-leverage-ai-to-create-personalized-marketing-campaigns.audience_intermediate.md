@@ -1,26 +1,19 @@
 ---
-status: "filled"
-tools: "Opus Clip, Make"
----
-
-﻿---
-title: "Best leverage AI to create personalized marketing campaigns"
-content_type: "best"
+title: "2026-02-22-best-leverage-ai-to-create-personalized-marketing-campaigns.audience_intermediate"
+content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "best leverage ai to create personalized marketing campaigns"
-tools: "Make, ChatGPT, Descript"
-last_updated: "2026-02-27"
+primary_keyword: "2026-02-22-best-leverage-ai-to-create-personalized-marketing-campaigns.audience_intermediate"
+tools: "Make, Copy.ai, ChatGPT"
+last_updated: "2026-03-06"
 status: "filled"
-audience_type: "intermediate"
-batch_id: "2026-02-22T121243"
 ---
 
-# Best leverage AI to create personalized marketing campaigns
+# 2026-02-22-best-leverage-ai-to-create-personalized-marketing-campaigns.audience_intermediate
 
-**Content type:** best
+**Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** best leverage ai to create personalized marketing campaigns
-**Last updated:** 2026-02-27
+**Primary keyword:** 2026-02-22-best-leverage-ai-to-create-personalized-marketing-campaigns.audience_intermediate
+**Last updated:** 2026-03-06
 
 ---
 
@@ -49,9 +42,32 @@ Before publishing, verify the following:
 
 ### Tradeoffs:
 
+### Failure modes:
+
+### SOP checklist:
+
 ---
 
-## Step-by-step workflow
+## Step-by-step workflow (practical)
+
+1.
+2.
+3.
+4.
+5.
+6.
+7.
+
+**Inputs / Outputs**
+
+- Inputs:
+- Outputs:
+
+**Common pitfalls**
+
+-
+-
+-
 
 ### Try it yourself: Build your own AI prompt
 
@@ -64,6 +80,8 @@ Before publishing, verify the following:
 ```
 
 ---
+
+To create a tailored prompt for your use case, try the [Flowtaro Prompt Generator](https://generator.flowtaro.com).
 
 ## When NOT to use this
 
@@ -83,18 +101,18 @@ Before publishing, verify the following:
 
 {{TOOLS_SECTION_DISCLAIMER}}
 
-Make, ChatGPT
+{{TOOLS_MENTIONED}}
 
 ---
 
 ## Internal links
 
-- [Best automate social media content posting with AI](/articles/2026-02-22-best-automate-social-media-content-posting-with-ai.audience_beginner/)
-- [Best implement chatbots for customer support automation with AI](/articles/2026-02-22-best-implement-chatbots-for-customer-support-automation-with-ai.audience_beginner/)
-- [Best use AI to improve email subject lines for higher open rates](/articles/2026-02-22-best-use-ai-to-improve-email-subject-lines-for-higher-open-rates.audience_beginner/)
-- [Best develop seamless AI-driven cross-platform advertising strategies](/articles/2026-02-22-best-develop-seamless-ai-driven-cross-platform-advertising-strategies.audience_professional/)
-- [Best integrate AI to streamline multi-channel marketing efforts](/articles/2026-02-22-best-integrate-ai-to-streamline-multi-channel-marketing-efforts.audience_professional/)
-- [Best utilize AI for predictive analytics in customer retention strategies](/articles/2026-02-22-best-utilize-ai-for-predictive-analytics-in-customer-retention-strategies.audience_professional/)
+- [Automating report generation with AI for marketing insights](/articles/2026-02-22-best-automate-report-generation-using-ai-insights-on-marketing-performance.audience_intermediate/)
+- [How to automate social media content posting with AI tools](/articles/2026-02-22-best-automate-social-media-content-posting-with-ai.audience_beginner/)
+- [How to develop seamless AI-driven cross-platform advertising strategies](/articles/2026-02-22-best-develop-seamless-ai-driven-cross-platform-advertising-strategies.audience_professional/)
+- [How to implement chatbots for customer support automation with AI](/articles/2026-02-22-best-implement-chatbots-for-customer-support-automation-with-ai.audience_beginner/)
+- [How to integrate AI to streamline multi-channel marketing efforts](/articles/2026-02-22-best-integrate-ai-to-streamline-multi-channel-marketing-efforts.audience_professional/)
+- [How to monitor lead loss in AI-driven marketing automations](/articles/2026-02-24-guide-to-how-to-monitor-lead-loss-due-to-scenario-failures-in-ai-driven-marketing-automations.audience_intermediate/)
 
 ---
 

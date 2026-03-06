@@ -1,26 +1,19 @@
 ---
-status: "filled"
-tools: "Descript"
----
-
-﻿---
-title: "Guide to leverage AI for basic social media listening and sentiment analysis"
+title: "2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner"
 content_type: "guide"
 category: "ai-marketing-automation"
-primary_keyword: "guide to leverage ai for basic social media listening and sentiment analysis"
-tools: "Make, Pictory, ChatGPT"
-last_updated: "2026-02-27"
+primary_keyword: "2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner"
+tools: "ChatGPT, Opus Clip, Descript"
+last_updated: "2026-03-06"
 status: "filled"
-audience_type: "beginner"
-batch_id: "2026-02-22T122331"
 ---
 
-# Guide to leverage AI for basic social media listening and sentiment analysis
+# 2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner
 
 **Content type:** guide
 **Category:** ai-marketing-automation
-**Primary keyword:** guide to leverage ai for basic social media listening and sentiment analysis
-**Last updated:** 2026-02-27
+**Primary keyword:** 2026-02-22-guide-to-leverage-ai-for-basic-social-media-listening-and-sentiment-analysis.audience_beginner
+**Last updated:** 2026-03-06
 
 ---
 
@@ -52,10 +45,6 @@ Before publishing, verify the following:
 ### Failure modes:
 
 ### SOP checklist:
-
-### Template 1:
-
-### Template 2:
 
 ---
 
@@ -92,6 +81,8 @@ Before publishing, verify the following:
 
 ---
 
+To create a tailored prompt for your use case, try the [Flowtaro Prompt Generator](https://generator.flowtaro.com).
+
 ## When NOT to use this
 
 ---
@@ -110,18 +101,18 @@ Before publishing, verify the following:
 
 {{TOOLS_SECTION_DISCLAIMER}}
 
-Descript, Make, ChatGPT
+{{TOOLS_MENTIONED}}
 
 ---
 
 ## Internal links
 
-- [Guide to integrate AI tools for enhancing online customer journey mapping](/articles/2026-02-22-guide-to-integrate-ai-tools-for-enhancing-online-customer-journey-mapping.audience_intermediate/)
-- [Guide to utilize AI for automating targeted ad placements based on user behavior](/articles/2026-02-22-guide-to-utilize-ai-for-automating-targeted-ad-placements-based-on-user-behavior.audience_intermediate/)
-- [How to create automated workflows for cross-channel marketing campaigns](/articles/2026-02-22-how-to-create-automated-workflows-for-cross-channel-marketing-campaigns.audience_intermediate/)
-- [How to automate customer feedback collection with AI tools](/articles/2026-02-22-how-to-automate-customer-feedback-collection-with-ai-tools.audience_beginner/)
-- [How to use AI to automate the creation of targeted audience profiles](/articles/2026-02-22-how-to-use-ai-to-automate-the-creation-of-targeted-audience-profiles.audience_beginner/)
-- [Guide to develop an AI-integrated platform for tracking influencer marketing effectiveness](/articles/2026-02-22-guide-to-develop-an-ai-integrated-platform-for-tracking-influencer-marketing-effectiveness.audience_professional/)
+- [Automating report generation with AI for marketing insights](/articles/2026-02-22-best-automate-report-generation-using-ai-insights-on-marketing-performance.audience_intermediate/)
+- [How to automate social media content posting with AI tools](/articles/2026-02-22-best-automate-social-media-content-posting-with-ai.audience_beginner/)
+- [How to develop seamless AI-driven cross-platform advertising strategies](/articles/2026-02-22-best-develop-seamless-ai-driven-cross-platform-advertising-strategies.audience_professional/)
+- [How to implement chatbots for customer support automation with AI](/articles/2026-02-22-best-implement-chatbots-for-customer-support-automation-with-ai.audience_beginner/)
+- [How to integrate AI to streamline multi-channel marketing efforts](/articles/2026-02-22-best-integrate-ai-to-streamline-multi-channel-marketing-efforts.audience_professional/)
+- [How to leverage AI to create personalized marketing campaigns](/articles/2026-02-22-best-leverage-ai-to-create-personalized-marketing-campaigns.audience_intermediate/)
 
 ---
 
