@@ -2,12 +2,15 @@
 """
 Minimal static renderer: Markdown (content/) -> HTML (public/). Stdlib only.
 Renders production articles and production hub; updates public/index.html.
+Supports --site (main | pl), --out-dir, --base-url for subdomain build (e.g. pl.flowtaro.com).
 """
 
+import argparse
 import hashlib
 import html
 import json
 import math
+import os
 import random
 import re
 import shutil
@@ -18,13 +21,17 @@ from pathlib import Path
 # Windows path length limit (MAX_PATH 260); keep under to avoid FileNotFoundError 206
 MAX_PATH_LEN = 250
 
-from content_index import get_production_articles, get_hubs_list, load_config
+from content_index import (
+    get_production_articles,
+    get_hubs_list_for_site,
+    get_category_slugs_for_site,
+    load_config,
+)
+from content_root import get_content_root_path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
-ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
-HUBS_DIR = PROJECT_ROOT / "content" / "hubs"
 PUBLIC_DIR = PROJECT_ROOT / "public"
+# affiliate_tools współdzielony – zawsze z content/
 AFFILIATE_TOOLS_PATH = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
 INDEX_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "index.html"
 HUB_TEMPLATE_PATH = PROJECT_ROOT / "templates" / "hub.html"
@@ -44,6 +51,24 @@ INTERNAL_ARTICLE_LINK = re.compile(r"\[([^\]]*)\]\((/articles/[^)]*)\)")
 
 # Tags inside which we do not replace tool names with links
 TOOL_LINK_SKIP_TAGS = frozenset(("a", "h1", "h2", "h3", "h4", "h5", "h6", "code", "pre"))
+
+# Content-type title prefixes to strip for display (EN and PL: same reader-friendly title in H1 and <title>)
+_TITLE_PREFIXES_STRIP = (
+    "products in category: ", "best in category: ", "comparison of ", "guide to ",
+    "how to ", "sales: ", "best ", "review: ",
+)
+
+
+def _strip_content_type_prefix_from_title(title: str) -> str:
+    """Strip leading content-type prefix (case-insensitive) so H1 and <title> match PL style (no prefix)."""
+    if not title or not title.strip():
+        return title
+    t = title.strip()
+    lower = t.lower()
+    for prefix in _TITLE_PREFIXES_STRIP:
+        if lower.startswith(prefix):
+            return t[len(prefix) :].strip() or t
+    return t
 
 
 def _slug_for_path(slug: str, out_dir: Path) -> str:
@@ -309,8 +334,13 @@ def _escape(s: str) -> str:
     return html.escape(s, quote=True)
 
 
-def _build_nav_html(hubs: list[dict]) -> str:
-    """Build site nav HTML: Home | hub1 | hub2 | Prompt Generator."""
+def _build_nav_html(
+    hubs: list[dict],
+    site: str = "main",
+    base_url_pl: str | None = None,
+    base_url_main: str | None = None,
+) -> str:
+    """Build site nav: Home | hub1 | hub2 | Prompt Generator. For site=pl append link to main (Flowtaro). For site=main append link to pl (Problem Fix & Find) if base_url_pl set."""
     parts: list[str] = []
     parts.append('<a href="/" class="site-nav-link">Home</a>')
     for h in hubs:
@@ -320,9 +350,11 @@ def _build_nav_html(hubs: list[dict]) -> str:
         label = (h.get("title") or slug).strip()
         url = f"/hubs/{_escape(slug)}/"
         parts.append(f'<a href="{url}" class="site-nav-link">{_escape(label)}</a>')
-    parts.append(
-        '<a href="https://generator.flowtaro.com" class="site-nav-link" target="_blank" rel="noopener noreferrer">Prompt Generator</a>'
-    )
+    parts.append('<a href="https://generator.flowtaro.com" class="site-nav-link">Prompt Generator</a>')
+    if site == "pl" and base_url_main:
+        parts.append(f'<a href="{_escape(base_url_main)}" class="site-nav-link">Flowtaro</a>')
+    elif site == "main" and base_url_pl:
+        parts.append(f'<a href="{_escape(base_url_pl)}" class="site-nav-link">Problem Fix &amp; Find</a>')
     return '<nav class="site-nav" aria-label="Main">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join(parts) + "</nav>"
 
 
@@ -463,6 +495,41 @@ def _article_title_h1(title: str) -> str:
     return f'<h1 class="text-2xl font-bold mb-6 text-[#17266B]">{_escape(title)}</h1>\n'
 
 
+# Locale strings for article UI (meta block, Read Next, disclosure). Keys: "en", "pl".
+_LOCALE = {
+    "en": {
+        "audience_beginner": "Beginner",
+        "audience_intermediate": "Intermediate",
+        "audience_advanced": "Advanced",
+        "meta_updated": "Updated:",
+        "meta_min_read": "min read",
+        "read_next_heading": "Read Next:",
+        "disclosure_heading": "Disclosure:",
+        "disclosure_body": "Some links on this page are affiliate links. If you make a purchase through these links, we may earn a commission at no extra cost to you.",
+        "affiliate_disclosure_placeholder": "Some links on this page are affiliate links. If you make a purchase through these links, we may earn a commission at no extra cost to you.",
+        "footer_privacy": "Privacy Policy",
+        "footer_prompt_generator": "Prompt Generator",
+    },
+    "pl": {
+        "audience_beginner": "Początkujący",
+        "audience_intermediate": "Średniozaawansowany",
+        "audience_advanced": "Zaawansowany",
+        "meta_updated": "Aktualizacja:",
+        "meta_min_read": "min czytania",
+        "read_next_heading": "Czytaj dalej:",
+        "disclosure_heading": "Informacja:",
+        "disclosure_body": "Część linków na tej stronie to linki afiliacyjne. Jeśli dokonasz zakupu przez nie, możemy otrzymać prowizję bez dodatkowych kosztów dla Ciebie.",
+        "affiliate_disclosure_placeholder": "Część linków na tej stronie to linki afiliacyjne. Jeśli dokonasz zakupu przez nie, możemy otrzymać prowizję bez dodatkowych kosztów dla Ciebie.",
+        "footer_privacy": "Polityka prywatności",
+        "footer_prompt_generator": "Prompt Generator",
+    },
+}
+
+def _locale(lang: str) -> dict:
+    """Return locale dict for lang; fallback to en if unknown."""
+    return _LOCALE.get((lang or "en").strip().lower(), _LOCALE["en"])
+
+
 _AUDIENCE_BADGE: dict[str, tuple[str, str]] = {
     "beginner": ("Beginner", "bg-green-50 text-green-700"),
     "intermediate": ("Intermediate", "bg-blue-50 text-blue-700"),
@@ -470,6 +537,16 @@ _AUDIENCE_BADGE: dict[str, tuple[str, str]] = {
 }
 
 VALID_AUDIENCE_TYPES = frozenset(_AUDIENCE_BADGE.keys())
+
+
+def _audience_label_and_css(audience_type: str, page_lang: str) -> tuple[str, str]:
+    """Return (label, css_class) for audience badge. Label is localized."""
+    at = (audience_type or "").strip().lower()
+    css = {"beginner": "bg-green-50 text-green-700", "intermediate": "bg-blue-50 text-blue-700", "professional": "bg-purple-50 text-purple-700"}.get(at, "bg-gray-50 text-gray-700")
+    loc = _locale(page_lang)
+    key = {"beginner": "audience_beginner", "intermediate": "audience_intermediate", "professional": "audience_advanced"}.get(at)
+    label = loc.get(key, at) if key else at
+    return (label, css)
 
 
 def _audience_type_from_stem(stem: str) -> str | None:
@@ -480,13 +557,21 @@ def _audience_type_from_stem(stem: str) -> str | None:
     return suffix if suffix in VALID_AUDIENCE_TYPES else None
 
 
+# Category slug -> badge label (PL and EN: same label for Problem Fix & Find hub)
+_CATEGORY_BADGE_LABEL: dict[str, str] = {
+    "problem-fix-find-pl": "Problem Fix & Find",
+    "marketplaces-products": "Problem Fix & Find",
+}
+
+
 def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str | None, lead: str,
-                        audience_type: str | None = None) -> str:
+                        audience_type: str | None = None, page_lang: str = "en") -> str:
     """HTML for meta block under H1 (articles only). Styled badge row with category, audience, date, reading time."""
+    loc = _locale(page_lang)
     parts: list[str] = []
     if category_slug:
         slug_esc = _escape(category_slug)
-        display = category_slug.replace("-", " ").title()
+        display = _CATEGORY_BADGE_LABEL.get(category_slug) or category_slug.replace("-", " ").title()
         display_esc = _escape(display)
         parts.append(
             f'<span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded">'
@@ -494,14 +579,13 @@ def _article_meta_block(updated_iso: str, reading_min: int, category_slug: str |
         )
         parts.append("<span>&bull;</span>")
     at = (audience_type or "").strip().lower()
-    badge = _AUDIENCE_BADGE.get(at)
-    if badge:
-        label, css = badge
+    if at in VALID_AUDIENCE_TYPES:
+        label, css = _audience_label_and_css(at, page_lang)
         parts.append(f'<span class="{css} px-2 py-1 rounded">{_escape(label)}</span>')
         parts.append("<span>&bull;</span>")
-    parts.append(f"<span>Updated: {_escape(updated_iso)}</span>")
+    parts.append(f"<span>{_escape(loc['meta_updated'])} {_escape(updated_iso)}</span>")
     parts.append("<span>&bull;</span>")
-    parts.append(f"<span>{_escape(str(reading_min))} min read</span>")
+    parts.append(f"<span>{_escape(str(reading_min))} {_escape(loc['meta_min_read'])}</span>")
     meta_html = (
         '<div class="flex flex-wrap items-center gap-3 text-sm font-medium text-gray-500 mb-6">\n  '
         + "\n  ".join(parts)
@@ -543,20 +627,38 @@ AFFILIATE_DISCLOSURE_TEXT = (
 )
 
 
+# Section titles to strip from markdown body (EN; PL equivalents added when page_lang=pl)
+_SECTIONS_TO_STRIP_EN = ["Tools mentioned", "CTA", "Pre-publish checklist", "Disclosure"]
+_SECTIONS_TO_STRIP_PL = [
+    "Lista platform i narzędzi wymienionych w artykule",
+    "CTA",
+    "Lista kontrolna przed publikacją",
+    "Informacja",
+]
+
+
 def _md_to_html(
     body: str,
     existing_slugs: set[str] | None = None,
     slug_to_fs: dict[str, str] | None = None,
+    page_lang: str = "en",
 ) -> str:
     """Minimal markdown to HTML: headings, - and 1. lists, paragraphs, [text](url), ``` code."""
     body = _strip_invalid_internal_links(body, existing_slugs, slug_to_fs)
-    # Replace affiliate disclosure placeholder with standard text (before generic mustache removal)
-    body = body.replace("{{AFFILIATE_DISCLOSURE}}", AFFILIATE_DISCLOSURE_TEXT)
+    loc = _locale(page_lang)
+    disclosure_text = loc.get("affiliate_disclosure_placeholder", AFFILIATE_DISCLOSURE_TEXT)
+    body = body.replace("{{AFFILIATE_DISCLOSURE}}", disclosure_text)
     # Usuń mustache placeholdery {{...}}
     body = re.sub(r"\{\{[^}]+\}\}", "", body)
-    # Usuń sekcję Verification policy (editors only)
+    # Usuń sekcję Verification policy (editors only) lub polską wersję
     body = re.sub(
         r"^## Verification policy \(editors only\).*?(?=^##|\Z)",
+        "",
+        body,
+        flags=re.DOTALL | re.MULTILINE,
+    )
+    body = re.sub(
+        r"^## Polityka weryfikacji \(tylko redaktorzy\).*?(?=^##|\Z)",
         "",
         body,
         flags=re.DOTALL | re.MULTILINE,
@@ -568,9 +670,11 @@ def _md_to_html(
         body,
         flags=re.MULTILINE,
     )
-    # Usuń znane sekcje (Tools mentioned, CTA, Pre-publish checklist, Disclosure).
-    # Disclosure is added by the script in a yellow box at the end of the page; do not keep it in the body.
-    for section in ["Tools mentioned", "CTA", "Pre-publish checklist", "Disclosure"]:
+    # Usuń znane sekcje (Tools mentioned, CTA, Pre-publish checklist, Disclosure) – EN i PL
+    sections_to_strip = list(_SECTIONS_TO_STRIP_EN)
+    if (page_lang or "en").strip().lower() == "pl":
+        sections_to_strip = list(_SECTIONS_TO_STRIP_EN) + _SECTIONS_TO_STRIP_PL
+    for section in sections_to_strip:
         pattern = r"^#{1,3}\s*" + re.escape(section) + r"\s*\n.*?(?=^#{1,3}|\Z)"
         body = re.sub(pattern, "", body, flags=re.DOTALL | re.MULTILINE)
     # Usuń puste sekcje (nagłówek + zawartość, jeśli po usunięciu placeholderów nie ma treści)
@@ -579,7 +683,7 @@ def _md_to_html(
     def remove_empty_section(match):
         header = match.group(1)
         content = match.group(2)
-        if re.search(r"[a-zA-Z]", content):
+        if re.search(r"\S", content):  # any non-whitespace (incl. Polish etc.)
             return header + content
         return ""
 
@@ -805,12 +909,39 @@ def _word_count_html(html: str) -> int:
 
 
 def _strip_disclosure_from_html(body: str) -> str:
-    """Remove any Disclosure heading and its content from article body. The script adds the disclosure in a yellow box at the end."""
-    return re.sub(
+    """Remove any Disclosure/Informacja heading and its content from article body. The script adds the disclosure in a yellow box at the end."""
+    # EN: Disclosure; PL: Informacja
+    body = re.sub(
         r"(?si)\s*<h[23](?:\s[^>]*)?>\s*Disclosure\s*</h[23]>.*?(?=<h[1-6](?:\s|>)|\Z)",
         "",
         body,
     )
+    body = re.sub(
+        r"(?si)\s*<h[23](?:\s[^>]*)?>\s*Informacja\s*</h[23]>.*?(?=<h[1-6](?:\s|>)|\Z)",
+        "",
+        body,
+    )
+    return body
+
+
+# Canonical Tailwind classes for article body (EN and PL must match).
+_ARTICLE_H2_CLASS = "text-3xl font-bold mt-8 mb-4"
+_ARTICLE_H3_CLASS = "text-xl font-semibold mt-6 mb-3"
+_ARTICLE_P_CLASS = "text-lg text-gray-700 mb-4"
+_ARTICLE_UL_CLASS = "list-disc list-inside space-y-2 text-gray-700"
+_ARTICLE_OL_CLASS = "list-decimal list-inside space-y-2 text-gray-700"
+_ARTICLE_TABLE_CLASS = "min-w-full border border-gray-200"
+
+
+def _normalize_article_body_styles(body: str) -> str:
+    """Force canonical article body classes so EN and PL (and any AI output) render identically. Replaces opening tags for h2, h3, p, ul, ol, table."""
+    body = re.sub(r"<h2(?:\s[^>]*)?>", f"<h2 class=\"{_ARTICLE_H2_CLASS}\">", body, flags=re.IGNORECASE)
+    body = re.sub(r"<h3(?:\s[^>]*)?>", f"<h3 class=\"{_ARTICLE_H3_CLASS}\">", body, flags=re.IGNORECASE)
+    body = re.sub(r"<p(?:\s[^>]*)?>", f"<p class=\"{_ARTICLE_P_CLASS}\">", body, flags=re.IGNORECASE)
+    body = re.sub(r"<ul(?:\s[^>]*)?>", f"<ul class=\"{_ARTICLE_UL_CLASS}\">", body, flags=re.IGNORECASE)
+    body = re.sub(r"<ol(?:\s[^>]*)?>", f"<ol class=\"{_ARTICLE_OL_CLASS}\">", body, flags=re.IGNORECASE)
+    body = re.sub(r"<table(?:\s[^>]*)?>", f"<table class=\"{_ARTICLE_TABLE_CLASS}\">", body, flags=re.IGNORECASE)
+    return body
 
 
 def _render_article(
@@ -819,6 +950,11 @@ def _render_article(
     existing_slugs: set[str] | None = None,
     slug_to_fs: dict[str, str] | None = None,
     nav_html: str = "",
+    page_lang: str = "en",
+    site_articles: list[tuple[dict, Path]] | None = None,
+    logo_href: str = "/",
+    articles_dir: Path | None = None,
+    config_path: Path | None = None,
 ) -> None:
     is_html = path.suffix.lower() == ".html"
     if is_html:
@@ -837,7 +973,7 @@ def _render_article(
         slug = meta.get("slug") or path.stem
         title = (meta.get("title") or slug).strip()
         updated_iso = _updated_date_iso(meta, path)
-        body_html = _md_to_html(body, existing_slugs, slug_to_fs)
+        body_html = _md_to_html(body, existing_slugs, slug_to_fs, page_lang=page_lang)
         body_html = enhance_article(body_html)
         tool_list = _load_affiliate_tools(AFFILIATE_TOOLS_PATH)
         body_html = replace_tool_names_with_links(body_html, tool_list)
@@ -853,6 +989,8 @@ def _render_article(
     body_html = _strip_leading_h1(body_html)
     # Insert Prompt Generator CTA block above "When NOT to use this" when that section exists
     body_html = _inject_prompt_generator_cta(body_html)
+    # Normalize body tag classes so EN and PL (and any AI output) render identically
+    body_html = _normalize_article_body_styles(body_html)
 
     slug_fs = (slug_to_fs or {}).get(slug, slug)
     html_path = out_dir / "articles" / slug_fs / "index.html"
@@ -860,23 +998,28 @@ def _render_article(
 
     category_slug = (meta.get("category") or meta.get("category_slug") or "").strip() or None
     lead = _extract_lead(meta, body_html)
+    # Display title without content-type prefix (EN and PL same; H1 and <title> use this)
+    title_display = _strip_content_type_prefix_from_title(title) or title
     # Title (H1) at top, then meta block (category, date, reading time, lead), then body
-    title_h1 = _article_title_h1(title)
+    title_h1 = _article_title_h1(title_display)
     audience_type = (meta.get("audience_type") or "").strip() or None
     if not audience_type:
         audience_type = _audience_type_from_stem(path.stem)
-    meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead, audience_type)
+    loc = _locale(page_lang)
+    meta_html = _article_meta_block(updated_iso, reading_min, category_slug, lead, audience_type, page_lang=page_lang)
     full_body_html = title_h1 + meta_html + body_html
 
     # Generate "Read Next" section
     read_next_html = ""
+    _articles_dir = articles_dir or (PROJECT_ROOT / "content" / "articles")
+    _config_path = config_path or (PROJECT_ROOT / "content" / "config.yaml")
     try:
-        all_articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+        all_articles = get_production_articles(_articles_dir, _config_path)
         other_articles = [a for a in all_articles if (a[0].get("slug") or a[1].stem) != slug]
         selected = random.sample(other_articles, min(3, len(other_articles)))
         if selected:
             read_next_html = '<section class="bg-gray-50 p-6 rounded-lg mt-8">'
-            read_next_html += '<h3 class="font-bold text-gray-900 mb-3">Read Next:</h3>'
+            read_next_html += f'<h3 class="font-bold text-gray-900 mb-3">{_escape(loc["read_next_heading"])}</h3>'
             read_next_html += '<ul class="space-y-2">'
             for art_meta, art_path in selected:
                 art_title = _escape(art_meta.get("title") or "Untitled")
@@ -890,9 +1033,9 @@ def _render_article(
     full_body_html += read_next_html
 
     # Affiliate disclosure (yellow box, below Read Next, above footer)
-    disclosure_html = """
+    disclosure_html = f"""
 <div class="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm rounded-r">
-    <strong>Disclosure:</strong> Some links on this page are affiliate links. If you make a purchase through these links, we may earn a commission at no extra cost to you.
+    <strong>{_escape(loc["disclosure_heading"])}</strong> {_escape(loc["disclosure_body"])}
 </div>"""
     full_body_html += disclosure_html
 
@@ -901,12 +1044,17 @@ def _render_article(
 
     if ARTICLE_TEMPLATE_PATH.exists():
         content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
-        content = content.replace("{{TITLE}}", _escape(title), 1)
+        content = content.replace("{{TITLE}}", _escape(title_display), 1)
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LOGO_HREF}}", logo_href, 1)
+        content = content.replace("{{PRIVACY_LABEL}}", _escape(loc.get("footer_privacy", "Privacy Policy")), 1)
+        content = content.replace("{{PROMPT_GENERATOR_LABEL}}", _escape(loc.get("footer_prompt_generator", "Prompt Generator")), 1)
     else:
         content = _wrap_page(title, body_html, updated_iso)
+    if page_lang != "en":
+        content = re.sub(r'<html\s+lang="en"\s*>', f'<html lang="{page_lang}">', content, count=1)
     html_path.write_text(content, encoding="utf-8")
     print(f"  {html_path.relative_to(out_dir)}")
     # Mark source .md as filled so fill_articles skips it next time
@@ -994,6 +1142,8 @@ def _render_hub(
     slug_to_fs: dict[str, str] | None = None,
     output_slug: str | None = None,
     nav_html: str = "",
+    page_lang: str = "en",
+    logo_href: str = "/",
 ) -> None:
     meta, body = _parse_md_file(path)
     slug = (output_slug or meta.get("slug") or path.stem).strip()
@@ -1036,21 +1186,25 @@ def _render_hub(
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LOGO_HREF}}", logo_href, 1)
     else:
+        logo_esc = _escape(logo_href)
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"../../assets/styles.css\">\n"
             "  <style>body{font-family:-apple-system,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n"
             "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
-            "  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
+            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n  </div>\n"
             "  <footer class=\"site-footer text-center\"><div class=\"site-footer-inner\">"
-            "<p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\" target=\"_blank\" rel=\"noopener noreferrer\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></div></footer>\n"
+            "<p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></div></footer>\n"
             "</body>\n</html>\n"
         )
+    if page_lang != "en":
+        content = re.sub(r'<html\s+lang="en"\s*>', f'<html lang="{page_lang}">', content, count=1)
     html_path.write_text(content, encoding="utf-8")
     print(f"  {html_path.relative_to(out_dir)}")
 
@@ -1061,6 +1215,8 @@ def _update_index(
     articles: list[tuple[dict, Path]],
     nav_html: str,
     slug_to_fs: dict[str, str] | None = None,
+    page_lang: str = "en",
+    logo_href: str = "/",
 ) -> None:
     slug_to_fs = slug_to_fs or {}
     index_path = out_dir / "index.html"
@@ -1100,26 +1256,29 @@ def _update_index(
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LOGO_HREF}}", logo_href, 1)
     else:
         # Fallback: build full page with static footer (no template file)
-        footer = '  <footer class="text-center">\n    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="https://generator.flowtaro.com" target="_blank" rel="noopener noreferrer">Prompt Generator</a> · <a href="/privacy.html">Privacy Policy</a></p>\n  </footer>\n'
+        logo_esc = _escape(logo_href)
+        footer = '  <footer class="text-center">\n    <p><a href="/robots.txt">robots.txt</a> · <a href="/sitemap.xml">sitemap.xml</a> · <a href="https://generator.flowtaro.com">Prompt Generator</a> · <a href="/privacy.html">Privacy Policy</a></p>\n  </footer>\n'
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n</head>\n<body>\n"
-            "  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
+            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n"
             + footer
             + "  </div>\n</body>\n</html>\n"
         )
-
+    if page_lang != "en":
+        content = re.sub(r'<html\s+lang="en"\s*>', f'<html lang="{page_lang}">', content, count=1)
     index_path.write_text(content, encoding="utf-8")
     print(f"  {index_path.relative_to(out_dir)} (updated)")
 
 
-def _write_privacy_page(out_dir: Path, nav_html: str = "") -> None:
+def _write_privacy_page(out_dir: Path, nav_html: str = "", page_lang: str = "en", logo_href: str = "/") -> None:
     """Generate public/privacy.html from privacy.docx or Privacy Policy.md (or placeholder if both missing)."""
     privacy_body: str
     if PRIVACY_DOCX_PATH.exists() and _DOCX_AVAILABLE:
@@ -1142,16 +1301,20 @@ def _write_privacy_page(out_dir: Path, nav_html: str = "") -> None:
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", privacy_body, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LOGO_HREF}}", logo_href, 1)
     else:
+        logo_esc = _escape(logo_href)
         content = (
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}.article-body{max-width:70ch;margin-left:auto;margin-right:auto;line-height:1.7;color:#1e293b;padding:0 1rem}</style>\n</head>\n<body>\n"
-            "  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"/\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
+            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n" + privacy_body + "\n  </div>\n"
-            "  <footer class=\"site-footer text-center\"><p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\" target=\"_blank\" rel=\"noopener noreferrer\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></footer>\n"
+            "  <footer class=\"site-footer text-center\"><p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></footer>\n"
             "</body>\n</html>\n"
         )
+    if page_lang != "en":
+        content = re.sub(r'<html\s+lang="en"\s*>', f'<html lang="{page_lang}">', content, count=1)
     privacy_path = out_dir / "privacy.html"
     privacy_path.write_text(content, encoding="utf-8")
     print(f"  {privacy_path.relative_to(out_dir)} (updated)")
@@ -1173,6 +1336,30 @@ def _ensure_images(out_dir: Path) -> None:
                 pass
 
 
+def _ensure_assets(out_dir: Path) -> None:
+    """Copy assets (e.g. styles.css) from public/assets to out_dir/assets so PL and other builds have CSS.
+    When out_dir is public_pl, public/assets is the source; when out_dir is public, skip (assets already there)."""
+    if out_dir == PUBLIC_DIR:
+        return
+    src_assets = PUBLIC_DIR / "assets"
+    dst_assets = out_dir / "assets"
+    if not src_assets.is_dir():
+        print("  Warning: public/assets/ not found; styles.css will 404. Build main site first or add public/assets/.")
+        return
+    try:
+        dst_assets.mkdir(parents=True, exist_ok=True)
+        for name in os.listdir(src_assets):
+            src_path = src_assets / name
+            dst_path = dst_assets / name
+            if src_path.is_file():
+                shutil.copy2(src_path, dst_path)
+            elif src_path.is_dir():
+                shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+        print(f"  Copied assets to {dst_assets.relative_to(PROJECT_ROOT)}")
+    except OSError as e:
+        print(f"  Warning: could not copy assets: {e}")
+
+
 def _articles_for_hub(
     all_articles: list[tuple[dict, Path]],
     hub_category: str,
@@ -1192,38 +1379,79 @@ def _articles_for_hub(
 
 
 def main() -> None:
-    config = load_config(CONFIG_PATH)
-    hubs = get_hubs_list(config)
-    nav_html = _build_nav_html(hubs)
+    parser = argparse.ArgumentParser(description="Render production articles and hubs to static HTML.")
+    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl).")
+    parser.add_argument("--site", default=None, choices=("main", "pl"), help="Site: main (default) or pl (subdomain). Overridden by env SITE.")
+    parser.add_argument(
+        "--out-dir",
+        default=None,
+        help="Output directory. Default: public_pl for --site pl, else public. Env: OUTPUT_DIR or OUT_DIR.",
+    )
+    parser.add_argument("--base-url", default=None, help="Base URL for absolute links (e.g. https://flowtaro.com). Overridden by env BASE_URL.")
+    args = parser.parse_args()
+
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    config_path = content_dir / "config.yaml"
+    articles_dir = content_dir / "articles"
+    hubs_dir = content_dir / "hubs"
+
+    site = (args.site or os.environ.get("SITE") or "main").strip().lower()
+    if site not in ("main", "pl"):
+        site = "main"
+    default_out = "public_pl" if site == "pl" else "public"
+    # OUTPUT_DIR and OUT_DIR allow CI (e.g. Cloudflare) to force output dir; default follows --site pl → public_pl
+    out_dir_raw = (
+        args.out_dir
+        or os.environ.get("OUTPUT_DIR")
+        or os.environ.get("OUT_DIR")
+        or default_out
+    )
+    public = Path(out_dir_raw)
+    if not public.is_absolute():
+        public = PROJECT_ROOT / public
+    try:
+        out_label = str(public.relative_to(PROJECT_ROOT))
+    except ValueError:
+        out_label = str(public)
+    print(f"Output directory: {out_label}")
+    base_url = (args.base_url or os.environ.get("BASE_URL") or ("https://pl.flowtaro.com" if site == "pl" else "https://flowtaro.com")).strip().rstrip("/")
+
+    config = load_config(config_path)
+    hubs = get_hubs_list_for_site(config, site)
+    category_slugs = get_category_slugs_for_site(config, site)
+    nav_html = _build_nav_html(hubs, site=site, base_url_pl="https://pl.flowtaro.com", base_url_main="https://flowtaro.com")
+    logo_href = "https://flowtaro.com" if site == "pl" else "/"
     first_hub_category = hubs[0]["category"] if hubs else None
-    public = PUBLIC_DIR
     public.mkdir(parents=True, exist_ok=True)
 
-    print("Rendering production articles...")
-    articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+    print(f"Rendering production articles (site={site})...")
+    all_articles = get_production_articles(articles_dir, config_path)
+    articles = [(meta, path) for meta, path in all_articles if (meta.get("category") or meta.get("category_slug") or "").strip() in category_slugs]
     existing_slugs = {meta.get("slug") or path.stem for meta, path in articles}
     slug_to_fs = {meta.get("slug") or path.stem: _slug_for_path(meta.get("slug") or path.stem, public) for meta, path in articles}
+    page_lang = "pl" if site == "pl" else "en"
     for meta, path in articles:
-        _render_article(path, public, existing_slugs, slug_to_fs, nav_html)
+        _render_article(path, public, existing_slugs, slug_to_fs, nav_html, page_lang=page_lang, logo_href=logo_href, articles_dir=articles_dir, config_path=config_path)
 
     print("Rendering hubs...")
     for hub in hubs:
         slug = hub["slug"]
         category = hub["category"]
-        hub_path = HUBS_DIR / f"{slug}.md"
+        hub_path = hubs_dir / f"{slug}.md"
         if hub_path.exists():
             hub_articles = _articles_for_hub(articles, category, first_hub_category)
-            _render_hub(hub_path, public, hub_articles, existing_slugs, slug_to_fs, output_slug=slug, nav_html=nav_html)
+            _render_hub(hub_path, public, hub_articles, existing_slugs, slug_to_fs, output_slug=slug, nav_html=nav_html, page_lang=page_lang, logo_href=logo_href)
         else:
             print(f"  (no {hub_path.name})")
 
-    print("Updating public/index.html...")
-    _update_index(public, hubs, articles, nav_html, slug_to_fs)
+    print("Updating index.html...")
+    _update_index(public, hubs, articles, nav_html, slug_to_fs, page_lang=page_lang, logo_href=logo_href)
 
     print("Writing privacy page...")
-    _write_privacy_page(public, nav_html)
+    _write_privacy_page(public, nav_html, page_lang=page_lang, logo_href=logo_href)
 
     _ensure_images(public)
+    _ensure_assets(public)
 
     print("Done.")
 
