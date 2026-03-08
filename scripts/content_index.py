@@ -23,16 +23,42 @@ def _default_config() -> dict:
         "use_case_audience_pyramid": [3, 3],
         "suggested_problems": [],
         "category_mode": "production_only",
+        "use_case_single_hub": True,
         "hubs": None,
+        "subdomain_hubs": [],
         "content_types_all": [
             "how-to", "guide", "best", "comparison", "review",
             "sales", "product-comparison", "best-in-category", "category-products",
         ],
+        "lock_equivalents": {},
     }
 
 
+def _hub_dict_from_current(current_hub: dict) -> dict:
+    """Build hub dict from current_hub (YAML parser), including optional description and lang."""
+    slug = (current_hub.get("slug") or current_hub.get("category") or "").strip() or "ai-marketing-automation"
+    category = (current_hub.get("category") or current_hub.get("slug") or "").strip() or "ai-marketing-automation"
+    title = (current_hub.get("title") or current_hub.get("slug") or current_hub.get("category") or "").strip()
+    entry = {"slug": slug, "category": category, "title": title}
+    desc = (current_hub.get("description") or "").strip()
+    lang = (current_hub.get("lang") or "").strip()
+    if desc:
+        entry["description"] = desc
+    if lang:
+        entry["lang"] = lang
+    return entry
+
+
+def _append_hub_to_list(hubs_list: list, current_hub: dict) -> None:
+    if current_hub and (current_hub.get("slug") or current_hub.get("category")):
+        hubs_list.append(_hub_dict_from_current(current_hub))
+
+
 def _inject_hubs_from_data(data: dict, out: dict) -> None:
-    """If data has a valid 'hubs' list (from JSON), set out['hubs']; else leave out['hubs'] unset (None)."""
+    """If data has a valid 'hubs' list (from JSON), set out['hubs']; else leave out['hubs'] unset (None). Also set subdomain_hubs if present."""
+    raw_sub = data.get("subdomain_hubs")
+    if isinstance(raw_sub, list):
+        out["subdomain_hubs"] = [str(s).strip() for s in raw_sub if str(s).strip()]
     raw = data.get("hubs")
     if raw is None:
         out["hubs"] = None
@@ -45,8 +71,15 @@ def _inject_hubs_from_data(data: dict, out: dict) -> None:
             slug = (h.get("slug") or h.get("category") or "").strip()
             category = (h.get("category") or slug or "").strip()
             title = (h.get("title") or "").strip()
+            description = (h.get("description") or "").strip()
+            lang = (h.get("lang") or "").strip()
             if slug or category:
-                hubs.append({"slug": slug or category, "category": category or slug, "title": title or slug})
+                entry = {"slug": slug or category, "category": category or slug, "title": title or slug}
+                if description:
+                    entry["description"] = description
+                if lang:
+                    entry["lang"] = lang
+                hubs.append(entry)
         out["hubs"] = hubs if hubs else None
         return
     if isinstance(raw, str):
@@ -60,8 +93,15 @@ def _inject_hubs_from_data(data: dict, out: dict) -> None:
                     slug = (h.get("slug") or h.get("category") or "").strip()
                     category = (h.get("category") or slug or "").strip()
                     title = (h.get("title") or "").strip()
+                    description = (h.get("description") or "").strip()
+                    lang = (h.get("lang") or "").strip()
                     if slug or category:
-                        hubs.append({"slug": slug or category, "category": category or slug, "title": title or slug})
+                        entry = {"slug": slug or category, "category": category or slug, "title": title or slug}
+                        if description:
+                            entry["description"] = description
+                        if lang:
+                            entry["lang"] = lang
+                        hubs.append(entry)
                 out["hubs"] = hubs if hubs else None
                 return
         except (json.JSONDecodeError, TypeError):
@@ -82,6 +122,42 @@ def get_hubs_list(config: dict) -> list[dict]:
     category = (config.get("production_category") or "ai-marketing-automation").strip()
     title = (config.get("hub_title") or "AI Marketing Automation Tools & Workflows").strip()
     return [{"slug": slug, "category": category, "title": title}]
+
+
+def get_hubs_list_for_site(config_or_site: dict | str, site: str | None = None) -> list[dict]:
+    """
+    Return hubs for the given site.
+
+    Can be called in two ways:
+    - get_hubs_list_for_site(site): loads config from content/config.yaml, returns hubs for that site.
+    - get_hubs_list_for_site(config, site): uses the provided config (e.g. from content/pl/config.yaml).
+
+    site in ("main", "pl").
+    For "pl": return hubs whose slug/category is in subdomain_hubs (subdomain-only hubs).
+    For "main": return hubs whose slug/category is NOT in subdomain_hubs (main site hubs).
+    """
+    if site is None:
+        site = (config_or_site or "main").strip().lower()
+        config = load_config()
+    else:
+        config = config_or_site
+        site = (site or "main").strip().lower()
+    if site not in ("main", "pl"):
+        site = "main"
+    hubs = get_hubs_list(config)
+    sub = config.get("subdomain_hubs") or []
+    if not isinstance(sub, list):
+        sub = []
+    sub_set = {str(s).strip() for s in sub if str(s).strip()}
+    if site == "pl":
+        return [h for h in hubs if ((h.get("slug") or h.get("category") or "").strip() in sub_set)]
+    return [h for h in hubs if ((h.get("slug") or h.get("category") or "").strip() not in sub_set)]
+
+
+def get_category_slugs_for_site(config: dict, site: str) -> set[str]:
+    """Return set of category slugs for the given site (from get_hubs_list_for_site)."""
+    hubs = get_hubs_list_for_site(config, site)
+    return {(h.get("category") or h.get("slug") or "").strip() for h in hubs if (h.get("category") or h.get("slug"))}
 
 
 def load_config(path: Path | None = None) -> dict:
@@ -121,6 +197,7 @@ def load_config(path: Path | None = None) -> dict:
                 "use_case_audience_pyramid": pyramid,
                 "suggested_problems": suggested,
                 "category_mode": category_mode,
+                "use_case_single_hub": bool(data.get("use_case_single_hub")),
             }
             _inject_hubs_from_data(data, out)
             raw_ct = data.get("content_types_all")
@@ -128,6 +205,8 @@ def load_config(path: Path | None = None) -> dict:
                 out["content_types_all"] = [str(x).strip() for x in raw_ct if str(x).strip()]
             else:
                 out["content_types_all"] = _default_config().get("content_types_all", [])[:]
+            raw_le = data.get("lock_equivalents")
+            out["lock_equivalents"] = dict(raw_le) if isinstance(raw_le, dict) else {}
             return out
     except (json.JSONDecodeError, ValueError):
         pass
@@ -145,43 +224,35 @@ def load_config(path: Path | None = None) -> dict:
             if list_key == "hubs":
                 if stripped.startswith("-"):
                     if current_hub and (current_hub.get("slug") or current_hub.get("category")):
-                        hubs_list.append({
-                            "slug": (current_hub.get("slug") or current_hub.get("category") or "").strip() or "ai-marketing-automation",
-                            "category": (current_hub.get("category") or current_hub.get("slug") or "").strip() or "ai-marketing-automation",
-                            "title": (current_hub.get("title") or current_hub.get("slug") or current_hub.get("category") or "").strip(),
-                        })
+                        _append_hub_to_list(hubs_list, current_hub)
                     current_hub = {}
                     after_dash = stripped[1:].strip()
                     if ":" in after_dash:
                         k, _, v = after_dash.partition(":")
                         k, v = k.strip(), v.strip().strip('"\'').strip()
-                        if k in ("slug", "category", "title"):
+                        if k in ("slug", "category", "title", "description", "lang"):
                             current_hub[k] = v
                 elif ":" in stripped:
                     k, _, v = stripped.partition(":")
                     k, v = k.strip(), v.strip().strip('"\'').strip()
-                    if k in ("slug", "category", "title"):
+                    if k in ("slug", "category", "title", "description", "lang"):
                         current_hub[k] = v
                     else:
                         in_list = False
                         if current_hub and (current_hub.get("slug") or current_hub.get("category")):
-                            hubs_list.append({
-                                "slug": (current_hub.get("slug") or current_hub.get("category") or "").strip() or "ai-marketing-automation",
-                                "category": (current_hub.get("category") or current_hub.get("slug") or "").strip() or "ai-marketing-automation",
-                                "title": (current_hub.get("title") or current_hub.get("slug") or current_hub.get("category") or "").strip(),
-                            })
+                            _append_hub_to_list(hubs_list, current_hub)
                         out["hubs"] = hubs_list if hubs_list else None
                         list_key = None
                 else:
                     in_list = False
                     if current_hub and (current_hub.get("slug") or current_hub.get("category")):
-                        hubs_list.append({
-                            "slug": (current_hub.get("slug") or current_hub.get("category") or "").strip() or "ai-marketing-automation",
-                            "category": (current_hub.get("category") or current_hub.get("slug") or "").strip() or "ai-marketing-automation",
-                            "title": (current_hub.get("title") or current_hub.get("slug") or current_hub.get("category") or "").strip(),
-                        })
+                        _append_hub_to_list(hubs_list, current_hub)
                     out["hubs"] = hubs_list if hubs_list else None
                     list_key = None
+            elif list_key == "subdomain_hubs" and stripped.startswith("-"):
+                val = stripped[1:].strip().strip('"\'')
+                if val:
+                    out.setdefault("subdomain_hubs", []).append(val)
             elif stripped.startswith("-"):
                 val = stripped[1:].strip().strip('"\'')
                 if val and list_key == "sandbox_categories":
@@ -197,11 +268,7 @@ def load_config(path: Path | None = None) -> dict:
                     out.setdefault("content_types_all", []).append(val)
             else:
                 if list_key == "hubs" and current_hub and (current_hub.get("slug") or current_hub.get("category")):
-                    hubs_list.append({
-                        "slug": (current_hub.get("slug") or current_hub.get("category") or "").strip() or "ai-marketing-automation",
-                        "category": (current_hub.get("category") or current_hub.get("slug") or "").strip() or "ai-marketing-automation",
-                        "title": (current_hub.get("title") or current_hub.get("slug") or current_hub.get("category") or "").strip(),
-                    })
+                    _append_hub_to_list(hubs_list, current_hub)
                     out["hubs"] = hubs_list if hubs_list else None
                 in_list = False
                 list_key = None
@@ -227,8 +294,15 @@ def load_config(path: Path | None = None) -> dict:
                                 slug = (h.get("slug") or h.get("category") or "").strip()
                                 category = (h.get("category") or slug or "").strip()
                                 title = (h.get("title") or "").strip()
+                                desc = (h.get("description") or "").strip()
+                                lang = (h.get("lang") or "").strip()
                                 if slug or category:
-                                    hubs.append({"slug": slug or category, "category": category or slug, "title": title or slug})
+                                    entry = {"slug": slug or category, "category": category or slug, "title": title or slug}
+                                    if desc:
+                                        entry["description"] = desc
+                                    if lang:
+                                        entry["lang"] = lang
+                                    hubs.append(entry)
                             out["hubs"] = hubs if hubs else None
                         else:
                             out["hubs"] = None
@@ -276,9 +350,22 @@ def load_config(path: Path | None = None) -> dict:
                         first = first[1:].strip().strip('"\'')
                     if first and first != "[]":
                         out["suggested_problems"].append(first)
+            elif key == "subdomain_hubs":
+                in_list = True
+                list_key = "subdomain_hubs"
+                out["subdomain_hubs"] = []
+                if rest and rest != "|":
+                    first = rest.strip().strip('"\'')
+                    if first.startswith("-"):
+                        first = first[1:].strip().strip('"\'')
+                    if first:
+                        out["subdomain_hubs"].append(first)
             elif key == "category_mode":
                 mode = rest.strip('"\'').strip().lower()
                 out["category_mode"] = mode if mode in {"production_only", "preserve_sandbox"} else "production_only"
+            elif key == "use_case_single_hub":
+                v = rest.strip('"\'').strip().lower()
+                out["use_case_single_hub"] = v in ("true", "1", "yes")
             elif key == "content_types_all":
                 in_list = True
                 list_key = "content_types_all"
@@ -289,6 +376,34 @@ def load_config(path: Path | None = None) -> dict:
                         first = first[1:].strip().strip('"\'')
                     if first:
                         out["content_types_all"].append(first)
+    # Parse lock_equivalents (nested dict) from raw text if present
+    if "lock_equivalents" in text and ":" in text:
+        le_dict: dict[str, str] = {}
+        in_le = False
+        for line in text.split("\n"):
+            s = line.strip()
+            if s.startswith("#"):
+                continue
+            if re.match(r"^lock_equivalents\s*:\s*$", line.strip()):
+                in_le = True
+                continue
+            if in_le:
+                if line and not line.startswith(" ") and not line.startswith("\t"):
+                    in_le = False
+                    continue
+                # Line like '  "Kradzieże rowerów": "Bike theft"' or "  'key': 'val'"
+                kv = re.match(r'^\s{2,}(?:"([^"]*)"|\'([^\']*)\')\s*:\s*(?:"([^"]*)"|\'([^\']*)\')\s*$', line)
+                if kv:
+                    k = (kv.group(1) or kv.group(2) or "").strip()
+                    v = (kv.group(3) or kv.group(4) or "").strip()
+                    if k:
+                        le_dict[k] = v
+                elif not line.strip():
+                    continue
+                else:
+                    in_le = False
+        if le_dict:
+            out["lock_equivalents"] = le_dict
     return out
 
 
