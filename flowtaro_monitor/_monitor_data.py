@@ -5,7 +5,14 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from flowtaro_monitor._config import AFFILIATE_TOOLS_PATH, CONTENT_DIR, LOGS_DIR, PROJECT_ROOT, SCRIPTS_DIR
+from flowtaro_monitor._config import (
+    AFFILIATE_TOOLS_PATH,
+    LOGS_DIR,
+    PROJECT_ROOT,
+    SCRIPTS_DIR,
+    get_content_dir,
+    get_content_root,
+)
 
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
@@ -14,10 +21,7 @@ from content_index import get_hubs_list, load_config  # noqa: E402
 from generate_queue import load_tools  # noqa: E402
 from monitor import (  # noqa: E402
     API_COSTS_PATH,
-    ARTICLES_DIR,
-    CONFIG_PATH,
     ERROR_LOG,
-    QUEUE_PATH,
     _load_cost_data,
     collect_article_stats,
     collect_cost_summary,
@@ -29,10 +33,14 @@ from monitor import (  # noqa: E402
 
 
 def get_dashboard_data(cost_days: int = 30) -> dict:
-    """Zbiera dane do dashboardu: artykuły, kolejka, koszty, ostatnie uruchomienia, błędy."""
-    config = load_config(CONFIG_PATH)
-    art = collect_article_stats(ARTICLES_DIR, config)
-    items, q_by_status, oldest_todo = collect_queue_status(QUEUE_PATH)
+    """Zbiera dane do dashboardu: artykuły, kolejka, koszty, ostatnie uruchomienia, błędy. Używa aktualnego content root (EN/PL)."""
+    content_dir = get_content_dir()
+    config_path = content_dir / "config.yaml"
+    articles_dir = content_dir / "articles"
+    queue_path = content_dir / "queue.yaml"
+    config = load_config(config_path)
+    art = collect_article_stats(articles_dir, config)
+    items, q_by_status, oldest_todo = collect_queue_status(queue_path)
     cost_data = _load_cost_data()
     total_cost, cost_last_n, avg_cost = collect_cost_summary(
         cost_data, cost_days, art["total"]
@@ -67,38 +75,62 @@ def reset_cost_data() -> None:
 
 
 def validate_project_root() -> tuple[bool, str | None]:
-    """Sprawdza, czy PROJECT_ROOT wygląda na katalog ACM (content/, scripts/). Zwraca (ok, komunikat_błędu)."""
+    """Sprawdza, czy PROJECT_ROOT wygląda na katalog ACM (content root, scripts/). Zwraca (ok, komunikat_błędu)."""
     if not SCRIPTS_DIR.exists():
         return False, f"Brak folderu scripts/: {SCRIPTS_DIR}"
-    if not CONTENT_DIR.exists():
-        return False, f"Brak folderu content/: {CONTENT_DIR}"
+    content_dir = get_content_dir()
+    if not content_dir.exists():
+        return False, f"Brak folderu content root: {content_dir}"
     return True, None
 
 
+def _category_display_label(cat: str, hub: dict | None) -> str:
+    """Etykieta do UI: tytuł huba lub slug; dla hubów z lang pl dodajemy ' (PL)'."""
+    if hub:
+        label = (hub.get("title") or cat).strip()
+        if (hub.get("lang") or "").strip().lower() == "pl":
+            return f"{label} (PL)"
+        return label
+    return cat
+
+
 def get_use_case_defaults() -> dict:
-    """Dla akcji Generuj use case'y: batch_size, pyramid (lista int), suma piramidy i lista kategorii z config (production + sandbox)."""
-    out = {"batch_size": 9, "pyramid": [3, 3], "categories": []}
-    if not CONFIG_PATH.exists():
+    """Dla akcji Generuj use case'y: batch_size, pyramid (lista int), suma piramidy i lista kategorii z config (production + sandbox).
+    categories = slugi (do --category); categories_display = etykiety do UI (dla hubów z lang pl dodajemy ' (PL)')."""
+    out = {"batch_size": 9, "pyramid": [3, 3], "categories": [], "categories_display": []}
+    config_path = get_content_dir() / "config.yaml"
+    if not config_path.exists():
         out["pyramid_sum"] = sum(out["pyramid"])
+        out["categories_display"] = out["categories"]
         return out
-    cfg = load_config(CONFIG_PATH)
+    cfg = load_config(config_path)
     out["batch_size"] = int(cfg.get("use_case_batch_size") or 9)
     p = cfg.get("use_case_audience_pyramid")
     out["pyramid"] = [int(x) for x in p] if isinstance(p, list) and p else [3, 3]
     out["pyramid_sum"] = sum(out["pyramid"])
     prod = (cfg.get("production_category") or "").strip()
     sandbox = cfg.get("sandbox_categories") or []
+    hubs_list = get_hubs_list(cfg) or []
+    hub_by_cat = {}
+    for hub in hubs_list:
+        if isinstance(hub, dict):
+            c = (hub.get("category") or hub.get("slug") or "").strip()
+            if c:
+                hub_by_cat[c] = hub
     cats = [prod] if prod else []
+    display = [_category_display_label(prod, hub_by_cat.get(prod))] if prod else []
     for s in sandbox:
         if isinstance(s, str) and s.strip() and s.strip() not in cats:
             cats.append(s.strip())
-    # Include categories from hubs so new hub categories appear without adding to sandbox
-    for hub in get_hubs_list(cfg) or []:
+            display.append(_category_display_label(s.strip(), hub_by_cat.get(s.strip())))
+    for hub in hubs_list:
         if isinstance(hub, dict):
             c = (hub.get("category") or hub.get("slug") or "").strip()
             if c and c not in cats:
                 cats.append(c)
+                display.append(_category_display_label(c, hub))
     out["categories"] = cats or ["ai-marketing-automation"]
+    out["categories_display"] = display if len(display) == len(cats) else out["categories"]
     return out
 
 
@@ -107,9 +139,10 @@ def get_article_tools_data() -> list[tuple[str, str]]:
     Returns sorted by slug."""
     import re as _re
     results: list[tuple[str, str]] = []
-    if not ARTICLES_DIR.exists():
+    articles_dir = get_content_dir() / "articles"
+    if not articles_dir.exists():
         return results
-    for path in sorted(ARTICLES_DIR.glob("*.md")):
+    for path in sorted(articles_dir.glob("*.md")):
         try:
             text = path.read_text(encoding="utf-8")
         except OSError:
@@ -162,14 +195,20 @@ def save_affiliate_tools(tools: list[dict]) -> None:
         name = (t.get("name") or "").strip()
         category = (t.get("category") or "").strip() or "general"
         link = (t.get("affiliate_link") or "").strip()
-        desc = (t.get("short_description_en") or "").strip()
+        desc_en = (t.get("short_description_en") or "").strip()
+        desc_pl = (t.get("short_description_pl") or "").strip()
+        cta_label = (t.get("cta_button_label") or "").strip()
         if not name:
             continue
         lines.append(f"  - name: {_quote_yaml(name)}")
         lines.append(f"    category: {_quote_yaml(category)}")
         lines.append(f"    affiliate_link: {_quote_yaml(link)}")
-        if desc:
-            lines.append(f"    short_description_en: {_quote_yaml(desc)}")
+        if desc_pl:
+            lines.append(f"    short_description_pl: {_quote_yaml(desc_pl)}")
+        if desc_en:
+            lines.append(f"    short_description_en: {_quote_yaml(desc_en)}")
+        if cta_label:
+            lines.append(f"    cta_button_label: {_quote_yaml(cta_label)}")
     AFFILIATE_TOOLS_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -231,9 +270,10 @@ def get_article_report_data() -> list[dict]:
     failure_reasons = _load_failure_reasons_by_stem()
     error_log_reasons = _load_last_error_by_stem_from_errors_log()
     rows: list[dict] = []
-    if not ARTICLES_DIR.exists():
+    articles_dir = get_content_dir() / "articles"
+    if not articles_dir.exists():
         return rows
-    for path in sorted(ARTICLES_DIR.glob("*.md")):
+    for path in sorted(articles_dir.glob("*.md")):
         stem = path.stem
         try:
             text = path.read_text(encoding="utf-8")
@@ -275,7 +315,7 @@ def get_article_report_data() -> list[dict]:
 
 def get_article_slug(stem: str) -> str:
     """Slug artykułu: frontmatter 'slug' lub stem (zgodnie z render_site)."""
-    path = ARTICLES_DIR / f"{stem}.md"
+    path = get_content_dir() / "articles" / f"{stem}.md"
     if not path.exists():
         return stem
     try:
@@ -295,9 +335,10 @@ def get_article_slug(stem: str) -> str:
 
 
 def get_public_article_html_path(stem: str) -> Path:
-    """Ścieżka do pliku artykułu w public/articles/<slug>/index.html (do podglądu w przeglądarce)."""
+    """Ścieżka do pliku artykułu w public/articles/<slug>/index.html (EN) lub public_pl/articles/ (PL)."""
     slug = get_article_slug(stem)
-    return PROJECT_ROOT / "public" / "articles" / slug / "index.html"
+    out_dir = "public_pl" if get_content_root().replace("\\", "/") == "content/pl" else "public"
+    return PROJECT_ROOT / out_dir / "articles" / slug / "index.html"
 
 
 def build_articles_report_html(data: list[dict], output_path: Path) -> None:

@@ -1,12 +1,12 @@
 production_category: "problem-fix-find-pl"
 hub_slug: "problem-fix-find-pl"
-hub_title: "Problem Fix & Find"
+hub_title: "Problem Fix & Find (PL)"
 
 # Lista hubów (slug, category, title, optional description, lang). Używana przez generate_hubs, render_site, sitemap.
 hubs:
   - slug: "problem-fix-find-pl"
     category: "problem-fix-find-pl"
-    title: "Problem Fix & Find"
+    title: "Problem Fix & Find (PL)"
 
 subdomain_hubs:
   - "problem-fix-find-pl"

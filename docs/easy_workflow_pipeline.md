@@ -113,3 +113,29 @@ Aby nie powielać tych samych ustawień w dwóch miejscach i uprościć UI:
 
 - Pod etykietą **Podział odbiorców** dodano wiersz z licznikiem **Suma …/…** (np. „Suma: 9 / 9”) oraz spinboxami Beginner / Intermediate / Professional.
 - Logika jak w dawnej Konfiguracji: **IntVar** dla trzech wartości, **suma na żywo**, kolor (zielony = równa limitowi, czerwony/pomarańczowy przy rozjazdzie), **clamp** — zmiana Beginner/Intermediate automatycznie koryguje Professional tak, aby suma = limit; zmiana limitu odświeża licznik.
+
+## Pipeline artykułów po polsku (PL)
+
+Aby generować artykuły **po polsku** (merytoryka dla polskich odbiorców, polskie źródła i kontekst):
+
+1. **W UI (zakładka „Generuj łatwo artykuły” lub „Generuj artykuły”)** w sekcji **„Gdzie trafią artykuły”** wybierz w dropdownie kategorię **„Problem Fix & Find (PL)”**.
+2. Ustaw problemy, limit, typy treści i uruchom **Uruchom** lub **Generuj z podglądem**.
+3. Pipeline automatycznie:
+   - **generate_use_cases** — przypisuje use case’om `lang: pl` (na podstawie huba o `category: problem-fix-find-pl` z `lang: pl` w config),
+   - **generate_queue** — wpisuje `lang: pl` do elementów kolejki,
+   - **generate_articles** — dopisuje w frontmatter `lang: pl`,
+   - **fill_articles** — używa instrukcji po polsku (polski rynek, PLN, polskie źródła i realia).
+4. Wygenerowane artykuły trafiają do huba „Problem Fix & Find” i na subdomenę **pl.flowtaro.com** (build: `render_site --site pl --out-dir public_pl`).
+
+W dropdownie kategorie hubów z językiem polskim są oznaczone etykietą **„(PL)”**.
+
+### Nowe tematy po polsku (suggested_problems) — bez zmian w kodzie
+
+- **Automatycznie:** Gdy pierwszy problem w `suggested_problems` jest po polsku (np. zawiera znaki ą, ę, ó), model dostaje instrukcję, żeby zwracać pole **„problem”** w tym samym języku co ten wpis. Dzięki temu sprawdzenie „hard lock” (zgodność z tematem) działa bez słownika.
+- **Opcjonalnie w configu:** W `content/config.yaml` możesz dodać sekcję **lock_equivalents** (słownik). Klucz = dokładny tekst problemu z `suggested_problems`, wartość = fraza po angielsku do porównania, gdy model i tak zwróci opisy po angielsku:
+  ```yaml
+  lock_equivalents:
+    "Kradzieże rowerów": "Bike theft"
+    "Organizacja przestrzeni": "Space organization"
+  ```
+  Przy zapisie configu z UI ta sekcja jest zachowywana. Dla nowych tematów wystarczy dopisać jedną linię w configu; zmiany w kodzie nie są potrzebne.

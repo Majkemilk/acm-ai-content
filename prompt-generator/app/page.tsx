@@ -199,18 +199,7 @@ export default function Home() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      <div className="mx-auto max-w-3xl">
-        {/* Logo – same as main site */}
-        <div className="mb-8 text-center">
-          <a href="/" className="inline-block">
-            <img
-              src="/images/logo.webp"
-              alt="Flowtaro"
-              className="mx-auto block h-auto w-56"
-            />
-          </a>
-        </div>
-
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
         <div className="rounded-xl border border-[#e2e8f0] bg-white py-8 px-6 shadow-sm sm:px-10 sm:py-12">
           {/* Hero */}
           <h1 className="text-2xl font-bold tracking-tight text-[#17266B] sm:text-3xl">

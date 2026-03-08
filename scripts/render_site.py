@@ -405,23 +405,23 @@ def _build_nav_html(
     site: str = "main",
     base_url_pl: str | None = None,
     base_url_main: str | None = None,
-) -> str:
-    """Build site nav: Home | hub1 | hub2 | Prompt Generator | EN | PL. For site=pl append link to main (Flowtaro). For site=main append link to pl (Problem Fix & Find). EN/PL are both links; current has aria-current and site-nav-link-active."""
-    parts: list[str] = []
-    parts.append('<a href="/" class="site-nav-link">Home</a>')
+) -> tuple[str, str]:
+    """Build (main_nav_html, lang_switcher_html). Main nav: Home | hub1 | ... | Prompt Generator | Flowtaro/PFF. Lang switcher: EN | PL for top-right corner."""
+    main_parts: list[str] = []
+    main_parts.append('<a href="/" class="site-nav-link">Home</a>')
     for h in hubs:
         slug = (h.get("slug") or h.get("category") or "").strip()
         if not slug:
             continue
         label = (h.get("title") or slug).strip()
         url = f"/hubs/{_escape(slug)}/"
-        parts.append(f'<a href="{url}" class="site-nav-link">{_escape(label)}</a>')
-    parts.append('<a href="https://generator.flowtaro.com" class="site-nav-link">Prompt Generator</a>')
+        main_parts.append(f'<a href="{url}" class="site-nav-link">{_escape(label)}</a>')
+    main_parts.append('<a href="https://generator.flowtaro.com" class="site-nav-link">Prompt Generator</a>')
     if site == "pl" and base_url_main:
-        parts.append(f'<a href="{_escape(base_url_main)}" class="site-nav-link">Flowtaro</a>')
+        main_parts.append(f'<a href="{_escape(base_url_main)}" class="site-nav-link">Flowtaro</a>')
     elif site == "main" and base_url_pl:
-        parts.append(f'<a href="{_escape(base_url_pl)}" class="site-nav-link">Problem Fix &amp; Find (PL)</a>')
-    # Language switcher: both EN and PL as links; active one has aria-current="page" and class site-nav-link-active
+        main_parts.append(f'<a href="{_escape(base_url_pl)}" class="site-nav-link">Problem Fix &amp; Find (PL)</a>')
+    main_nav = '<nav class="site-nav" aria-label="Main">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join(main_parts) + "</nav>"
     en_url = base_url_main or "https://flowtaro.com"
     pl_url = base_url_pl or "https://pl.flowtaro.com"
     if site == "main":
@@ -430,9 +430,8 @@ def _build_nav_html(
     else:
         en_link = f'<a href="{_escape(en_url)}" class="site-nav-link">EN</a>'
         pl_link = f'<a href="{_escape(pl_url)}" class="site-nav-link site-nav-link-active" aria-current="page">PL</a>'
-    parts.append(en_link)
-    parts.append(pl_link)
-    return '<nav class="site-nav" aria-label="Main">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join(parts) + "</nav>"
+    lang_switcher = '<nav class="site-nav-lang" aria-label="Language">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join([en_link, pl_link]) + "</nav>"
+    return (main_nav, lang_switcher)
 
 
 def _inline_links(s: str) -> str:
@@ -628,7 +627,7 @@ _INDEX_LOCALE = {
         "cta_h2": "Gotowe prompty AI",
         "cta_p": "Skorzystaj z Generatora promptów Flowtaro, aby otrzymać spersonalizowany prompt do Claude, ChatGPT lub innych narzędzi AI. Jeden prompt, jedna płatność – bez abonamentu.",
         "cta_btn": "Przejdź do Generatora promptów",
-        "about_p": "Flowtaro to niezależna platforma recenzji i edukacji, która pomaga wybierać odpowiednie narzędzia AI. Oferujemy porównania, poradniki i praktyczne wskazówki – w oparciu o testy i badania.",
+        "about_p": "Flowtaro to niezależna platforma recenzji i edukacji, która pomaga wybierać odpowiednie narzędzia AI oraz praktyczne rozwiązania dla Twojego domu, warsztatu, podróży i bezpieczeństwa. Oferujemy porównania, poradniki i praktyczne wskazówki – w oparciu o testy i badania.",
         "about_pl_section": (
             '<section class="about my-8 max-w-4xl mx-auto px-4">'
             '<h2 class="text-2xl font-bold text-[rgb(23,38,107)] mb-3">O nas</h2>'
@@ -1097,6 +1096,7 @@ def _render_article(
     logo_href: str = "/",
     articles_dir: Path | None = None,
     config_path: Path | None = None,
+    lang_switcher_html: str = "",
 ) -> None:
     is_html = path.suffix.lower() == ".html"
     if is_html:
@@ -1194,6 +1194,7 @@ def _render_article(
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LANG_SWITCHER}}", lang_switcher_html, 1)
         content = content.replace("{{LOGO_HREF}}", logo_href, 1)
         content = content.replace("{{PRIVACY_LABEL}}", _escape(loc.get("footer_privacy", "Privacy Policy")), 1)
         content = content.replace("{{PROMPT_GENERATOR_LABEL}}", _escape(loc.get("footer_prompt_generator", "Prompt Generator")), 1)
@@ -1290,6 +1291,7 @@ def _render_hub(
     nav_html: str = "",
     page_lang: str = "en",
     logo_href: str = "/",
+    lang_switcher_html: str = "",
 ) -> None:
     meta, body = _parse_md_file(path)
     slug = (output_slug or meta.get("slug") or path.stem).strip()
@@ -1333,6 +1335,7 @@ def _render_hub(
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LANG_SWITCHER}}", lang_switcher_html, 1)
         content = content.replace("{{LOGO_HREF}}", logo_href, 1)
         loc = _locale(page_lang)
         content = content.replace("{{FOOTER_PROMPT_GENERATOR}}", _escape(loc.get("footer_prompt_generator", "Prompt Generator")), 1)
@@ -1345,7 +1348,7 @@ def _render_hub(
             f"  <title>{_escape(title)}</title>\n  <link rel=\"stylesheet\" href=\"../../assets/styles.css\">\n"
             "  <style>body{font-family:-apple-system,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n"
             "<script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<body>\n"
-            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
+            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"flex flex-wrap items-center justify-between gap-2\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto block\"></a>" + lang_switcher_html + "</div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n  </div>\n"
@@ -1367,6 +1370,7 @@ def _update_index(
     slug_to_fs: dict[str, str] | None = None,
     page_lang: str = "en",
     logo_href: str = "/",
+    lang_switcher_html: str = "",
 ) -> None:
     slug_to_fs = slug_to_fs or {}
     index_locale = _INDEX_LOCALE.get((page_lang or "en").strip().lower()) or _INDEX_LOCALE["en"]
@@ -1444,6 +1448,7 @@ def _update_index(
         content = content.replace("{{FOOTER_PRIVACY}}", _escape(index_locale.get("footer_privacy", "Privacy Policy")), 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LANG_SWITCHER}}", lang_switcher_html, 1)
         content = content.replace("{{LOGO_HREF}}", logo_href, 1)
     else:
         # Fallback: build full page with static footer (no template file)
@@ -1453,7 +1458,7 @@ def _update_index(
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             "  <title>Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}</style>\n</head>\n<body>\n"
-            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
+            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"flex flex-wrap items-center justify-between gap-2\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto block\"></a>" + lang_switcher_html + "</div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n"
             + dynamic_content
             + "\n"
@@ -1466,7 +1471,7 @@ def _update_index(
     print(f"  {index_path.relative_to(out_dir)} (updated)")
 
 
-def _write_privacy_page(out_dir: Path, nav_html: str = "", page_lang: str = "en", logo_href: str = "/") -> None:
+def _write_privacy_page(out_dir: Path, nav_html: str = "", page_lang: str = "en", logo_href: str = "/", lang_switcher_html: str = "") -> None:
     """Generate public/privacy.html from privacy.docx or Privacy Policy.md (or placeholder if both missing)."""
     privacy_body: str
     if PRIVACY_DOCX_PATH.exists() and _DOCX_AVAILABLE:
@@ -1490,6 +1495,7 @@ def _write_privacy_page(out_dir: Path, nav_html: str = "", page_lang: str = "en"
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", privacy_body, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
+        content = content.replace("{{LANG_SWITCHER}}", lang_switcher_html, 1)
         content = content.replace("{{LOGO_HREF}}", logo_href, 1)
     else:
         logo_esc = _escape(logo_href)
@@ -1497,7 +1503,7 @@ def _write_privacy_page(out_dir: Path, nav_html: str = "", page_lang: str = "en"
             "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n"
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
             "  <title>Privacy Policy - Flowtaro</title>\n  <link rel=\"stylesheet\" href=\"assets/styles.css\">\n  <style>body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;line-height:1.6;color:#1e293b;background:#fff;margin:0;padding:0}.flowtaro-container{max-width:960px!important;margin-left:auto!important;margin-right:auto!important;padding:2rem 1rem!important}.article-body{max-width:70ch;margin-left:auto;margin-right:auto;line-height:1.7;color:#1e293b;padding:0 1rem}</style>\n</head>\n<body>\n"
-            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"text-center\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto mx-auto block\"></a></div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
+            f"  <section class=\"bg-white pt-6 pb-6\"><div class=\"max-w-4xl mx-auto px-4\"><div class=\"flex flex-wrap items-center justify-between gap-2\"><a href=\"{logo_esc}\"><img src=\"/images/logo.webp\" alt=\"Flowtaro\" class=\"w-56 h-auto block\"></a>" + lang_switcher_html + "</div><div class=\"mt-6\">" + nav_html + "</div></div></section>\n"
             "  <div class=\"flowtaro-container\">\n" + privacy_body + "\n  </div>\n"
             "  <footer class=\"site-footer text-center\"><p>&copy; 2026 Flowtaro. <a href=\"https://generator.flowtaro.com\">Prompt Generator</a> &middot; <a href=\"/privacy.html\">Privacy Policy</a></p></footer>\n"
             "</body>\n</html>\n"
@@ -1611,7 +1617,7 @@ def main() -> None:
     config = load_config(config_path)
     hubs = get_hubs_list_for_site(config, site)
     category_slugs = get_category_slugs_for_site(config, site)
-    nav_html = _build_nav_html(hubs, site=site, base_url_pl="https://pl.flowtaro.com", base_url_main="https://flowtaro.com")
+    nav_html, lang_switcher_html = _build_nav_html(hubs, site=site, base_url_pl="https://pl.flowtaro.com", base_url_main="https://flowtaro.com")
     logo_href = "https://flowtaro.com/"
     first_hub_category = hubs[0]["category"] if hubs else None
     public.mkdir(parents=True, exist_ok=True)
@@ -1623,7 +1629,7 @@ def main() -> None:
     slug_to_fs = {meta.get("slug") or path.stem: _slug_for_path(meta.get("slug") or path.stem, public) for meta, path in articles}
     page_lang = "pl" if site == "pl" else "en"
     for meta, path in articles:
-        _render_article(path, public, existing_slugs, slug_to_fs, nav_html, page_lang=page_lang, logo_href=logo_href, articles_dir=articles_dir, config_path=config_path)
+        _render_article(path, public, existing_slugs, slug_to_fs, nav_html, page_lang=page_lang, logo_href=logo_href, articles_dir=articles_dir, config_path=config_path, lang_switcher_html=lang_switcher_html)
 
     print("Rendering hubs...")
     for hub in hubs:
@@ -1632,15 +1638,15 @@ def main() -> None:
         hub_path = hubs_dir / f"{slug}.md"
         if hub_path.exists():
             hub_articles = _articles_for_hub(articles, category, first_hub_category)
-            _render_hub(hub_path, public, hub_articles, existing_slugs, slug_to_fs, output_slug=slug, nav_html=nav_html, page_lang=page_lang, logo_href=logo_href)
+            _render_hub(hub_path, public, hub_articles, existing_slugs, slug_to_fs, output_slug=slug, nav_html=nav_html, page_lang=page_lang, logo_href=logo_href, lang_switcher_html=lang_switcher_html)
         else:
             print(f"  (no {hub_path.name})")
 
     print("Updating index.html...")
-    _update_index(public, hubs, articles, nav_html, slug_to_fs, page_lang=page_lang, logo_href=logo_href)
+    _update_index(public, hubs, articles, nav_html, slug_to_fs, page_lang=page_lang, logo_href=logo_href, lang_switcher_html=lang_switcher_html)
 
     print("Writing privacy page...")
-    _write_privacy_page(public, nav_html, page_lang=page_lang, logo_href=logo_href)
+    _write_privacy_page(public, nav_html, page_lang=page_lang, logo_href=logo_href, lang_switcher_html=lang_switcher_html)
 
     _ensure_images(public)
     _ensure_assets(public)

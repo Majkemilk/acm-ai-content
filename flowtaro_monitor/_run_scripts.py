@@ -1,11 +1,29 @@
 # Flowtaro Monitor – uruchamianie skryptów z scripts/ z przechwyceniem outputu
+import os
 import queue
 import subprocess
 import sys
 import threading
 from pathlib import Path
 
-from flowtaro_monitor._config import PROJECT_ROOT, SCRIPTS_DIR, get_python_executable
+from flowtaro_monitor._config import (
+    PROJECT_ROOT,
+    SCRIPTS_DIR,
+    get_python_executable,
+    get_content_root_resolved,
+    _CONTENT_ROOT_PL,
+)
+
+
+def _script_env() -> dict[str, str]:
+    """Środowisko dla subprocess: CONTENT_ROOT (4D); dla PL także SITE=pl, OUT_DIR=public_pl."""
+    env = {**os.environ}
+    content_root = get_content_root_resolved()
+    env["CONTENT_ROOT"] = content_root
+    if content_root == _CONTENT_ROOT_PL:
+        env["SITE"] = "pl"
+        env["OUT_DIR"] = "public_pl"
+    return env
 
 
 def run_script(
@@ -16,6 +34,7 @@ def run_script(
     """
     Uruchamia skrypt z scripts/ z cwd = PROJECT_ROOT.
     Zwraca (połączony stdout+stderr jako string, kod powrotu).
+    Przekazuje CONTENT_ROOT w env (wariant 4D).
     """
     script_path = SCRIPTS_DIR / script_name
     if not script_path.exists():
@@ -25,6 +44,7 @@ def run_script(
         result = subprocess.run(
             cmd,
             cwd=str(PROJECT_ROOT),
+            env=_script_env(),
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -43,6 +63,7 @@ def run_script(
 SCRIPT_MAP = {
     "generate_use_cases": "generate_use_cases.py",
     "generate_queue": "generate_queue.py",
+    "pick_run_links": "pick_run_links.py",
     "generate_articles": "generate_articles.py",
     "fill_articles": "fill_articles.py",
     "update_affiliate_links": "update_affiliate_links.py",
@@ -90,6 +111,7 @@ def start_script_streaming(
         proc = subprocess.Popen(
             cmd,
             cwd=str(PROJECT_ROOT),
+            env=_script_env(),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,

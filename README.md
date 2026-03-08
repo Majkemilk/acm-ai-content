@@ -107,3 +107,14 @@ For an **A1 deploy** (publish only the static output):
 - **Output directory:** `public`
 - **Build command:** none (no build step required for A1)
 - This deploy serves as a pipeline test: the site root shows a placeholder; `public/` must contain `index.html`, `robots.txt`, and `sitemap.xml`.
+
+### Subdomain pl.flowtaro.com (Polish site)
+
+The Polish hub "Problem Fix & Find" is built to **`public_pl/`**. Cloudflare Pages allows only **one output directory per project**, so **flowtaro.com** and **pl.flowtaro.com** must use **two separate Pages projects** from the same repo:
+
+- **Project 1 (flowtaro.com):** output directory `public`, build command optional (or `python scripts/render_site.py`).
+- **Project 2 (pl.flowtaro.com):** output directory **`public_pl`**, build command:  
+  `CONTENT_ROOT=content/pl python scripts/render_site.py --site pl`  
+  Assign custom domain **pl.flowtaro.com** to Project 2 only.
+
+See **`docs/audit_pl_subdomain_flowtaro.md`** for the full technical audit and step-by-step fix.
