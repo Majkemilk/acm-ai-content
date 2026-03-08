@@ -7,13 +7,16 @@ Fills {{INTERNAL_LINKS}} from existing articles (same category/tool/content_type
 """
 
 import argparse
+import hashlib
 import json
+import os
 import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
 
 from content_index import get_hubs_list, get_production_articles, load_config
+from content_root import get_content_root_path
 
 # Pattern: markdown link using our internal URL convention (already has links)
 INTERNAL_LINK_PATTERN = re.compile(r"\]\s*\(\s*/articles/[^)]+\)")
@@ -54,10 +57,13 @@ TEMPLATES_DIR = PROJECT_ROOT / "templates"
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
 
 
-def get_template_path(content_type: str) -> Path:
-    """Return path to type-specific template: templates/{content_type}.md. Raises if missing."""
+def get_template_path(content_type: str, use_pl_templates: bool = False) -> Path:
+    """Return path to type-specific template: templates/{content_type}.md or templates/pl/{content_type}.md for PL. Raises if missing."""
     normalized = normalize_content_type(content_type)
-    path = TEMPLATES_DIR / f"{normalized}.md"
+    if use_pl_templates:
+        path = TEMPLATES_DIR / "pl" / f"{normalized}.md"
+    else:
+        path = TEMPLATES_DIR / f"{normalized}.md"
     if not path.exists():
         raise FileNotFoundError(
             f"Template not found for content_type '{content_type}' (resolved: '{normalized}'): {path}"
@@ -179,14 +185,22 @@ def normalize_content_type(raw: str) -> str:
     return DEFAULT_CONTENT_TYPE
 
 
+# Windows path limit ~260; leave room for articles_dir + date + .audience_xxx.md
+MAX_SLUG_LENGTH = 180
+
+
 def slug_from_keyword(primary_keyword: str) -> str:
-    """Build filename-safe slug from primary keyword."""
+    """Build filename-safe slug from primary keyword. Truncates with hash suffix if over MAX_SLUG_LENGTH."""
     if not primary_keyword:
         return "article"
     s = primary_keyword.lower().strip()
     s = re.sub(r"[^a-z0-9\s-]", "", s)
     s = re.sub(r"[-\s]+", "-", s).strip("-")
-    return s or "article"
+    s = s or "article"
+    if len(s) <= MAX_SLUG_LENGTH:
+        return s
+    suffix = hashlib.sha256(primary_keyword.encode("utf-8")).hexdigest()[:8]
+    return s[: MAX_SLUG_LENGTH - 9].rstrip("-") + "-" + suffix
 
 
 def parse_article_frontmatter(path: Path) -> dict | None:
@@ -475,8 +489,9 @@ def run_re_skeleton(path: Path) -> bool:
                 allowed_categories.add(c)
 
     content_type = normalize_content_type((item.get("content_type") or "").strip())
+    use_pl_templates = "pl" in path.parts
     try:
-        template_path = get_template_path(content_type)
+        template_path = get_template_path(content_type, use_pl_templates=use_pl_templates)
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return False
@@ -503,6 +518,13 @@ def run_re_skeleton(path: Path) -> bool:
     )
     internal_links_str = format_internal_links_bullets(links) if links else None
 
+    default_lang = "en"
+    for hub in get_hubs_list(cfg) or []:
+        if isinstance(hub, dict) and (hub.get("lang") or "").strip().lower() == "pl":
+            default_lang = "pl"
+            break
+    if "pl" in CONFIG_PATH.parts:
+        default_lang = "pl"
     new_content = render_article(
         template,
         item,
@@ -511,6 +533,7 @@ def run_re_skeleton(path: Path) -> bool:
         category_mode=category_mode,
         production_category=production_category,
         allowed_categories=allowed_categories,
+        default_lang=default_lang,
     )
     try:
         path.write_text(new_content, encoding="utf-8")
@@ -539,6 +562,25 @@ def run_backfill(articles_dir: Path) -> None:
     print(f"\nSummary: {updated} updated, {skipped} skipped (already have links), {unchanged} unchanged.")
 
 
+# Content-type title prefixes to strip for PL (no "Products in category: " etc. in reader-facing title)
+_TITLE_PREFIXES_STRIP_PL = (
+    "products in category: ", "best in category: ", "comparison of ", "guide to ",
+    "how to ", "sales: ", "best ", "review: ",
+)
+
+
+def _strip_content_type_prefix_from_title(title: str) -> str:
+    """Strip leading content-type prefix (case-insensitive) for PL reader-friendly titles."""
+    if not title or not title.strip():
+        return title
+    t = title.strip()
+    lower = t.lower()
+    for prefix in _TITLE_PREFIXES_STRIP_PL:
+        if lower.startswith(prefix):
+            return t[len(prefix) :].strip() or t
+    return t
+
+
 def build_frontmatter(
     item: dict,
     today: str,
@@ -546,12 +588,18 @@ def build_frontmatter(
     category_mode: str,
     production_category: str,
     allowed_categories: set[str],
+    default_lang: str = "en",
 ) -> str:
     """Build YAML frontmatter from queue item; use placeholders for missing required fields. Category and content_type are normalized."""
     raw_cat = (item.get("category_slug") or item.get("category") or "").strip()
     raw_ct = (item.get("content_type") or "").strip()
+    title_val = (item.get("title") or "{{TITLE}}").strip()
+    keyword_val = (item.get("primary_keyword") or "{{PRIMARY_KEYWORD}}").strip()
+    if (default_lang or "").strip().lower() == "pl" and title_val and "{{" not in title_val:
+        title_val = _strip_content_type_prefix_from_title(title_val) or title_val
+        keyword_val = _strip_content_type_prefix_from_title(keyword_val) or keyword_val
     fm = {
-        "title": item.get("title") or "{{TITLE}}",
+        "title": title_val or "{{TITLE}}",
         "content_type": normalize_content_type(raw_ct),
         "category": normalize_category(
             raw_cat,
@@ -559,18 +607,17 @@ def build_frontmatter(
             production_category=production_category,
             allowed_categories=allowed_categories,
         ),
-        "primary_keyword": item.get("primary_keyword") or "{{PRIMARY_KEYWORD}}",
+        "primary_keyword": keyword_val or "{{PRIMARY_KEYWORD}}",
         "tools": item.get("tools", ""),
         "last_updated": item.get("last_updated") or today,
         "status": "draft",
     }
-    # Default language: English for product pipeline types
+    # Language: from queue item, or default_lang from config (e.g. pl for PL content root; product types use same default)
     ct_lower = raw_ct.strip().lower()
-    product_types = ("sales", "product-comparison", "best-in-category", "category-products")
-    if ct_lower in product_types and not item.get("lang"):
-        fm["lang"] = "en"
-    elif item.get("lang"):
+    if item.get("lang"):
         fm["lang"] = (item.get("lang") or "").strip()
+    else:
+        fm["lang"] = (default_lang or "en").strip()
     if item.get("audience_type"):
         fm["audience_type"] = (item.get("audience_type") or "").strip()
     if item.get("batch_id"):
@@ -647,6 +694,7 @@ def render_article(
     category_mode: str,
     production_category: str,
     allowed_categories: set[str],
+    default_lang: str = "en",
 ) -> str:
     """Produce article body: frontmatter + template with variables replaced."""
     front = build_frontmatter(
@@ -655,6 +703,7 @@ def render_article(
         category_mode=category_mode,
         production_category=production_category,
         allowed_categories=allowed_categories,
+        default_lang=default_lang,
     )
     body = template
     for placeholder, value in get_replacements(
@@ -670,11 +719,19 @@ def render_article(
 
 
 def main() -> None:
+    global CONFIG_PATH, QUEUE_PATH, ARTICLES_DIR
     parser = argparse.ArgumentParser(description="Generate articles from queue or backfill internal links.")
+    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl).")
     parser.add_argument("--backfill", action="store_true", help="Update existing articles with internal links; do not generate from queue.")
     parser.add_argument("--re-skeleton", metavar="PATH", type=Path, default=None, help="Regenerate skeleton for one .md from its frontmatter (overwrites file; same slug).")
     parser.add_argument("--include-preview-skipped", action="store_true", help="Also process queue items with status 'preview_skipped' (for preview flow).")
     args = parser.parse_args()
+
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    CONFIG_PATH = content_dir / "config.yaml"
+    QUEUE_PATH = content_dir / "queue.yaml"
+    ARTICLES_DIR = content_dir / "articles"
+    use_pl_templates = "pl" in content_dir.parts or content_dir.name == "pl"
 
     articles_dir = ARTICLES_DIR
     articles_dir.mkdir(parents=True, exist_ok=True)
@@ -706,6 +763,14 @@ def main() -> None:
             c = (hub.get("category") or hub.get("slug") or "").strip()
             if c:
                 allowed_categories.add(c)
+    default_lang = "en"
+    for hub in get_hubs_list(cfg) or []:
+        if isinstance(hub, dict) and (hub.get("lang") or "").strip().lower() == "pl":
+            default_lang = "pl"
+            break
+    # When content root is PL, always use Polish (safeguard even if hub config is missing lang)
+    if "pl" in content_dir.parts or content_dir.name == "pl":
+        default_lang = "pl"
     if not QUEUE_PATH.exists():
         print(f"Queue not found: {QUEUE_PATH}")
         return
@@ -722,9 +787,16 @@ def main() -> None:
 
     for i in todo_indices:
         item = items[i]
+        if use_pl_templates:
+            raw_title = (item.get("title") or "").strip()
+            raw_kw = (item.get("primary_keyword") or "").strip()
+            if raw_title and "{{" not in raw_title:
+                st = _strip_content_type_prefix_from_title(raw_title) or raw_title
+                sk = _strip_content_type_prefix_from_title(raw_kw) or raw_kw
+                item = {**item, "title": st, "primary_keyword": sk.lower() if sk else raw_kw}
         content_type = normalize_content_type((item.get("content_type") or "").strip())
         try:
-            template_path = get_template_path(content_type)
+            template_path = get_template_path(content_type, use_pl_templates=use_pl_templates)
         except FileNotFoundError as e:
             print(f"Error: {e}")
             return
@@ -768,6 +840,7 @@ def main() -> None:
             category_mode=category_mode,
             production_category=production_category,
             allowed_categories=allowed_categories,
+            default_lang=default_lang,
         )
         out_path.write_text(content, encoding="utf-8")
         print(f"Generated: {out_path}")

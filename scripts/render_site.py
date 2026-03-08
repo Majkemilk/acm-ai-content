@@ -158,6 +158,15 @@ def _load_affiliate_tools(path: Path) -> list[tuple[str, str]]:
     Load content/affiliate_tools.yaml and return list of (name, url).
     url is affiliate_link; empty string if missing or empty. Stdlib only.
     """
+    items = _load_affiliate_tools_with_descriptions(path)
+    return [(name, url) for name, url, _d_en, _d_pl in items]
+
+
+def _load_affiliate_tools_with_descriptions(path: Path) -> list[tuple[str, str, str, str]]:
+    """
+    Load affiliate_tools.yaml and return list of (name, url, short_description_en, short_description_pl).
+    Stdlib only. Used for PL article render to show Polish descriptions in "Lista platform i narzędzi".
+    """
     if not path.exists():
         return []
     text = path.read_text(encoding="utf-8")
@@ -169,16 +178,20 @@ def _load_affiliate_tools(path: Path) -> list[tuple[str, str]]:
     rest = text[start:].strip()
     if not rest.startswith("-"):
         return []
-    items: list[tuple[str, str]] = []
+    items: list[tuple[str, str, str, str]] = []
     current_name = ""
     current_url = ""
+    current_desc_en = ""
+    current_desc_pl = ""
     for line in rest.split("\n"):
         stripped = line.strip()
         if stripped.startswith("- "):
             if current_name:
-                items.append((current_name, current_url or ""))
+                items.append((current_name, current_url or "", current_desc_en, current_desc_pl))
             current_name = ""
             current_url = ""
+            current_desc_en = ""
+            current_desc_pl = ""
             part = stripped[2:].strip()
             kv = re.match(r"^([a-zA-Z0-9_]+)\s*:\s*(.*)$", part)
             if kv:
@@ -187,6 +200,10 @@ def _load_affiliate_tools(path: Path) -> list[tuple[str, str]]:
                     current_name = v
                 elif k == "affiliate_link":
                     current_url = v
+                elif k == "short_description_en":
+                    current_desc_en = v
+                elif k == "short_description_pl":
+                    current_desc_pl = v
             continue
         kv = re.match(r"^([a-zA-Z0-9_]+)\s*:\s*(.*)$", stripped)
         if kv:
@@ -195,9 +212,58 @@ def _load_affiliate_tools(path: Path) -> list[tuple[str, str]]:
                 current_name = v
             elif k == "affiliate_link":
                 current_url = v
+            elif k == "short_description_en":
+                current_desc_en = v
+            elif k == "short_description_pl":
+                current_desc_pl = v
     if current_name:
-        items.append((current_name, current_url or ""))
+        items.append((current_name, current_url or "", current_desc_en, current_desc_pl))
     return items
+
+
+def _replace_tools_section_descriptions_with_pl(body_html: str, tools_path: Path) -> str:
+    """
+    In the "Lista platform i narzędzi wymienionych w artykule" section, replace each tool's
+    description (text after the link) with short_description_pl from affiliate_tools.yaml.
+    Only runs when we have PL descriptions; preserves list structure.
+    """
+    tools = _load_affiliate_tools_with_descriptions(tools_path)
+    url_to_desc_pl: dict[str, str] = {}
+    for _name, url, _de, dp in tools:
+        if url and dp:
+            url_to_desc_pl[url.strip()] = dp
+    if not url_to_desc_pl:
+        return body_html
+    # Match <li><a href="URL">Name</a> — description</li>; use URL to pick correct desc_pl (same name can have multiple entries).
+    def replace_li(match: re.Match[str]) -> str:
+        full = match.group(0)
+        link_part = match.group(1)
+        href_m = re.search(r'href=["\']([^"\']+)["\']', link_part)
+        if not href_m:
+            return full
+        url = href_m.group(1).strip()
+        desc_pl = url_to_desc_pl.get(url)
+        if not desc_pl:
+            return full
+        return "<li>" + link_part + " — " + _escape(desc_pl) + "</li>"
+    section_re = re.compile(
+        r'<li>(<a\s+href="[^"]*"[^>]*>[^<]+</a>)\s*[—\-]\s*([^<]*)</li>',
+        re.IGNORECASE,
+    )
+    tools_heading = "Lista platform i narzędzi wymienionych w artykule"
+    if tools_heading not in body_html:
+        return body_html
+    idx = body_html.find(tools_heading)
+    if idx == -1:
+        return body_html
+    # Find the next <h2> after this section (or end of string) to limit replacement
+    after = body_html[idx:]
+    next_h2 = re.search(r"<h2[^>]*>", after[200:])  # skip past current h2
+    end = next_h2.start() + 200 if next_h2 else len(after)
+    block = after[:end]
+    rest = after[end:]
+    new_block = section_re.sub(replace_li, block)
+    return body_html[:idx] + new_block + rest
 
 
 def _replace_tool_names_in_text(text: str, tool_list: list[tuple[str, str]]) -> str:
@@ -340,7 +406,7 @@ def _build_nav_html(
     base_url_pl: str | None = None,
     base_url_main: str | None = None,
 ) -> str:
-    """Build site nav: Home | hub1 | hub2 | Prompt Generator. For site=pl append link to main (Flowtaro). For site=main append link to pl (Problem Fix & Find) if base_url_pl set."""
+    """Build site nav: Home | hub1 | hub2 | Prompt Generator | EN | PL. For site=pl append link to main (Flowtaro). For site=main append link to pl (Problem Fix & Find). EN/PL are both links; current has aria-current and site-nav-link-active."""
     parts: list[str] = []
     parts.append('<a href="/" class="site-nav-link">Home</a>')
     for h in hubs:
@@ -354,7 +420,18 @@ def _build_nav_html(
     if site == "pl" and base_url_main:
         parts.append(f'<a href="{_escape(base_url_main)}" class="site-nav-link">Flowtaro</a>')
     elif site == "main" and base_url_pl:
-        parts.append(f'<a href="{_escape(base_url_pl)}" class="site-nav-link">Problem Fix &amp; Find</a>')
+        parts.append(f'<a href="{_escape(base_url_pl)}" class="site-nav-link">Problem Fix &amp; Find (PL)</a>')
+    # Language switcher: both EN and PL as links; active one has aria-current="page" and class site-nav-link-active
+    en_url = base_url_main or "https://flowtaro.com"
+    pl_url = base_url_pl or "https://pl.flowtaro.com"
+    if site == "main":
+        en_link = f'<a href="{_escape(en_url)}" class="site-nav-link site-nav-link-active" aria-current="page">EN</a>'
+        pl_link = f'<a href="{_escape(pl_url)}" class="site-nav-link">PL</a>'
+    else:
+        en_link = f'<a href="{_escape(en_url)}" class="site-nav-link">EN</a>'
+        pl_link = f'<a href="{_escape(pl_url)}" class="site-nav-link site-nav-link-active" aria-current="page">PL</a>'
+    parts.append(en_link)
+    parts.append(pl_link)
     return '<nav class="site-nav" aria-label="Main">' + " <span class=\"site-nav-sep\" aria-hidden=\"true\">|</span> ".join(parts) + "</nav>"
 
 
@@ -525,9 +602,74 @@ _LOCALE = {
     },
 }
 
+# Index page (home) locale: hero, CTA block, about, footer, title. Used for templates/index.html.
+_INDEX_LOCALE = {
+    "en": {
+        "page_title": "Flowtaro",
+        "hero_h1": "AI workflows, simplified",
+        "hero_p": "Independent reviews, comparisons, and guides to help you choose the best AI tools for your business.",
+        "hero_cta": "Explore articles",
+        "cta_h2": "Create ready-to-use AI prompts",
+        "cta_p": "Use the Flowtaro Prompt Generator to get a custom, level-based prompt for Claude, ChatGPT or other AI tools. One prompt, one payment—no subscription.",
+        "cta_btn": "Go to Prompt Generator",
+        "about_p": "Flowtaro is an independent review and educational platform dedicated to helping people choose the right AI tools. We provide in-depth comparisons, how‑to guides, and practical insights – all based on real‑world testing and research.",
+        "about_pl_section": "",  # EN: no extra section
+        "newest_articles_heading": "Newest articles",
+        "read_more": "Read more",
+        "no_articles_yet": "No articles yet.",
+        "footer_prompt_generator": "Prompt Generator",
+        "footer_privacy": "Privacy Policy",
+    },
+    "pl": {
+        "page_title": "Flowtaro – Problem Fix & Find (PL)",
+        "hero_h1": "Problem Fix & Find – nasze rozwiązania na Twoje problemy",
+        "hero_p": "Praktyczne poradniki, recenzje i porównania, które pomogą Ci wybrać najlepsze rozwiązania. Bez zbędnych słów – konkretna wiedza i rekomendacje.",
+        "hero_cta": "Zobacz artykuły",
+        "cta_h2": "Gotowe prompty AI",
+        "cta_p": "Skorzystaj z Generatora promptów Flowtaro, aby otrzymać spersonalizowany prompt do Claude, ChatGPT lub innych narzędzi AI. Jeden prompt, jedna płatność – bez abonamentu.",
+        "cta_btn": "Przejdź do Generatora promptów",
+        "about_p": "Flowtaro to niezależna platforma recenzji i edukacji, która pomaga wybierać odpowiednie narzędzia AI. Oferujemy porównania, poradniki i praktyczne wskazówki – w oparciu o testy i badania.",
+        "about_pl_section": (
+            '<section class="about my-8 max-w-4xl mx-auto px-4">'
+            '<h2 class="text-2xl font-bold text-[rgb(23,38,107)] mb-3">O nas</h2>'
+            '<p class="text-gray-700 text-lg">Problem Fix &amp; Find to dział Flowtaro skierowany do użytkowników polskojęzycznych. Łączymy praktyczne poradniki z recenzjami i porównaniami, aby ułatwić wybór rozwiązań dopasowanych do Twoich potrzeb.</p>'
+            "</section>"
+        ),
+        "newest_articles_heading": "Nowe artykuły",
+        "read_more": "Czytaj więcej",
+        "no_articles_yet": "Brak artykułów.",
+        "footer_prompt_generator": "Generator promptów",
+        "footer_privacy": "Polityka prywatności",
+    },
+}
+
 def _locale(lang: str) -> dict:
     """Return locale dict for lang; fallback to en if unknown."""
     return _LOCALE.get((lang or "en").strip().lower(), _LOCALE["en"])
+
+
+# Base URLs for hreflang (index and other pages)
+_BASE_URL_MAIN = "https://flowtaro.com"
+_BASE_URL_PL = "https://pl.flowtaro.com"
+
+
+def _hreflang_links(page_lang: str) -> str:
+    """Return HTML for hreflang and canonical in <head>. page_lang in ('en', 'pl')."""
+    if page_lang == "pl":
+        canonical = _BASE_URL_PL
+        alternate_en = _BASE_URL_MAIN
+        alternate_pl = _BASE_URL_PL
+    else:
+        canonical = _BASE_URL_MAIN
+        alternate_en = _BASE_URL_MAIN
+        alternate_pl = _BASE_URL_PL
+    lines = [
+        f'  <link rel="canonical" href="{_escape(canonical)}/">',
+        f'  <link rel="alternate" hreflang="en" href="{_escape(alternate_en)}/">',
+        f'  <link rel="alternate" hreflang="pl" href="{_escape(alternate_pl)}/">',
+        f'  <link rel="alternate" hreflang="x-default" href="{_escape(_BASE_URL_MAIN)}/">',
+    ]
+    return "\n".join(lines)
 
 
 _AUDIENCE_BADGE: dict[str, tuple[str, str]] = {
@@ -980,6 +1122,9 @@ def _render_article(
         words = _word_count_md(body)
         reading_min = _reading_time_min(words)
 
+    if (page_lang or "").strip().lower() == "pl":
+        body_html = _replace_tools_section_descriptions_with_pl(body_html, AFFILIATE_TOOLS_PATH)
+
     # Last-line defense: fix Try it yourself <pre> closing and orphan list tags if inconsistencies detected
     if _article_body_has_html_issues(body_html):
         body_html = _sanitize_article_html_body(body_html)
@@ -1045,6 +1190,7 @@ def _render_article(
     if ARTICLE_TEMPLATE_PATH.exists():
         content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("{{TITLE}}", _escape(title_display), 1)
+        content = content.replace("{{HREFLANG_LINKS}}", _hreflang_links(page_lang), 1)
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", article_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
@@ -1183,10 +1329,14 @@ def _render_hub(
     if HUB_TEMPLATE_PATH.exists():
         content = HUB_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("HUB_TITLE_PLACEHOLDER", _escape(title), 1)
+        content = content.replace("{{HREFLANG_LINKS}}", _hreflang_links(page_lang), 1)
         content = content.replace("{{STYLESHEET_HREF}}", "../../assets/styles.css", 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
         content = content.replace("{{LOGO_HREF}}", logo_href, 1)
+        loc = _locale(page_lang)
+        content = content.replace("{{FOOTER_PROMPT_GENERATOR}}", _escape(loc.get("footer_prompt_generator", "Prompt Generator")), 1)
+        content = content.replace("{{FOOTER_PRIVACY}}", _escape(loc.get("footer_privacy", "Privacy Policy")), 1)
     else:
         logo_esc = _escape(logo_href)
         content = (
@@ -1219,6 +1369,7 @@ def _update_index(
     logo_href: str = "/",
 ) -> None:
     slug_to_fs = slug_to_fs or {}
+    index_locale = _INDEX_LOCALE.get((page_lang or "en").strip().lower()) or _INDEX_LOCALE["en"]
     index_path = out_dir / "index.html"
     newest = sorted(articles, key=lambda x: _sort_key_newest(x[0], x[1]), reverse=True)[:12]
     hub_links: list[str] = []
@@ -1229,9 +1380,12 @@ def _update_index(
         label_esc = _escape(label)
         hub_links.append(f'<a href="/hubs/{slug_esc}/" class="text-[rgb(23,38,107)] hover:underline">{label_esc}</a>')
     hub_link = '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">' + " &middot; ".join(hub_links) + '</h2>\n'
+    newest_heading = _escape(index_locale.get("newest_articles_heading", "Newest articles"))
+    read_more_label = _escape(index_locale.get("read_more", "Read more"))
+    no_articles = _escape(index_locale.get("no_articles_yet", "No articles yet."))
     articles_html = ""
     if newest:
-        articles_html = '<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">Newest articles</h2>\n'
+        articles_html = f'<h2 class="text-2xl font-bold mb-6 text-[rgb(23,38,107)] text-center">{newest_heading}</h2>\n'
         articles_html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">\n'
         for meta, path in newest:
             slug = meta.get("slug") or path.stem
@@ -1243,17 +1397,51 @@ def _update_index(
                 <a href="/articles/{slug_esc}/" class="text-gray-900 hover:text-[#17266B]">{title_esc}</a>
             </h3>
             <p class="text-gray-600 text-sm mb-4">{date_esc}</p>
-            <a href="/articles/{slug_esc}/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">Read more</a>
+            <a href="/articles/{slug_esc}/" class="inline-block bg-[#17266B] text-white px-4 py-2 rounded hover:bg-[#0f1a4a] transition">{read_more_label}</a>
         </div>
 '''
         articles_html += '</div>\n'
     else:
-        articles_html = '<p class="text-gray-600">No articles yet.</p>\n'
+        articles_html = f'<p class="text-gray-600">{no_articles}</p>\n'
     dynamic_content = hub_link + articles_html
 
     if INDEX_TEMPLATE_PATH.exists():
         content = INDEX_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
+        content = content.replace("{{HREFLANG_LINKS}}", _hreflang_links(page_lang), 1)
+        content = content.replace("{{PAGE_TITLE}}", _escape(index_locale.get("page_title", "Flowtaro")), 1)
+        content = content.replace("{{HERO_H1}}", _escape(index_locale.get("hero_h1", "AI workflows, simplified")), 1)
+        content = content.replace("{{HERO_P}}", _escape(index_locale.get("hero_p", "")), 1)
+        content = content.replace("{{HERO_CTA}}", _escape(index_locale.get("hero_cta", "Explore articles")), 1)
+        # TOP_CTA_ABOUT_BLOCK: for EN = CTA + about + about_pl_section (empty); for PL = empty (moved to bottom).
+        # BOTTOM_BLOCK: for EN = empty; for PL = CTA + about + about_pl_section (all in Polish).
+        cta_h2 = _escape(index_locale.get("cta_h2", "Create ready-to-use AI prompts"))
+        cta_p = _escape(index_locale.get("cta_p", ""))
+        cta_btn = _escape(index_locale.get("cta_btn", "Go to Prompt Generator"))
+        about_p = _escape(index_locale.get("about_p", ""))
+        about_pl_section = index_locale.get("about_pl_section") or ""
+        cta_section_html = (
+            f'  <section class="max-w-4xl mx-auto px-4 py-10 text-center">\n'
+            f'    <h2 class="text-2xl font-bold text-[rgb(23,38,107)] mb-3">{cta_h2}</h2>\n'
+            f'    <p class="text-gray-700 mb-6 max-w-xl mx-auto">{cta_p}</p>\n'
+            f'    <a href="https://generator.flowtaro.com" class="inline-block bg-[#17266B] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#0f1a4a] transition">{cta_btn}</a>\n'
+            "  </section>\n\n"
+        )
+        about_section_html = (
+            f'  <section class="about my-12 max-w-4xl mx-auto px-4">\n'
+            f'    <p class="text-gray-700 text-lg">{about_p}</p>\n'
+            "  </section>\n"
+        )
+        if (page_lang or "").strip().lower() == "pl":
+            top_block = ""
+            bottom_block = cta_section_html + about_section_html + (about_pl_section if about_pl_section else "")
+        else:
+            top_block = cta_section_html + about_section_html + (about_pl_section if about_pl_section else "")
+            bottom_block = ""
+        content = content.replace("{{TOP_CTA_ABOUT_BLOCK}}", top_block, 1)
+        content = content.replace("{{BOTTOM_BLOCK}}", bottom_block, 1)
+        content = content.replace("{{FOOTER_PROMPT_GENERATOR}}", _escape(index_locale.get("footer_prompt_generator", "Prompt Generator")), 1)
+        content = content.replace("{{FOOTER_PRIVACY}}", _escape(index_locale.get("footer_privacy", "Privacy Policy")), 1)
         content = content.replace("<!-- DYNAMIC_CONTENT -->", dynamic_content, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
         content = content.replace("{{LOGO_HREF}}", logo_href, 1)
@@ -1298,6 +1486,7 @@ def _write_privacy_page(out_dir: Path, nav_html: str = "", page_lang: str = "en"
     if ARTICLE_TEMPLATE_PATH.exists():
         content = ARTICLE_TEMPLATE_PATH.read_text(encoding="utf-8")
         content = content.replace("{{TITLE}}", "Privacy Policy", 1)
+        content = content.replace("{{HREFLANG_LINKS}}", _hreflang_links(page_lang), 1)
         content = content.replace("{{STYLESHEET_HREF}}", "assets/styles.css", 1)
         content = content.replace("<!-- ARTICLE_CONTENT -->", privacy_body, 1)
         content = content.replace("<!-- NAV -->", nav_html, 1)
@@ -1380,7 +1569,7 @@ def _articles_for_hub(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Render production articles and hubs to static HTML.")
-    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl).")
+    parser.add_argument("--content-root", default=None, help="Content root (e.g. content or content/pl). Default: content/pl for --site pl, else content. Env: CONTENT_ROOT.")
     parser.add_argument("--site", default=None, choices=("main", "pl"), help="Site: main (default) or pl (subdomain). Overridden by env SITE.")
     parser.add_argument(
         "--out-dir",
@@ -1390,14 +1579,17 @@ def main() -> None:
     parser.add_argument("--base-url", default=None, help="Base URL for absolute links (e.g. https://flowtaro.com). Overridden by env BASE_URL.")
     args = parser.parse_args()
 
-    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
-    config_path = content_dir / "config.yaml"
-    articles_dir = content_dir / "articles"
-    hubs_dir = content_dir / "hubs"
-
     site = (args.site or os.environ.get("SITE") or "main").strip().lower()
     if site not in ("main", "pl"):
         site = "main"
+    # Content root: explicit --content-root or CONTENT_ROOT wins; else content/pl for PL site, content for main
+    content_root = (args.content_root or os.environ.get("CONTENT_ROOT") or "").strip() or None
+    if not content_root:
+        content_root = "content/pl" if site == "pl" else "content"
+    content_dir = get_content_root_path(PROJECT_ROOT, content_root)
+    config_path = content_dir / "config.yaml"
+    articles_dir = content_dir / "articles"
+    hubs_dir = content_dir / "hubs"
     default_out = "public_pl" if site == "pl" else "public"
     # OUTPUT_DIR and OUT_DIR allow CI (e.g. Cloudflare) to force output dir; default follows --site pl → public_pl
     out_dir_raw = (
@@ -1420,7 +1612,7 @@ def main() -> None:
     hubs = get_hubs_list_for_site(config, site)
     category_slugs = get_category_slugs_for_site(config, site)
     nav_html = _build_nav_html(hubs, site=site, base_url_pl="https://pl.flowtaro.com", base_url_main="https://flowtaro.com")
-    logo_href = "https://flowtaro.com" if site == "pl" else "/"
+    logo_href = "https://flowtaro.com/"
     first_hub_category = hubs[0]["category"] if hubs else None
     public.mkdir(parents=True, exist_ok=True)
 

@@ -16,8 +16,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
-from content_index import load_config
+from content_index import load_config, get_hubs_list
+from content_root import get_content_root_path, get_affiliate_tools_path
 
+# Defaults (overridden in main() from --content-root / CONTENT_ROOT)
 CONTENT_DIR = PROJECT_ROOT / "content"
 CONFIG_PATH = CONTENT_DIR / "config.yaml"
 AFFILIATE_TOOLS_PATH = CONTENT_DIR / "affiliate_tools.yaml"
@@ -157,14 +159,38 @@ def load_use_cases(path: Path) -> list[dict]:
     return load_yaml_list(path, "use_cases")
 
 
-def title_for_entry(problem: str, content_type: str) -> str:
-    """Generate title as '{action} {problem}'. Strips from problem any leading prefix that would duplicate the action."""
+def load_use_cases_with_default_lang(path: Path) -> tuple[list[dict], str | None]:
+    """Load use cases and optional top-level default_lang (e.g. 'pl' for content/pl). Used to set lang on queue items."""
+    if not path.exists():
+        return [], None
+    text = path.read_text(encoding="utf-8")
+    # Parse default_lang from top-level key (before use_cases:)
+    default_lang = None
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("use_cases"):
+            break
+        m = re.match(r"^default_lang\s*:\s*(.+)$", stripped, re.IGNORECASE)
+        if m:
+            raw = m.group(1).strip().strip('"\'').strip().lower()
+            if raw in ("en", "pl"):
+                default_lang = raw
+            break
+    use_cases = load_yaml_list(path, "use_cases")
+    return use_cases, default_lang
+
+
+def title_for_entry(problem: str, content_type: str, add_prefix: bool = True) -> str:
+    """Generate title as '{action} {problem}' when add_prefix=True, else just the problem (for PL reader-friendly titles).
+    Strips from problem any leading prefix that would duplicate the action."""
     problem = (problem or "").strip()
     content_type_key = (content_type or "").strip().lower()
     problem = _strip_duplicate_prefix(problem, content_type_key)
-    action = CONTENT_TYPE_ACTION.get(content_type_key, "Guide to")
     if not problem:
         return "Untitled"
+    if not add_prefix:
+        return problem
+    action = CONTENT_TYPE_ACTION.get(content_type_key, "Guide to")
     return f"{action} {problem}"
 
 
@@ -173,10 +199,23 @@ def title_to_primary_keyword(title: str) -> str:
     return (title or "").strip().lower() or "article"
 
 
-def build_queue_items(use_cases: list[dict], today: str, allowed_content_types: list[str] | None = None) -> list[dict]:
+def build_queue_items(
+    use_cases: list[dict],
+    today: str,
+    allowed_content_types: list[str] | None = None,
+    category_to_lang: dict[str, str] | None = None,
+    content_dir: object = None,
+    default_lang: str | None = None,
+) -> list[dict]:
     """Build queue items: one entry per use case. Tools left empty (filled at fill_articles stage).
-    allowed_content_types: from config content_types_all; if missing/invalid, content_type falls back to DEFAULT_CONTENT_TYPE."""
+    allowed_content_types: from config content_types_all; if missing/invalid, content_type falls back to DEFAULT_CONTENT_TYPE.
+    category_to_lang: optional map category_slug -> lang from config hubs (e.g. problem-fix-find-pl -> pl); used when use case has no lang.
+    content_dir: optional Path; when its parts contain 'pl', titles are built without content-type prefix (PL reader-friendly).
+    default_lang: optional top-level lang from use_cases.yaml (e.g. 'pl'); used when use case has no lang and category_to_lang has no entry."""
     allowed = list(allowed_content_types) if allowed_content_types else ALLOWED_CONTENT_TYPES
+    cat_lang = category_to_lang or {}
+    force_pl_titles = getattr(content_dir, "parts", None) and "pl" in getattr(content_dir, "parts", ())
+    force_pl_lang = getattr(content_dir, "parts", None) and "pl" in getattr(content_dir, "parts", ())
     items = []
     for uc in use_cases:
         problem = (uc.get("problem") or "").strip()
@@ -186,7 +225,8 @@ def build_queue_items(use_cases: list[dict], today: str, allowed_content_types: 
         if content_type not in allowed:
             content_type = DEFAULT_CONTENT_TYPE
         category_slug = (uc.get("category_slug") or "").strip() or "ai-marketing-automation"
-        title = title_for_entry(problem, content_type)
+        # No content-type prefix in title for any locale (EN and PL reader-friendly; same as PL previously).
+        title = title_for_entry(problem, content_type, add_prefix=False)
         item = {
             "title": title,
             "primary_keyword": title_to_primary_keyword(title),
@@ -201,9 +241,17 @@ def build_queue_items(use_cases: list[dict], today: str, allowed_content_types: 
             item["audience_type"] = (uc.get("audience_type") or "").strip()
         if uc.get("batch_id"):
             item["batch_id"] = (uc.get("batch_id") or "").strip()
+        # Lang: use case > default_lang (from use_cases.yaml) > category (from hub) > content root PL > en
         if uc.get("lang"):
             item["lang"] = (uc.get("lang") or "").strip().lower()
-        elif content_type in ("sales", "product-comparison", "best-in-category", "category-products"):
+        elif default_lang:
+            _dl = (default_lang or "").strip().lower()
+            item["lang"] = _dl if _dl in ("en", "pl") else "en"
+        elif category_slug in cat_lang:
+            item["lang"] = (cat_lang[category_slug] or "en").strip().lower()
+        elif force_pl_lang:
+            item["lang"] = "pl"
+        else:
             item["lang"] = "en"
         items.append(item)
     return items
@@ -271,6 +319,7 @@ def _duplicate_key(item: dict) -> tuple[str, str]:
 
 
 USE_CASES_HEADER = """# List of business problems / use cases for content generation
+# default_lang: optional top-level key before use_cases:; "pl" or "en" — applied to queue items when generated (for content/pl use "pl").
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
 # - content_type: string (one of: how-to, guide, best, comparison, review, sales, product-comparison, best-in-category, category-products)
@@ -279,14 +328,17 @@ USE_CASES_HEADER = """# List of business problems / use cases for content genera
 """
 
 
-def _save_use_cases(path: Path, items: list[dict]) -> None:
-    """Write use_cases.yaml (same format as generate_use_cases). Preserves status. Uses content_type only."""
+def _save_use_cases(path: Path, items: list[dict], default_lang: str | None = None) -> None:
+    """Write use_cases.yaml (same format as generate_use_cases). Preserves status and optional default_lang."""
     def q(v: str) -> str:
         v = str(v)
         if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
             v = '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
         return v
-    lines = [USE_CASES_HEADER.strip(), "use_cases:"]
+    lines = [USE_CASES_HEADER.strip()]
+    if default_lang and (default_lang or "").strip().lower() in ("en", "pl"):
+        lines.append(f"default_lang: {(default_lang or '').strip().lower()}")
+    lines.append("use_cases:")
     for item in items:
         problem = (item.get("problem") or "").strip()
         content_type = (item.get("content_type") or "").strip()
@@ -306,9 +358,11 @@ def _save_use_cases(path: Path, items: list[dict]) -> None:
 
 def main() -> None:
     import argparse
+    import os
     parser = argparse.ArgumentParser(
         description="Append queue entries from use_cases.yaml (one entry per use case).",
     )
+    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl)")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -316,24 +370,44 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    config_path = content_dir / "config.yaml"
+    use_cases_path = content_dir / "use_cases.yaml"
+    queue_path = content_dir / "queue.yaml"
+
     # ALL = content_types_all from config (single source of truth; fallback when type not on list)
-    config = load_config(CONFIG_PATH)
+    config = load_config(config_path)
     allowed_content_types = list(config.get("content_types_all") or ALLOWED_CONTENT_TYPES)
 
+    # Lang from hubs (e.g. pl for PL content root) so queue items get correct lang when use case has none
+    category_to_lang = {}
+    for hub in get_hubs_list(config) or []:
+        if isinstance(hub, dict):
+            cat = (hub.get("category") or "").strip()
+            hlang = (hub.get("lang") or "").strip().lower()
+            if cat and hlang:
+                category_to_lang[cat] = hlang
+
     today = date.today().isoformat()
-    use_cases = load_use_cases(USE_CASES_PATH)
+    use_cases, default_lang = load_use_cases_with_default_lang(use_cases_path)
 
     # Only use cases with status "todo" are added; "generated", "archived", "discarded" are skipped.
     todo_use_cases = [
         uc for uc in use_cases
         if str(uc.get("status") or "").strip().lower() == "todo"
     ]
-    candidates = build_queue_items(todo_use_cases, today, allowed_content_types=allowed_content_types)
+    candidates = build_queue_items(
+        todo_use_cases, today,
+        allowed_content_types=allowed_content_types,
+        category_to_lang=category_to_lang,
+        content_dir=content_dir,
+        default_lang=default_lang,
+    )
     if not candidates:
         print("No queue entries to add (no use cases with status 'todo').")
         return
 
-    existing = load_existing_queue(QUEUE_PATH)
+    existing = load_existing_queue(queue_path)
     existing_keys = {_duplicate_key(e) for e in existing}
     added = [i for i in candidates if _duplicate_key(i) not in existing_keys]
     final = existing + added
@@ -349,8 +423,8 @@ def main() -> None:
         print("No new entries to add (all combinations already in queue).")
         return
 
-    QUEUE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    save_queue(QUEUE_PATH, final)
+    queue_path.parent.mkdir(parents=True, exist_ok=True)
+    save_queue(queue_path, final)
     added_keys_set = {_duplicate_key(a) for a in added}
     for i, c in enumerate(candidates):
         if _duplicate_key(c) in added_keys_set:
@@ -362,8 +436,8 @@ def main() -> None:
                 if (u.get("problem") or "").strip() == p and (u.get("content_type") or "").strip() == ct and (u.get("category_slug") or "").strip() == cat:
                     u["status"] = "generated"
                     break
-    _save_use_cases(USE_CASES_PATH, use_cases)
-    print(f"Added {len(added)} new entr{'y' if len(added) == 1 else 'ies'} to {QUEUE_PATH}. Total queue: {len(final)}. Marked those use cases as 'generated' in use_cases.yaml.")
+    _save_use_cases(use_cases_path, use_cases, default_lang=default_lang)
+    print(f"Added {len(added)} new entr{'y' if len(added) == 1 else 'ies'} to {queue_path}. Total queue: {len(final)}. Marked those use cases as 'generated' in use_cases.yaml.")
 
 
 if __name__ == "__main__":

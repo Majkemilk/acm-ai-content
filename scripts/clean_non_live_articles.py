@@ -8,23 +8,27 @@ Run from project root: python scripts/clean_non_live_articles.py [--dry-run] [--
 Default: --archive (for content). Without --confirm only prints what would be done.
 """
 import argparse
+import os
 import shutil
 import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
-ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
-PUBLIC_ARTICLES_DIR = PROJECT_ROOT / "public" / "articles"
-ARCHIVE_DIR = PROJECT_ROOT / "content" / "articles_archive"
 
 # Import after path setup
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+from content_root import get_content_root_path
 from content_index import (
     get_production_articles,
     _parse_frontmatter,
     _parse_html_frontmatter_from_comment,
 )
+
+# Set in main() from --content-root
+CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
+ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
+PUBLIC_ARTICLES_DIR = PROJECT_ROOT / "public" / "articles"
+ARCHIVE_DIR = PROJECT_ROOT / "content" / "articles_archive"
 
 
 def _collect_content_stems_and_status(articles_dir: Path) -> dict[str, str]:
@@ -161,6 +165,7 @@ def run(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Clean non-live articles: archive content (status != filled), remove stale public dirs.")
+    ap.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl)")
     ap.add_argument("--dry-run", action="store_true", help="Only print what would be done (default if --confirm not set)")
     ap.add_argument("--confirm", action="store_true", help="Perform archive and removal")
     ap.add_argument("--archive", action="store_true", default=True, help="Archive content files to content/articles_archive/ (default: True)")
@@ -168,6 +173,14 @@ def main() -> None:
     ap.add_argument("--content-only", action="store_true", help="Only process content/articles (do not touch public)")
     ap.add_argument("--public-only", action="store_true", help="Only remove stale public/articles dirs (do not touch content)")
     args = ap.parse_args()
+
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    public_dir = PROJECT_ROOT / "public_pl" if args.content_root.strip().endswith("pl") else PROJECT_ROOT / "public"
+    global CONFIG_PATH, ARTICLES_DIR, PUBLIC_ARTICLES_DIR, ARCHIVE_DIR
+    CONFIG_PATH = content_dir / "config.yaml"
+    ARTICLES_DIR = content_dir / "articles"
+    PUBLIC_ARTICLES_DIR = public_dir / "articles"
+    ARCHIVE_DIR = content_dir / "articles_archive"
 
     if args.content_only and args.public_only:
         print("Use at most one of --content-only and --public-only.", file=sys.stderr)

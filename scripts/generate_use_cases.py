@@ -23,12 +23,15 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from content_index import get_hubs_list, load_config  # noqa: E402
+from content_root import get_content_root_path  # noqa: E402
+from generate_queue import load_existing_queue  # noqa: E402
 
 PROJECT_ROOT = _SCRIPTS_DIR.parent
 CONTENT_DIR = PROJECT_ROOT / "content"
 CONFIG_PATH = CONTENT_DIR / "config.yaml"
 USE_CASES_PATH = CONTENT_DIR / "use_cases.yaml"
 ARTICLES_DIR = CONTENT_DIR / "articles"
+QUEUE_PATH = CONTENT_DIR / "queue.yaml"
 ALLOWED_CATEGORIES_FILE = CONTENT_DIR / "use_case_allowed_categories.json"
 
 # Fallback when config has no content_types_all (ALL = full list for generate_use_cases)
@@ -105,8 +108,52 @@ def _norm_tokens(text: str) -> set[str]:
     return {_stem_token(t) for t in raw if len(t) > 2 and t not in _STOPWORDS}
 
 
-def _is_locked_to_problem(problem: str, anchor_problem: str) -> bool:
-    """Semantic-ish lock check: overlap against anchor problem must be strong."""
+# Cross-language equivalents for hard-lock check (anchor e.g. Polish, model may return English).
+# Keys: token from anchor or from problem. Values: added to a_expanded so problem tokens can match.
+# Polish morphology: anchor "Kradzieże rowerów" → model zwraca "system antykradzieżowy w rowerze";
+# tokenizer [a-z0-9]+ obcina polskie znaki → "antykradzie", "rowerze". Te muszą pasować do anchoru.
+_LOCK_EQUIVALENTS = {
+    "rower": {"bicycle", "bike", "rowerze", "rowerem", "roweru"},
+    "rowerów": {"bicycle", "bike", "rower"},
+    "rowerowy": {"bicycle", "bike", "rower"},
+    "rowerze": {"rower", "bicycle", "bike"},
+    "rowerem": {"rower", "bicycle", "bike"},
+    "roweru": {"rower", "bicycle", "bike"},
+    "kradzież": {"theft", "kradzie", "antykradzie"},
+    "kradzieże": {"theft", "kradzie", "antykradzie"},
+    "kradzieży": {"theft", "kradzie", "antykradzie"},
+    "kradzieżowy": {"theft", "antykradzie"},
+    "kradzie": {"theft", "antykradzie"},
+    "antykradzie": {"theft", "kradzie"},
+    "antykradzieowy": {"theft", "kradzie"},
+}
+
+
+def _anchor_tokens_with_equivalents(a_tokens: set[str]) -> set[str]:
+    """Expand anchor tokens with built-in cross-language equivalents (PL->EN)."""
+    out = set(a_tokens)
+    for t in a_tokens:
+        out.update(_LOCK_EQUIVALENTS.get(t, ()))
+    return out
+
+
+def _looks_non_english(text: str) -> bool:
+    """True if text looks like a non-English language (e.g. Polish diacritics). Used to ask model to output problem in same language."""
+    if not (text or text.strip()):
+        return False
+    # Polish: ą ę ć ł ń ó ś ź ż (and uppercase). Other common Latin-extended.
+    non_ascii_letters = [c for c in text if ord(c) > 127 and c.isalpha()]
+    return len(non_ascii_letters) >= 1
+
+
+def _is_locked_to_problem(
+    problem: str,
+    anchor_problem: str,
+    equivalent_phrase: str | None = None,
+) -> bool:
+    """Semantic-ish lock check: overlap against anchor problem must be strong.
+    - equivalent_phrase: optional (from config lock_equivalents); when model returns another language, this phrase's tokens count as anchor.
+    - When anchor is PL etc., built-in token equivalents (e.g. rower->bicycle) also expand anchor."""
     p = (problem or "").strip().lower()
     a = (anchor_problem or "").strip().lower()
     if not p or not a:
@@ -115,9 +162,12 @@ def _is_locked_to_problem(problem: str, anchor_problem: str) -> bool:
         return True
     p_tokens = _norm_tokens(p)
     a_tokens = _norm_tokens(a)
+    if equivalent_phrase and (equivalent_phrase or "").strip():
+        a_tokens = a_tokens | _norm_tokens((equivalent_phrase or "").strip().lower())
     if not p_tokens or not a_tokens:
         return False
-    overlap = len(p_tokens & a_tokens)
+    a_expanded = _anchor_tokens_with_equivalents(a_tokens)
+    overlap = len(p_tokens & a_expanded)
     ratio_to_anchor = overlap / max(1, len(a_tokens))
     ratio_to_problem = overlap / max(1, len(p_tokens))
     return ratio_to_anchor >= 0.35 or (ratio_to_anchor >= 0.25 and ratio_to_problem >= 0.25)
@@ -190,8 +240,24 @@ def load_use_cases(path: Path) -> list[dict]:
     return load_yaml_list(path, "use_cases")
 
 
+def _read_default_lang_from_use_cases_file(path: Path) -> str | None:
+    """If use_cases.yaml has top-level default_lang, return it (en/pl); else None."""
+    if not path.exists():
+        return None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("use_cases"):
+            break
+        m = re.match(r"^default_lang\s*:\s*(.+)$", stripped, re.IGNORECASE)
+        if m:
+            raw = m.group(1).strip().strip('"\'').strip().lower()
+            return raw if raw in ("en", "pl") else None
+    return None
+
+
 def save_use_cases(path: Path, items: list[dict]) -> None:
     """Write use_cases.yaml with header comments and list of use cases (same format as template).
+    Preserves existing default_lang (e.g. pl) when present in the file.
     Only the key content_type is written (suggested_content_type is never written).
     Value for content_type is taken from item['content_type'] or, for pre-migration data, item['suggested_content_type'].
     Run scripts/migrate_use_cases_to_content_type.py once before production; after that the file uses only content_type."""
@@ -200,7 +266,11 @@ def save_use_cases(path: Path, items: list[dict]) -> None:
         if "\n" in v or ":" in v or v.startswith("#") or '"' in v:
             v = '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
         return v
-    lines = [USE_CASES_HEADER.strip(), "use_cases:"]
+    default_lang = _read_default_lang_from_use_cases_file(path)
+    lines = [USE_CASES_HEADER.strip()]
+    if default_lang:
+        lines.append(f"default_lang: {default_lang}")
+    lines.append("use_cases:")
     if items:
         for item in items:
             problem = (item.get("problem") or "").strip()
@@ -211,6 +281,8 @@ def save_use_cases(path: Path, items: list[dict]) -> None:
             lines.append(f"    category_slug: {q(category)}")
             if item.get("audience_type"):
                 lines.append(f"    audience_type: {q(str(item.get('audience_type', '')).strip())}")
+            if item.get("lang"):
+                lines.append(f"    lang: {q(str(item.get('lang', '')).strip())}")
             if item.get("batch_id"):
                 lines.append(f"    batch_id: {q(str(item.get('batch_id', '')).strip())}")
             if "status" in item and str(item.get("status", "")).strip():
@@ -237,17 +309,21 @@ def get_categories_from_config(config_path: Path) -> list[str]:
 
 
 def _build_scope_description(config: dict) -> str:
-    """Build natural-language scope from hub titles and sandbox categories (for model instruction)."""
+    """Build natural-language scope from thematic scope (production + sandbox) and suggested problems (for model instruction). No hub titles."""
     parts = []
-    for hub in get_hubs_list(config) or []:
-        if isinstance(hub, dict):
-            t = (hub.get("title") or hub.get("category") or hub.get("slug") or "").strip()
-            if t and t not in parts:
-                parts.append(t)
+    prod = (config.get("production_category") or "").strip()
+    if prod:
+        parts.append(prod.replace("-", " ").title())
     for s in (config.get("sandbox_categories") or []):
-        if isinstance(s, str) and s.strip() and s.strip() not in parts:
-            parts.append(s.strip())
-    return ", ".join(parts) if parts else ""
+        if isinstance(s, str) and s.strip():
+            x = s.strip().replace("-", " ").title()
+            if x not in parts:
+                parts.append(x)
+    problems = list(config.get("suggested_problems") or [])
+    problem_phrases = [str(p).strip() for p in problems if str(p).strip()]
+    if problem_phrases:
+        parts.append("Problems to address: " + "; ".join(problem_phrases[:10]))
+    return ". ".join(parts) if parts else ""
 
 
 def sync_allowed_categories_file(config_path: Path, output_path: Path | None = None) -> None:
@@ -390,7 +466,6 @@ def build_prompt(
     quality_feedback: list[str] | None = None,
     audience_pyramid: list[int] | None = None,
     is_all_types: bool = False,
-    hub_titles: list[str] | None = None,
     production_category: str = "",
     scope_description: str = "",
 ) -> tuple[str, str]:
@@ -399,17 +474,21 @@ def build_prompt(
     is_all_types: True when allowed equals full list (ALL) – model has full freedom; otherwise only allowed types permitted.
     suggested_problems (from config): optional list of problems to prefer turning into use cases.
     audience_pyramid [n1, n2]: first n1 = beginner, next n2 = intermediate, remaining = professional.
-    hub_titles: from config hubs[].title, used as space description in instructions. production_category: from config.
-    scope_description: optional pre-built scope text (from use_case_allowed_categories.json); used when non-empty instead of hub_titles."""
+    production_category: from config (thematic scope). scope_description: pre-built from problems + scope (use_case_allowed_categories.json); used when non-empty for intro."""
     types = list(allowed_content_types or ALLOWED_CONTENT_TYPES)
 
     if scope_description and scope_description.strip():
         intro = f"You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following these areas: {scope_description.strip()}."
-    elif hub_titles:
-        space_phrase = ", ".join(hub_titles)
-        intro = f"You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following these hubs: {space_phrase}."
     else:
-        intro = "You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following the allowed categories (see user message)."
+        fallback_parts = []
+        if production_category:
+            fallback_parts.append(f"thematic scope: {production_category.replace('-', ' ').title()}")
+        if suggested_problems:
+            fallback_parts.append("problems to address: " + "; ".join(str(p).strip() for p in (suggested_problems or [])[:5] if str(p).strip()))
+        if fallback_parts:
+            intro = f"You are a content strategist. Your task is to suggest new use cases for blog content aligned with {', '.join(fallback_parts)}."
+        else:
+            intro = "You are a content strategist. Your task is to suggest new use cases for blog content in the context and space strictly following the allowed categories (see user message)."
     if production_category:
         category_rule = f" The production category for this site is {production_category}; the full list of allowed category_slug values is in the user message—assign each use case exactly one of them. Use only the allowed category_slug values from the user message."
     else:
@@ -433,6 +512,12 @@ Do not output any markdown, explanation, or text outside the JSON array. The res
             "\n\nHARD LOCK (MUST FOLLOW): Every generated use case must stay on the same base problem domain provided by the user. "
             "Do not drift to adjacent/general topics."
         )
+        if _looks_non_english(hard_lock_problem):
+            instructions += (
+                "\n\nLANGUAGE: The BASE PROBLEM LOCK is not in English. You MUST output the \"problem\" field for each use case "
+                "in the SAME language as the BASE PROBLEM LOCK (e.g. if the base is in Polish, write each problem in Polish). "
+                "This keeps the use cases clearly on-topic and avoids cross-language mismatch."
+            )
 
     # Existing use cases (problems) to avoid duplicating
     existing_problems = [
@@ -555,24 +640,142 @@ def parse_ai_use_cases(raw: str, allowed_types: list[str], allowed_categories: l
     return out
 
 
+# Duplicate check: reference = articles in category + queue todo in category (no use_cases.yaml). Similarity = 90% tokens.
+DUPLICATE_TOKEN_RATIO = 0.9
+
+
+def build_dedup_reference(
+    categories: list[str],
+    articles_dir: Path,
+    queue_path: Path,
+) -> list[dict]:
+    """
+    Build list of dicts with key "problem" for is_duplicate():
+    - existing articles in articles_dir (frontmatter category/category_slug in categories)
+    - queue entries with status todo and category_slug/category in categories
+    use_cases.yaml is not used (simplified variant).
+    """
+    ref: list[dict] = []
+    cat_set = set(c.strip() for c in categories if c and c.strip())
+
+    if articles_dir.exists():
+        for ext in ("*.md", "*.html"):
+            for path in sorted(articles_dir.glob(ext)):
+                meta = parse_article_frontmatter(path)
+                if not meta:
+                    continue
+                cat = (meta.get("category") or meta.get("category_slug") or "").strip()
+                if cat not in cat_set:
+                    continue
+                title = (meta.get("title") or "").strip()
+                keyword = (meta.get("primary_keyword") or "").strip()
+                text = (title + " " + keyword).strip() or title or path.stem
+                if text:
+                    ref.append({"problem": text})
+
+    if queue_path.exists():
+        for item in load_existing_queue(queue_path):
+            if (item.get("status") or "").strip().lower() != "todo":
+                continue
+            cat = (item.get("category_slug") or item.get("category") or "").strip()
+            if cat not in cat_set:
+                continue
+            title = (item.get("title") or item.get("problem") or "").strip()
+            if title:
+                ref.append({"problem": title})
+
+    return ref
+
+
 def is_duplicate(problem: str, existing: list[dict]) -> bool:
-    """True if problem already exists (case-insensitive) or is too similar (substring match)."""
+    """True if problem already exists (exact, case-insensitive) or is too similar (>= 90% of tokens in common)."""
     p = (problem or "").strip().lower()
     if not p:
         return True
+    p_tokens = _norm_tokens(p)
+    if not p_tokens:
+        return False
     for uc in existing:
         existing_p = (uc.get("problem") or "").strip().lower()
         if existing_p == p:
             return True
-        # Simple similarity: one contains the other (avoid "turn X into Y" vs "turn X into Y with Z")
-        if len(p) > 10 and len(existing_p) > 10:
-            if p in existing_p or existing_p in p:
-                return True
+        existing_tokens = _norm_tokens(existing_p)
+        if not existing_tokens:
+            continue
+        overlap = len(p_tokens & existing_tokens)
+        # Duplicate only when a large part of words overlap (90% of the smaller set)
+        min_size = min(len(p_tokens), len(existing_tokens))
+        if min_size > 0 and (overlap / min_size) >= DUPLICATE_TOKEN_RATIO:
+            return True
     return False
+
+
+PENDING_USE_CASES_FILENAME = "use_cases_pending.json"
+FLOWTARO_PENDING_MARKER = "FLOWTARO_PENDING_USE_CASES=1"
+
+
+def _write_pending_use_cases(content_dir: Path, candidates: list[dict], base_problem: str) -> Path:
+    """Zapisuje listę kandydatów (z kluczem on_topic) do pliku pending. Zwraca ścieżkę do pliku."""
+    path = content_dir / PENDING_USE_CASES_FILENAME
+    data = {"base_problem": base_problem, "use_cases": candidates}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def _apply_pending_use_cases(
+    content_dir: Path,
+    use_cases_path: Path,
+    action: str,
+    indices: list[int] | None = None,
+) -> int:
+    """Czyta pending, filtruje według action (all|on_topic|selected|reject), dopisuje do use_cases.yaml lub usuwa pending. Zwraca liczbę dopisanych (0 przy reject)."""
+    pending_path = content_dir / PENDING_USE_CASES_FILENAME
+    if action == "reject":
+        if pending_path.exists():
+            pending_path.unlink()
+        return 0
+    if not pending_path.exists():
+        print("Brak pliku pending. Nic do zastosowania.", file=sys.stderr)
+        return 0
+    try:
+        data = json.loads(pending_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"Błąd odczytu pending: {e}", file=sys.stderr)
+        return 0
+    candidates = data.get("use_cases") or []
+    if not candidates:
+        pending_path.unlink(missing_ok=True)
+        return 0
+    if action == "on_topic":
+        to_save = [c for c in candidates if c.get("on_topic") is True]
+    elif action == "selected" and indices is not None:
+        to_save = [c for i, c in enumerate(candidates) if i in indices]
+    else:
+        to_save = list(candidates)
+    for uc in to_save:
+        uc.pop("on_topic", None)
+        uc.pop("_orig_i", None)
+    existing = load_use_cases(use_cases_path)
+    for u in existing:
+        if str(u.get("status") or "").strip().lower() == "generated":
+            u["status"] = "archived"
+    combined = existing + to_save
+    save_use_cases(use_cases_path, combined)
+    pending_path.unlink(missing_ok=True)
+    return len(to_save)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate new use cases and append to content/use_cases.yaml")
+    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl)")
+    parser.add_argument(
+        "--apply-pending",
+        choices=("all", "on_topic", "selected", "reject"),
+        metavar="ACTION",
+        help="Zastosuj pending: all=zapisz wszystkie, on_topic=tylko na temat, selected=zapisz wybrane (wymaga --pending-indices), reject=odrzuć.",
+    )
+    parser.add_argument("--pending-indices", default=None, metavar="I,J,K", help="Indeksy (0-based) do zapisania przy --apply-pending=selected, np. 0,2,3")
     parser.add_argument(
         "--category",
         type=str,
@@ -590,6 +793,25 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    config_path = content_dir / "config.yaml"
+    use_cases_path = content_dir / "use_cases.yaml"
+    articles_dir = content_dir / "articles"
+    queue_path = content_dir / "queue.yaml"
+    allowed_categories_file = content_dir / "use_case_allowed_categories.json"
+
+    if args.apply_pending is not None:
+        indices = None
+        if args.apply_pending == "selected" and args.pending_indices:
+            try:
+                indices = [int(x.strip()) for x in args.pending_indices.split(",") if x.strip()]
+            except ValueError:
+                print("Błąd: --pending-indices musi być listą liczb np. 0,2,3", file=sys.stderr)
+                sys.exit(1)
+        n = _apply_pending_use_cases(content_dir, use_cases_path, args.apply_pending, indices)
+        print(f"Zastosowano pending: zapisano {n} pomysłów." if n else "Odrucono pending (nic nie zapisano).")
+        return
+
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:
         print("Error: OPENAI_API_KEY environment variable is not set.")
@@ -598,7 +820,6 @@ def main() -> None:
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip()
 
     # Load config first (needed for content_types_all and categories)
-    config_path = CONFIG_PATH
     config = load_config(config_path)
     content_types_all = list(config.get("content_types_all") or ALLOWED_CONTENT_TYPES)
     if not content_types_all:
@@ -612,7 +833,7 @@ def main() -> None:
     if pyramid[0] + (pyramid[1] if len(pyramid) > 1 else 0) <= 0:
         print("Warning: use_case_audience_pyramid [0, 0] would make all use cases 'professional'. Using [1, 1] so you get beginner/intermediate/professional spread.")
         pyramid = [1, 1]
-    all_categories, scope_description = get_allowed_categories(config_path)
+    all_categories, scope_description = get_allowed_categories(config_path, allowed_categories_file)
     if args.category:
         if args.category.strip() not in all_categories:
             print(f"Error: --category {args.category!r} is not in allowed categories: {all_categories}")
@@ -630,19 +851,16 @@ def main() -> None:
     batch_size = int(config.get("use_case_batch_size", 9))
 
     # Load existing use cases (create file with empty list if missing)
-    existing = load_use_cases(USE_CASES_PATH)
-    if not USE_CASES_PATH.exists():
-        save_use_cases(USE_CASES_PATH, [])
+    existing = load_use_cases(use_cases_path)
+    if not use_cases_path.exists():
+        save_use_cases(use_cases_path, [])
 
     # Collect keywords from existing articles
-    article_keywords = collect_article_keywords(ARTICLES_DIR)
+    article_keywords = collect_article_keywords(articles_dir)
 
-    hub_titles = []
-    for h in get_hubs_list(config) or []:
-        t = (h.get("title") or h.get("category") or h.get("slug") or "").strip()
-        if t:
-            hub_titles.append(t)
     production_category = (config.get("production_category") or "").strip()
+    if config.get("use_case_single_hub") and production_category:
+        categories = [production_category]
 
     # Build prompt and call API (ask for exactly batch_size use cases)
     suggested_problems = list(config.get("suggested_problems") or [])
@@ -654,6 +872,8 @@ def main() -> None:
         print("Note: suggested_problems[0] is long; using first line (max 200 chars) as hard lock. Prefer a short phrase in config.")
     else:
         hard_lock_problem = raw_first
+    lock_equivalents_map = config.get("lock_equivalents") or {}
+    equivalent_phrase = (lock_equivalents_map.get(hard_lock_problem) or "").strip() or None
     max_attempts = 3 if hard_lock_problem else 1
     candidates: list[dict] = []
     last_issues: list[str] = []
@@ -670,7 +890,6 @@ def main() -> None:
             quality_feedback=last_issues if attempt > 1 else None,
             audience_pyramid=pyramid,
             is_all_types=is_all_types,
-            hub_titles=hub_titles,
             production_category=production_category,
             scope_description=scope_description,
         )
@@ -704,7 +923,7 @@ def main() -> None:
         n_returned = len(candidates)
         if n_returned > batch_size:
             if hard_lock_problem:
-                locked = [c for c in candidates if _is_locked_to_problem(c.get("problem", ""), hard_lock_problem)]
+                locked = [c for c in candidates if _is_locked_to_problem(c.get("problem", ""), hard_lock_problem, equivalent_phrase)]
                 rest = [c for c in candidates if c not in locked]
                 candidates = (locked + rest)[:batch_size]
                 print(f"  AI returned {n_returned} candidates, preferring {len(locked)} locked to problem; capped to {batch_size}.")
@@ -716,22 +935,11 @@ def main() -> None:
             mismatched = [
                 uc.get("problem", "")
                 for uc in candidates
-                if not _is_locked_to_problem(uc.get("problem", ""), hard_lock_problem)
+                if not _is_locked_to_problem(uc.get("problem", ""), hard_lock_problem, equivalent_phrase)
             ]
             if mismatched:
-                last_issues = [
-                    f"Hard lock mismatch against base problem: {hard_lock_problem}",
-                    *[f"Mismatched candidate: {m}" for m in mismatched[:5]],
-                ]
-                if attempt < max_attempts:
-                    print(f"Attempt {attempt}/{max_attempts} failed: {len(mismatched)} use case(s) drifted from hard-locked problem. Retrying...")
-                    continue
-                print("Fail-fast: generated use cases do not stay on the hard-locked suggested problem.")
-                for m in mismatched[:5]:
-                    print(f"  - Drifted: {m}")
-                sys.exit(2)
-
-        # Success path
+                print(f"  {len(mismatched)} use case(s) oznaczonych jako poza tematem (rekomendacja). Decyzja w UI monitora.")
+        # Success path: mamy kandydatów (ew. z częścią poza tematem – bez blokowania)
         break
 
     # Assign audience_type by original position in API response (preserves beginner/intermediate/professional order after locked-first capping)
@@ -742,10 +950,35 @@ def main() -> None:
         uc["batch_id"] = batch_id
         uc.pop("_orig_i", None)
 
-    # Deduplicate against existing
+    # Set lang from hub for category (e.g. pl for subdomain hub categories)
+    hubs = get_hubs_list(config) or []
+    category_to_lang = {}
+    for hub in hubs:
+        if isinstance(hub, dict):
+            cat = (hub.get("category") or "").strip()
+            hlang = (hub.get("lang") or "").strip().lower()
+            if cat and hlang:
+                category_to_lang[cat] = hlang
+    for uc in candidates:
+        cat = (uc.get("category_slug") or "").strip()
+        uc["lang"] = category_to_lang.get(cat) or "en"
+
+    # Tag each candidate with on_topic (rekomendacja dla UI – bez blokowania zapisu)
+    if hard_lock_problem:
+        for uc in candidates:
+            uc["on_topic"] = _is_locked_to_problem(uc.get("problem", ""), hard_lock_problem, equivalent_phrase)
+        any_off_topic = any(not uc.get("on_topic") for uc in candidates)
+        if any_off_topic:
+            pending_path = _write_pending_use_cases(content_dir, candidates, hard_lock_problem)
+            print(FLOWTARO_PENDING_MARKER)
+            print(str(pending_path))
+            return
+
+    # Deduplicate against reference list: articles in category + queue todo in category (no use_cases.yaml)
+    existing_for_dedup = build_dedup_reference(categories, articles_dir, queue_path)
     new_use_cases = [
         uc for uc in candidates
-        if not is_duplicate(uc.get("problem") or "", existing)
+        if not is_duplicate(uc.get("problem") or "", existing_for_dedup)
     ]
 
     # Option C: fail-fast when nothing new would be saved (exit 2 so pipeline can stop)
@@ -761,13 +994,16 @@ def main() -> None:
 
     # Zawsze dopisuj do istniejących. Historyczne wpisy ze statusem "generated" oznacz jako "archived",
     # żeby były jawnie tylko do przeglądu i nigdy nie trafiły do kolejki przy kolejnym runie.
+    to_append = new_use_cases[:batch_size]
+    for uc in to_append:
+        uc.pop("on_topic", None)
     for u in existing:
         if str(u.get("status") or "").strip().lower() == "generated":
             u["status"] = "archived"
-    combined = existing + new_use_cases[:batch_size]
-    save_use_cases(USE_CASES_PATH, combined)
+    combined = existing + to_append
+    save_use_cases(use_cases_path, combined)
     kept = len(new_use_cases[:batch_size])
-    msg = f"Saved {kept} new use case(s) to {USE_CASES_PATH}. Total in file: {len(combined)}."
+    msg = f"Saved {kept} new use case(s) to {use_cases_path}. Total in file: {len(combined)}."
     print(msg)
     for uc in new_use_cases[:batch_size]:
         print(f"  - {uc.get('problem')} ({uc.get('content_type')}, {uc.get('category_slug')}, {uc.get('audience_type')})")

@@ -7,13 +7,16 @@ Default: dry-run (report only). Use --write to modify files (with optional .bak 
 See docs/proposal_affiliate_links_update_script.md for workflow and design.
 """
 
+import os
 import html
 import re
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Defaults; overridden in main() from CONTENT_ROOT for articles dir
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
+# affiliate_tools shared – always content/affiliate_tools.yaml
 AFFILIATE_TOOLS_PATH = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
 
 # External links: markdown ](https?://...) and HTML href="https?://..."
@@ -196,20 +199,24 @@ def scan_and_report(
 
 def main() -> None:
     import argparse
+    from content_root import get_content_root_path
+
+    content_dir = get_content_root_path(PROJECT_ROOT, os.environ.get("CONTENT_ROOT"))
+    default_articles = content_dir / "articles"
     parser = argparse.ArgumentParser(
         description="Update external links in articles to affiliate URLs from affiliate_tools.yaml."
     )
     parser.add_argument(
         "--articles-dir",
         type=Path,
-        default=ARTICLES_DIR,
-        help=f"Articles directory (default: content/articles)",
+        default=None,
+        help=f"Articles directory (default: from CONTENT_ROOT, e.g. content/articles or content/pl/articles)",
     )
     parser.add_argument(
         "--affiliate-file",
         type=Path,
         default=AFFILIATE_TOOLS_PATH,
-        help="Path to affiliate_tools.yaml",
+        help="Path to affiliate_tools.yaml (default: content/affiliate_tools.yaml)",
     )
     parser.add_argument(
         "--write",
@@ -222,7 +229,7 @@ def main() -> None:
         help="Do not create .bak backup when --write",
     )
     args = parser.parse_args()
-    articles_dir = args.articles_dir.resolve()
+    articles_dir = (args.articles_dir or default_articles).resolve()
     affiliate_path = args.affiliate_file.resolve()
     if not articles_dir.exists():
         print(f"Articles dir not found: {articles_dir}")

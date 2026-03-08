@@ -82,12 +82,15 @@ def write_config(
     use_case_audience_pyramid: list[int] | None = None,
     suggested_problems: list[str] | None = None,
     category_mode: str | None = None,
+    use_case_single_hub: bool | None = None,
+    content_types_all: list[str] | None = None,
+    hubs: list[dict] | None = None,
+    hub_title: str | None = None,
 ) -> None:
     """
     Write content/config.yaml. Preserves use_case_batch_size, use_case_audience_pyramid,
-    suggested_problems and hubs from existing file when not provided.
-    Hubs (list of slug/category/title) are always read from existing config and written
-    back so that saving from Flowtaro Monitor does not remove the hubs section.
+    suggested_problems, hubs, hub_title, content_types_all, use_case_single_hub from existing file when not provided.
+    When hubs/content_types_all/hub_title are passed, they are written; when None, preserved from existing.
     No comments preserved.
     """
     production_category = _validate_production_category(production_category)
@@ -111,29 +114,52 @@ def write_config(
     if category_mode is None:
         category_mode = str(existing.get("category_mode") or DEFAULT_CATEGORY_MODE).strip().lower()
     category_mode = _validate_category_mode(category_mode)
+    if use_case_single_hub is None:
+        use_case_single_hub = bool(existing.get("use_case_single_hub", True))
+    if hub_title is None:
+        hub_title = (existing.get("hub_title") or "").strip()
+    else:
+        hub_title = (hub_title or "").strip()
+    if hubs is None:
+        hubs = existing.get("hubs") if isinstance(existing.get("hubs"), list) else None
+    subdomain_hubs = existing.get("subdomain_hubs") if isinstance(existing.get("subdomain_hubs"), list) else []
+    if content_types_all is None:
+        content_types_all = list(existing.get("content_types_all") or [])
+    lock_equivalents = existing.get("lock_equivalents") if isinstance(existing.get("lock_equivalents"), dict) else None
+
     lines = [
         f"production_category: {_quote_yaml_value(production_category)}",
         f"hub_slug: {_quote_yaml_value(hub_slug)}",
     ]
-    # Preserve hub_title and hubs from existing config (multi-hub; not edited in FlowMonitor yet)
-    hub_title = (existing.get("hub_title") or "").strip()
     if hub_title:
         lines.append(f"hub_title: {_quote_yaml_value(hub_title)}")
-    hubs = existing.get("hubs")
-    if hubs and isinstance(hubs, list) and len(hubs) > 0:
+    if hubs and len(hubs) > 0:
         lines.append("")
-        lines.append("# Lista hubów (slug, category, title). Używana przez generate_hubs, render_site, sitemap.")
+        lines.append("# Lista hubów (slug, category, title, optional description, lang). Używana przez generate_hubs, render_site, sitemap.")
         lines.append("hubs:")
         for h in hubs:
             if isinstance(h, dict):
                 slug = (h.get("slug") or h.get("category") or "").strip()
                 cat = (h.get("category") or h.get("slug") or "").strip()
                 title = (h.get("title") or slug).strip()
+                desc = (h.get("description") or "").strip()
+                lang = (h.get("lang") or "").strip()
                 if slug or cat:
                     lines.append(f'  - slug: {_quote_yaml_value(slug)}')
                     lines.append(f'    category: {_quote_yaml_value(cat)}')
                     lines.append(f'    title: {_quote_yaml_value(title)}')
+                    if desc:
+                        lines.append(f'    description: {_quote_yaml_value(desc)}')
+                    if lang:
+                        lines.append(f'    lang: {_quote_yaml_value(lang)}')
+    if subdomain_hubs:
+        lines.append("")
+        lines.append("subdomain_hubs:")
+        for s in subdomain_hubs:
+            if str(s).strip():
+                lines.append(f'  - {_quote_yaml_value(str(s).strip())}')
     lines.append(f"category_mode: {_quote_yaml_value(category_mode)}")
+    lines.append(f"use_case_single_hub: {'true' if use_case_single_hub else 'false'}")
     lines.append("sandbox_categories:")
     for cat in sandbox_categories:
         lines.append(f'  - {_quote_yaml_value(cat)}')
@@ -144,6 +170,17 @@ def write_config(
     lines.append("suggested_problems:")
     for prob in suggested_problems:
         lines.append(f'  - {_quote_yaml_value(prob)}')
+    if lock_equivalents:
+        lines.append("")
+        lines.append("# Równoważniki dla hard-lock (gdy suggested_problems po polsku, a model zwraca EN). Klucz = dokładny tekst problemu, wartość = fraza po angielsku do porównania.")
+        lines.append("lock_equivalents:")
+        for k, v in lock_equivalents.items():
+            if str(k).strip() and (v is not None):
+                lines.append(f'  {_quote_yaml_value(str(k).strip())}: {_quote_yaml_value(str(v).strip())}')
+    if content_types_all:
+        lines.append("content_types_all:")
+        for ct in content_types_all:
+            lines.append(f'  - {_quote_yaml_value(str(ct).strip())}')
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

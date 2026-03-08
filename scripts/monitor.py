@@ -20,9 +20,10 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from content_index import get_production_articles, load_config, _parse_html_frontmatter_from_comment  # noqa: E402
 
-ARTICLES_DIR = _PROJECT_ROOT / "content" / "articles"
-QUEUE_PATH = _PROJECT_ROOT / "content" / "queue.yaml"
-CONFIG_PATH = _PROJECT_ROOT / "content" / "config.yaml"
+_content_root = (os.environ.get("CONTENT_ROOT") or "content").strip() or "content"
+ARTICLES_DIR = _PROJECT_ROOT / _content_root.replace("/", os.sep) / "articles"
+QUEUE_PATH = _PROJECT_ROOT / _content_root.replace("/", os.sep) / "queue.yaml"
+CONFIG_PATH = _PROJECT_ROOT / _content_root.replace("/", os.sep) / "config.yaml"
 LOGS_DIR = _PROJECT_ROOT / "logs"
 ERROR_LOG = LOGS_DIR / "errors.log"
 API_COSTS_PATH = LOGS_DIR / "api_costs.json"

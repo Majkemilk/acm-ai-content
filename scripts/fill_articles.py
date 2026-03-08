@@ -20,7 +20,14 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Content root (overridden in main() from --content-root / CONTENT_ROOT)
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+from content_root import get_content_root_path, get_affiliate_tools_path  # noqa: E402
+
 ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
+RUN_TOOLS_PATH = PROJECT_ROOT / "content" / "run_tools.yaml"
 LOGS_DIR = PROJECT_ROOT / "logs"
 ERROR_LOG = LOGS_DIR / "errors.log"
 API_COSTS_PATH = LOGS_DIR / "api_costs.json"
@@ -337,14 +344,14 @@ def _h2_lines(body: str) -> list[str]:
     return out
 
 
-# Word-count thresholds by audience (normal, strict). Used by run_preflight_qa.
-# All audiences: 500 words (min and strict); default (unknown) 500.
+# Word-count: single threshold 400 for QA (no audience/strict logic). Override via --min-words-override.
+MIN_WORDS_QA = 400
 WORD_COUNT_BY_AUDIENCE: dict[str, tuple[int, int]] = {
-    "beginner": (500, 500),
-    "intermediate": (500, 500),
-    "professional": (500, 500),
+    "beginner": (400, 400),
+    "intermediate": (400, 400),
+    "professional": (400, 400),
 }
-WORD_COUNT_DEFAULT = (500, 500)  # when audience_type missing or unknown
+WORD_COUNT_DEFAULT = (400, 400)
 
 STYLE_FOR_AUDIENCE: dict[str, str] = {
     "beginner": "docs",
@@ -367,7 +374,7 @@ def run_preflight_qa(
 ) -> tuple[bool, list[str]]:
     """Validate filled output. Returns (ok, list of failure reasons).
     When is_html=True, H1/H2 structure check is skipped; bracket/word/forbidden use stripped text.
-    Word-count threshold: 500 words for all audience types (beginner, intermediate, professional) and default.
+    Word-count threshold: 400 words (single threshold; use --min-words-override to change).
     Try-it-yourself descriptor check (Prompt #1, Prompt #2, tool consistency, encouraging CTA) runs when content_type is 'how-to', 'guide', 'best', or 'comparison'."""
     reasons: list[str] = []
 
@@ -418,17 +425,11 @@ def run_preflight_qa(
         if missing_h2:
             reasons.append(f"H2 headings missing: {', '.join(missing_h2)}")
 
-    # D. Word count (use stripped text for HTML); threshold by audience or override
+    # D. Word count (single threshold 400; override via --min-words-override)
     word_count = len(text_for_checks.split())
-    if min_words_override is not None:
-        threshold = min_words_override
-    else:
-        at = (audience_type or "").strip().lower()
-        min_words, min_words_strict = WORD_COUNT_BY_AUDIENCE.get(at, WORD_COUNT_DEFAULT)
-        threshold = min_words_strict if strict else min_words
+    threshold = min_words_override if min_words_override is not None else MIN_WORDS_QA
     if word_count < threshold:
-        at = (audience_type or "").strip().lower()
-        reasons.append(f"word count {word_count} < {threshold} (audience: {at or 'default'})")
+        reasons.append(f"word count {word_count} < {threshold}")
 
     # E. Forbidden patterns (use stripped text for HTML to avoid matching inside attributes)
     for pat, label in FORBIDDEN_PATTERNS:
@@ -440,7 +441,7 @@ def run_preflight_qa(
     _qa_try_it_yourself_descriptors_enabled = False
     lowered = text_for_checks.lower()
     if _qa_try_it_yourself_descriptors_enabled and "try it yourself" in lowered and (content_type or "").strip().lower() in ("how-to", "guide", "best", "comparison"):
-        ref_tools = {(name or "").strip() for name, _url, _short, _ in _load_affiliate_tools() if (name or "").strip()}
+        ref_tools = {(name or "").strip() for name, _url, _short, *_ in _load_affiliate_tools() if (name or "").strip()}
         # For MD: relaxed checks — require only "Prompt #2"/"prompt 2" and "ready to use" (in section or whole body if section empty)
         try_section = ""
         if not is_html:
@@ -529,10 +530,10 @@ def _is_affiliate_url(url: str) -> bool:
     return False
 
 
-def _load_affiliate_tools() -> list[tuple[str, str, str, str]]:
-    """Load (name, url, short_description_en, category) from content/affiliate_tools.yaml. Stdlib only.
-    short_description_en and category are optional in YAML; use "" when missing."""
-    path = PROJECT_ROOT / "content" / "affiliate_tools.yaml"
+def _load_affiliate_tools() -> list[tuple[str, str, str, str, str]]:
+    """Load (name, url, short_description_en, category, cta_button_label) from content/affiliate_tools.yaml (shared EN/PL). Stdlib only.
+    short_description_en, category and cta_button_label are optional in YAML; use "" when missing."""
+    path = get_affiliate_tools_path(PROJECT_ROOT)
     if not path.exists():
         return []
     text = path.read_text(encoding="utf-8")
@@ -543,12 +544,13 @@ def _load_affiliate_tools() -> list[tuple[str, str, str, str]]:
             return s[1:-1].replace('\\"', '"').strip()
         return s
 
-    items: list[tuple[str, str, str, str]] = []
+    items: list[tuple[str, str, str, str, str]] = []
     in_tools = False
     current_name = ""
     current_url = ""
     current_short = ""
     current_category = ""
+    current_cta_label = ""
     for line in text.split("\n"):
         stripped = line.strip()
         if stripped.startswith("#"):
@@ -560,11 +562,12 @@ def _load_affiliate_tools() -> list[tuple[str, str, str, str]]:
             continue
         if stripped.startswith("- "):
             if current_name:
-                items.append((current_name, current_url, current_short, current_category))
+                items.append((current_name, current_url, current_short, current_category, current_cta_label))
             current_name = ""
             current_url = ""
             current_short = ""
             current_category = ""
+            current_cta_label = ""
             part = stripped[2:].strip()
             kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", part)
             if kv:
@@ -577,6 +580,8 @@ def _load_affiliate_tools() -> list[tuple[str, str, str, str]]:
                     current_short = v
                 elif k == "category":
                     current_category = v
+                elif k == "cta_button_label":
+                    current_cta_label = v
             continue
         kv = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", stripped)
         if kv:
@@ -589,9 +594,141 @@ def _load_affiliate_tools() -> list[tuple[str, str, str, str]]:
                 current_short = v
             elif k == "category":
                 current_category = v
+            elif k == "cta_button_label":
+                current_cta_label = v
     if current_name:
-        items.append((current_name, current_url, current_short, current_category))
+        items.append((current_name, current_url, current_short, current_category, current_cta_label))
     return items
+
+
+def _parse_run_tools_yaml(text: str) -> dict | None:
+    """Parse run_tools YAML content (stdlib only). Returns dict with affiliate, other, inne, article_built_around_links or None."""
+    data = {}
+    current_key = None
+    i = 0
+    lines = text.split("\n")
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            i += 1
+            continue
+        key_match = re.match(r"^([a-zA-Z0-9_]+):\s*(.*)$", stripped)
+        if key_match:
+            key, rest = key_match.group(1), key_match.group(2).strip()
+            if key in ("affiliate", "other", "inne"):
+                data[key] = []
+                current_key = key
+                i += 1
+                while i < len(lines) and (lines[i].startswith("  ") or lines[i].strip() == ""):
+                    l = lines[i]
+                    if l.strip().startswith("- "):
+                        entry = {"name": "", "url": ""}
+                        block = l.strip()[2:].strip()
+                        nm = re.search(r"name:\s*['\"]?(.*?)['\"]?\s*$", block)
+                        if nm:
+                            entry["name"] = nm.group(1).strip().strip("'\"")
+                        i += 1
+                        while i < len(lines) and re.match(r"^\s+(name|url):", lines[i]):
+                            kv = re.match(r"^\s*(name|url):\s*['\"]?(.*?)['\"]?\s*$", lines[i].strip())
+                            if kv:
+                                entry[kv.group(1)] = kv.group(2).strip().strip("'\"")
+                            i += 1
+                        data[key].append(entry)
+                        continue
+                    i += 1
+                continue
+            if key == "article_built_around_links":
+                data[key] = rest.lower() in ("true", "yes", "1")
+                current_key = None
+            i += 1
+            continue
+        i += 1
+    return data if data else None
+
+
+def load_run_tools() -> dict | None:
+    """Load content/run_tools.yaml. Returns dict with keys affiliate, other, inne (lists of {name, url}),
+    and article_built_around_links (bool). Returns None if file missing, empty, or invalid structure."""
+    if not RUN_TOOLS_PATH.exists():
+        return None
+    text = RUN_TOOLS_PATH.read_text(encoding="utf-8").strip()
+    if not text:
+        return None
+    try:
+        data = _parse_run_tools_yaml(text)
+    except Exception:
+        return None
+    if not data:
+        return None
+    affiliate = data.get("affiliate")
+    other = data.get("other")
+    inne = data.get("inne")
+    if not isinstance(affiliate, list):
+        affiliate = []
+    if not isinstance(other, list):
+        other = []
+    if not isinstance(inne, list):
+        inne = []
+    # Normalize items to {name, url}
+    def _norm(items: list) -> list:
+        out = []
+        for it in items:
+            if isinstance(it, dict) and ("name" in it or "url" in it):
+                out.append({"name": (it.get("name") or "").strip(), "url": (it.get("url") or "").strip()})
+            elif isinstance(it, str):
+                out.append({"name": it.strip(), "url": ""})
+        return out
+    built_around = bool(data.get("article_built_around_links", False))
+    return {
+        "affiliate": _norm(affiliate),
+        "other": _norm(other),
+        "inne": _norm(inne),
+        "article_built_around_links": built_around,
+    }
+
+
+def save_run_tools(data: dict, path: Path | None = None) -> None:
+    """Write run_tools.yaml. data must have affiliate, other, inne (lists of {name, url})
+    and optionally article_built_around_links. path: optional; default RUN_TOOLS_PATH."""
+    target = path or RUN_TOOLS_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    lines = []
+    for key in ("affiliate", "other", "inne"):
+        lines.append(f"{key}:")
+        for item in data.get(key, []):
+            name = (item.get("name") or "").replace("\\", "\\\\").replace('"', '\\"')
+            url = (item.get("url") or "").replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(f'  - name: "{name}"')
+            lines.append(f'    url: "{url}"')
+    lines.append(f"article_built_around_links: {bool(data.get('article_built_around_links', False))}")
+    target.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _run_tools_to_lists(run_data: dict) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
+    """Convert run_tools dict to (affiliate_tools, other_tools) as list of (name, url, short_desc).
+    Fills short_desc from affiliate_tools.yaml by name; 'inne' entries get empty short_desc and go into other_tools."""
+    name_to_short: dict[str, str] = {}
+    for name, _url, short_desc, *_ in _load_affiliate_tools():
+        name_to_short[(name or "").strip()] = (short_desc or "").strip()
+    affiliate: list[tuple[str, str, str]] = []
+    for x in run_data.get("affiliate") or []:
+        if isinstance(x, dict) and (x.get("name") or x.get("url")):
+            name = (x.get("name") or "").strip()
+            url = (x.get("url") or "").strip()
+            affiliate.append((name, url, name_to_short.get(name, "")))
+    other: list[tuple[str, str, str]] = []
+    for x in run_data.get("other") or []:
+        if isinstance(x, dict) and (x.get("name") or x.get("url")):
+            name = (x.get("name") or "").strip()
+            url = (x.get("url") or "").strip()
+            other.append((name, url, name_to_short.get(name, "")))
+    for x in run_data.get("inne") or []:
+        if isinstance(x, dict) and (x.get("name") or x.get("url")):
+            name = (x.get("name") or "").strip()
+            url = (x.get("url") or "").strip()
+            other.append((name, url, ""))
+    return affiliate, other
 
 
 # Map category from affiliate_tools.yaml to display type for "or in another tool of the same type (X)"
@@ -621,7 +758,7 @@ CATEGORY_TO_TYPE_DISPLAY: dict[str, str] = {
 
 def _get_tool_type_display(tool_name: str) -> str:
     """Return display type for a tool (e.g. 'General AI chat') from YAML category, or generic fallback."""
-    for name, _url, _short, category in _load_affiliate_tools():
+    for name, _url, _short, category, *_ in _load_affiliate_tools():
         if (name or "").strip() == (tool_name or "").strip():
             cat = (category or "").strip()
             if cat and cat in CATEGORY_TO_TYPE_DISPLAY:
@@ -634,7 +771,7 @@ def _get_tool_type_display(tool_name: str) -> str:
 
 def _get_tool_category(tool_name: str) -> str:
     """Return category for a tool from affiliate_tools.yaml, or empty string."""
-    for name, _url, _short, category in _load_affiliate_tools():
+    for name, _url, _short, category, *_ in _load_affiliate_tools():
         if (name or "").strip() == (tool_name or "").strip():
             return (category or "").strip()
     return ""
@@ -799,10 +936,28 @@ Emphasize that this approach makes the user the architect of the workflow, not j
     return body
 
 
+def _article_lang_instructions(meta: dict) -> tuple[str, str, str]:
+    """Return (LANGUAGE line, section titles lang phrase, 'in English'/'po polsku') for prompts."""
+    lang = (meta.get("lang") or "").strip().lower()
+    if lang == "pl":
+        return (
+            "LANGUAGE: Pisz cały artykuł po polsku. Wybór języka polskiego oznacza, że merytoryka ma być dla polskich odbiorców: czerp z polskich źródeł, kontekstu i realiów (polski rynek, ceny w PLN gdzie stosowne, dostępność w Polsce, polskie sklepy i marketplace'y, ewentualnie polskie przepisy lub normy). Artykuł ma być merytorycznie osadzony w polskim kontekście, nie tylko przetłumaczony.",
+            "in Polish",
+            "po polsku",
+        )
+    return (
+        "LANGUAGE: Write the whole article in English.",
+        "in English",
+        "in English",
+    )
+
+
 def _build_product_html_prompt(meta, affiliate_tools, other_tools):
     """(instructions, user_message) for product/sales content types. No Template 1/2, no Try it yourself.
-    Article language: English. Conversational, natural tone; contextual section titles; comparison table where applicable;
+    Article language: English or Polish (from meta.lang). Conversational, natural tone; contextual section titles; comparison table where applicable;
     CTA with two elements (engaging question + link to platform). Reader = person looking for products/solutions."""
+    lang_line, section_lang, in_lang = _article_lang_instructions(meta)
+    tools_section_heading = _tools_section_strings((meta.get("lang") or "").strip().lower() or "en")[0]
     ct = (meta.get("content_type") or "").strip().lower()
     title = (meta.get("title") or "").strip()
     keyword = (meta.get("primary_keyword") or "").strip()
@@ -825,33 +980,36 @@ def _build_product_html_prompt(meta, affiliate_tools, other_tools):
             + "\n\nLINKING: First occurrence <a href=\"URL\">Name</a> (description). Later: link name only. "
             "In the Comparison table, use affiliate links from the list above in the 'Where to buy' column. Do not invent tools.\n"
         )
+    cta_map_product = {(name or "").strip(): (label or "").strip() for name, _u, _s, _c, label in _load_affiliate_tools() if (name or "").strip() and (label or "").strip()}
+    if cta_map_product:
+        tools_blob += "\n\nCTA / action button text (use as link text in the CTA section when linking to the tool; if not listed, use default e.g. 'Check it out'): " + ", ".join(f"{n}: '{l}'" for n, l in cta_map_product.items())
 
     # Section list per type; model must use concrete reader-friendly H2 titles (see instructions below)
     if ct == "sales":
         sections = (
-            "Introduction, What to look for when choosing [topic/category] (concrete H2), Key benefits, "
-            "Who it's for / Who it's not for, How it works, Social proof / Testimonials, "
-            "Cost comparison (short; approximate price ranges typical for the category), FAQ, Internal links, "
-            "List of platforms and tools, CTA (see CTA rules below)."
+            f"Introduction, What to look for when choosing [topic/category] (concrete H2), Key benefits, "
+            f"Who it's for / Who it's not for, How it works, Social proof / Testimonials, "
+            f"Cost comparison (short; approximate price ranges typical for the category), FAQ, Internal links, "
+            f"{tools_section_heading}, CTA (see CTA rules below)."
         )
     elif ct == "product-comparison":
         sections = (
-            "Introduction, What to look for when choosing [topic/category] (concrete H2), Comparison criteria, "
-            "Comparison table (required; see table format below), Short review per product, Cost comparison, "
-            "Which to choose, FAQ, Internal links, List of platforms and tools, CTA (see CTA rules below)."
+            f"Introduction, What to look for when choosing [topic/category] (concrete H2), Comparison criteria, "
+            f"Comparison table (required; see table format below), Short review per product, Cost comparison, "
+            f"Which to choose, FAQ, Internal links, {tools_section_heading}, CTA (see CTA rules below)."
         )
     elif ct == "best-in-category":
         sections = (
-            "Introduction, What to look for when choosing [topic/category] (concrete H2), Criteria we used, "
-            "List of products (pros/cons each), Comparison table (required; see table format below), "
-            "Comparison at a glance, Cost comparison, How we picked / Methodology, FAQ, Internal links, "
-            "List of platforms and tools, CTA (see CTA rules below)."
+            f"Introduction, What to look for when choosing [topic/category] (concrete H2), Criteria we used, "
+            f"List of products (pros/cons each), Comparison table (required; see table format below), "
+            f"Comparison at a glance, Cost comparison, How we picked / Methodology, FAQ, Internal links, "
+            f"{tools_section_heading}, CTA (see CTA rules below)."
         )
     else:
         sections = (
-            "Introduction, What this category is, What to look for when choosing [topic/category] (concrete H2), "
-            "Product list, Comparison table (optional; same format as below if included), How to choose, "
-            "Cost comparison (optional), List of platforms and tools, Internal links, CTA (see CTA rules below)."
+            f"Introduction, What this category is, What to look for when choosing [topic/category] (concrete H2), "
+            f"Product list, Comparison table (optional; same format as below if included), How to choose, "
+            f"Cost comparison (optional), {tools_section_heading}, Internal links, CTA (see CTA rules below)."
         )
 
     comparison_table_instruction = ""
@@ -860,15 +1018,15 @@ def _build_product_html_prompt(meta, affiliate_tools, other_tools):
 COMPARISON TABLE (required for this content type): Include one section with an H2 like "Comparison table" or "At a glance: comparison". The table must be HTML: <table class="min-w-full border border-gray-200"> with <thead> and <tbody>. Columns: (1) Product name, (2) Price (approximate range, e.g. \"10–30 EUR\" or \"from X\"; no unverified exact prices), (3) Features (e.g. GPS, QR, reflective; short list or keywords), (4) Where to buy (use <a href=\"URL\">link text</a> from the Affiliate/Other tool list above). Include at least 3–5 rows. Readers love comparison tables; place affiliate links in the Where to buy column.
 """
 
-    instructions = f"""You are a documentation writer. Generate the BODY of an article as HTML only. The article must be entirely in ENGLISH. Output goes inside <article>; no <html>/<body>/H1. Do NOT include a "Disclosure" section (site adds it automatically).
+    instructions = f"""You are a documentation writer. Generate the BODY of an article as HTML only. Output goes inside <article>; no <html>/<body>/H1. Do NOT include a "Disclosure" section (site adds it automatically).
 
-LANGUAGE: Write the whole article in English.
+{lang_line}
 
 AUDIENCE: The reader is someone looking for products or solutions (e.g. bicycle accessories, tools to buy), not someone implementing business processes. Write for a buyer/consumer perspective.
 
 LANGUAGE AND TONE: Use a conversational, natural tone. Address the reader as "you". Use short, practical sentences. Avoid corporate or B2B playbook style. FORBIDDEN phrases: "Before diving into the details…", "It is crucial to understand…", "Implement automation when…". PREFERRED equivalents: "What to look for when choosing…", "If you're looking for…", "It's worth comparing…", "It's worth a look."
 
-SECTION TITLES: Each H2 must be a concrete, reader-friendly title in English that describes what the section covers. Do NOT use generic labels like "Key benefits" or "Comparison criteria" as the exact H2 text. Use descriptive titles adapted to the article topic, e.g. "What to look for when choosing bicycle accessories", "Examples of products available on marketplaces", "Cost comparison", "Which option fits your budget?". Use the article title and category to choose appropriate section titles.
+SECTION TITLES: Each H2 must be a concrete, reader-friendly title {section_lang} that describes what the section covers. Do NOT use generic labels like "Key benefits" or "Comparison criteria" as the exact H2 text. Use descriptive titles adapted to the article topic, e.g. "What to look for when choosing bicycle accessories", "Examples of products available on marketplaces", "Cost comparison", "Which option fits your budget?". Use the article title and category to choose appropriate section titles.
 
 REQUIRED SECTIONS (H2/H3): {sections}
 You MUST include an H2 section titled "FAQ" or "Frequently Asked Questions" (or very similar, e.g. "Common questions"). You MUST include a section that explains what this product category is (e.g. "What this category is", "About this category", "What is [category]").
@@ -877,7 +1035,7 @@ COST COMPARISON: Include a "Cost comparison" (or similar) section with approxima
 
 CTA (end of article, mandatory): The closing must include exactly two elements: (1) One engaging sentence that invites the reader to respond, e.g. "Do you use any extra security for your bike? Let us know in the comments!" (2) One sentence with a clear call to action and a link to a marketplace or product (use an affiliate link from the tool list when it fits), e.g. "If you're looking for the right fit, check out offers on [platform name] — they often run promotions." Both sentences must be present.
 
-List of platforms and tools: near the end, <ul> with <a href> and one-sentence description per tool used. If no tools, omit.
+{tools_section_heading}: near the end, <ul> with <a href> and one-sentence description per tool used. If no tools, omit.
 
 RULES: No [bracket] placeholders; use (variable) for slots. FORBIDDEN: "the best", "unlimited", "limit to", "limited to", "up to [number]", "#1". Avoid corporate-documentation phrases such as "Before diving into the details", "It is crucial to understand", "Implement automation when" — use a natural, conversational tone instead. You MAY use approximate price ranges (e.g. "10–30 EUR") and the words "cost", "price", "price range"; avoid unverified exact prices for specific products. Include realistic product/brand names where they help (e.g. BikeRegister, Immobilise, or category-typical names). Do not claim "best price" or "#1".
 
@@ -891,7 +1049,7 @@ Output ONLY the HTML fragment. At the end add one line: TOOLS_SELECTED: ToolName
         instructions += "\n\nAudience level: " + al
     instructions += "\n\nLength: " + _audience_length_guidance(audience_type)
 
-    user = f"Article title: {title}\nPrimary keyword: {keyword}\nCategory: {category}\nContent type: {ct}\nTarget audience: {audience_type}\n\nGenerate the full article body in HTML, in English. Use concrete section titles adapted to this topic. Conversational tone; cost comparison and CTA (two sentences) required. " + _audience_length_guidance(audience_type) + " No [bracket] placeholders."
+    user = f"Article title: {title}\nPrimary keyword: {keyword}\nCategory: {category}\nContent type: {ct}\nTarget audience: {audience_type}\n\nGenerate the full article body in HTML, {in_lang}. Use concrete section titles adapted to this topic. Conversational tone; cost comparison and CTA (two sentences) required. " + _audience_length_guidance(audience_type) + " No [bracket] placeholders."
     return instructions, user
 
 
@@ -907,6 +1065,7 @@ def _build_html_prompt(
     category = (meta.get("category") or meta.get("category_slug") or "").strip()
     content_type = (meta.get("content_type") or "").strip()
     audience_type = (meta.get("audience_type") or "").strip()
+    tools_section_heading = _tools_section_strings((meta.get("lang") or "").strip().lower() or "en")[0]
 
     if content_type.strip().lower() in PRODUCT_CONTENT_TYPES:
         return _build_product_html_prompt(meta, affiliate_tools, other_tools)
@@ -938,6 +1097,9 @@ def _build_html_prompt(
             "- At the first occurrence of each tool in the article body, use this format: <a href=\"URL\">Name</a> (short description in English, one sentence). At later occurrences of the same tool, link only the name: <a href=\"URL\">Name</a>, without repeating the description.\n"
             "- If a tool has a description after | in the list above (e.g. Name=URL|description), use that description in the parentheses and in \"List of platforms and tools\"; do not invent a different description. Only when no description is given after |, write a factual one-sentence description; if unsure, use a generic form like \"AI tool for [category or use case]\"."
         )
+    cta_map = {(name or "").strip(): (label or "").strip() for name, _u, _s, _c, label in _load_affiliate_tools() if (name or "").strip() and (label or "").strip()}
+    if cta_map:
+        tools_blob += "\n\nCTA / action button text (use this as the link text when linking to the tool in the CTA section; if not listed, use a default like 'Check it out' or 'Read more'): " + ", ".join(f"{n}: '{l}'" for n, l in cta_map.items())
 
     instructions = f"""You are a documentation writer. Generate the BODY of an article as HTML only. The output will be inserted inside an <article> tag; the page already has header, footer, and the article title (H1). Do NOT output <html>, <head>, <body>, or an H1 — start with the first section (e.g. Introduction or first H2). Do not generate any part of the page layout (header, footer, navigation); only the article content.
 IMPORTANT: Do NOT include a "Disclosure" section. The site template adds a disclosure box automatically at the end of every article.
@@ -955,13 +1117,13 @@ REQUIRED SECTIONS (include every one, in this order; use H2 for main sections, H
 - When NOT to use this (when to avoid this approach)
 - FAQ (at least 2–3 questions and answers)
 - Internal links (1–2 sentences suggesting related reads; you may use placeholder URLs like # or /blog/ for now)
-- List of platforms and tools mentioned in this article (place near the end, e.g. after FAQ or after Internal links; see "SECTION: List of platforms and tools" below)
+- {tools_section_heading} (place near the end, e.g. after FAQ or after Internal links; see "SECTION: List of platforms and tools" below)
 - Optionally: Case study (a few paragraphs illustrating a real-world scenario: specific data, challenges, and outcomes; see example below)
 
 {_try_it_yourself_instruction(content_type, audience_type, html=True)}
 
-SECTION: "List of platforms and tools mentioned in this article"
-Include a section titled "List of platforms and tools mentioned in this article" near the end of the article (e.g. after FAQ or after Internal links; choose a consistent, logical position). This section gives readers a quick reference and supports affiliate links.
+SECTION: "{tools_section_heading}"
+Include a section titled "{tools_section_heading}" near the end of the article (e.g. after FAQ or after Internal links; choose a consistent, logical position). This section gives readers a quick reference and supports affiliate links.
 - Placement: Near the end, after FAQ or after Internal links. Do not place after the disclosure (the template adds disclosure automatically).
 - Content: A bulleted list. For each tool that is both (a) in the Affiliate or Other tool list above and (b) actually linked or clearly mentioned in the article body, add one bullet containing: the tool name as a link using the exact URL from the list above, then a short one-sentence description in English. Do not list tools that you did not use or link in the article.
 - Description rules: When a description was provided after | in the tool list above, use that exact description here and in the article body; do not invent a different one. Only when no description is given after |, write a factual one-sentence description in English. Avoid vague phrases like "powerful tool". Do not invent tools.
@@ -972,6 +1134,8 @@ IMPORTANT — LENGTH: Follow the audience-based length rule (see Audience and Le
 LENGTH AND CONTENT RULES:
 - Do not output any text in square brackets [like this]. Replace every [placeholder] with a concrete example. If you need a variable slot, use round parentheses (e.g. (product name)) instead. NEVER use square-bracket placeholders (e.g. [Name], [Date], [Customer Name], [Your Company], [Insert URL]). Every template field, example, and sentence must be filled with concrete, realistic content. Use real-looking example names, dates, product names — never leave or introduce any [bracket] token. No [bracket] tokens in output; QA will reject the article if any remain. If you need to indicate a variable or example slot, use round parentheses ( ) instead of square brackets, e.g. (video title) or (your product name).
 - FORBIDDEN PHRASES (QA will reject the article if present): Never use the phrase "the best" in any generated article content (headings, body, lists, templates). Do not use "unlimited", "limit to", "limited to", or "up to [number]" (e.g. "up to 5"). Do not use $ or any currency amount (e.g. $99). Do not use "#1" or "pricing" anywhere in the article. Use neutral wording instead (e.g. "many", "as needed", "several", "a set of steps", "cost").
+
+SELF-CHECK (before finishing): Verify that your response includes: Decision rules, Tradeoffs, Failure modes, SOP checklist, and within Step-by-step workflow: Inputs/Outputs and Common pitfalls. If any are missing, add them.
 
 STYLE (Tailwind CSS utility classes):
 - Main section headings: <h2 class="text-3xl font-bold mt-8 mb-4">. Subsection: <h3 class="text-xl font-semibold mt-6 mb-3">.
@@ -1008,7 +1172,7 @@ TOOLS_SELECTED: ToolName1, ToolName2, ...
     if audience_type:
         user += f"Target audience level: {audience_type}\n"
     length_guide = _audience_length_guidance(audience_type)
-    user += f"\nGenerate the complete article body in HTML with Tailwind classes. Include all required sections (including 'List of platforms and tools mentioned in this article' near the end). {length_guide} No square-bracket placeholders; use round parentheses ( ) for any variable or example slot, e.g. (video title)."
+    user += f"\nGenerate the complete article body in HTML with Tailwind classes. Include all required sections (including '{tools_section_heading}' near the end). {length_guide} No square-bracket placeholders; use round parentheses ( ) for any variable or example slot, e.g. (video title)."
     return instructions, user
 
 
@@ -1041,34 +1205,55 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
         bl = body_plain.lower()
         # Flexible markers: section presence by substring (reader-friendly H2s may vary)
         if ct_lower == "sales":
-            if "benefit" not in bl and "who it's for" not in bl and "for whom" not in bl:
+            has_benefits = any(
+                phrase in bl for phrase in ("benefit", "who it's for", "for whom", "dla kogo", "korzyści", "zalety")
+            )
+            if not has_benefits:
                 missing.append("missing section: benefits or who it's for")
-            if "cost" not in bl or ("comparison" not in bl and "price" not in bl):
+            has_cost_sales = any(p in bl for p in ("cost", "price", "koszt", "cena", "cen"))
+            has_comp_sales = any(p in bl for p in ("comparison", "price", "porównanie"))
+            if not has_cost_sales or not has_comp_sales:
                 missing.append("missing section: cost comparison (or similar)")
         elif ct_lower == "product-comparison":
-            if "comparison" not in bl and "criteria" not in bl:
+            has_criteria = any(
+                phrase in bl for phrase in ("comparison", "criteria", "kryteria", "porównanie")
+            )
+            if not has_criteria:
                 missing.append("missing section: comparison criteria (or similar)")
-            if "which to choose" not in bl and "which option" not in bl and "choose" not in bl:
+            has_choose = any(
+                phrase in bl for phrase in ("which to choose", "which option", "choose", "wybierz", "wybór")
+            )
+            if not has_choose:
                 missing.append("missing section: which to choose (or similar)")
-            if "cost" not in bl or ("comparison" not in bl and "price" not in bl):
+            has_cost_pc = any(p in bl for p in ("cost", "price", "koszt", "cena"))
+            has_comp_pc = any(p in bl for p in ("comparison", "price", "porównanie"))
+            if not has_cost_pc or not has_comp_pc:
                 missing.append("missing section: cost comparison (or similar)")
-            if "comparison table" not in bl and "at a glance" not in bl and "table" not in bl:
+            if "comparison table" not in bl and "at a glance" not in bl and "table" not in bl and "tabela" not in bl and "porównania" not in bl:
                 missing.append("missing section: 'Comparison table' (or similar H2)")
             if "<table" not in body.lower():
                 missing.append("product-comparison must contain an HTML comparison table (<table>)")
         elif ct_lower == "best-in-category":
-            if "criteria" not in bl and "how we picked" not in bl and "methodology" not in bl:
+            has_criteria_b = any(
+                phrase in bl for phrase in ("criteria", "how we picked", "methodology", "kryteria", "metodologia", "wybór")
+            )
+            if not has_criteria_b:
                 missing.append("missing section: criteria or methodology")
-            if "product" not in bl and "list" not in bl:
+            has_products_b = any(
+                phrase in bl for phrase in ("product", "list", "produkt", "produktów", "lista")
+            )
+            if not has_products_b:
                 missing.append("missing section: list of products (or similar)")
-            if "cost" not in bl or ("comparison" not in bl and "price" not in bl):
+            has_cost_b = any(p in bl for p in ("cost", "price", "koszt", "cena"))
+            has_comp_b = any(p in bl for p in ("comparison", "price", "porównanie"))
+            if not has_cost_b or not has_comp_b:
                 missing.append("missing section: cost comparison (or similar)")
-            if "comparison table" not in bl and "at a glance" not in bl and "table" not in bl:
+            if "comparison table" not in bl and "at a glance" not in bl and "table" not in bl and "tabela" not in bl:
                 missing.append("missing section: 'Comparison table' (or similar H2)")
             if "<table" not in body.lower():
                 missing.append("best-in-category must contain an HTML comparison table (<table>)")
         else:
-            # category-products
+            # category-products (EN + PL)
             has_category_section = any(
                 phrase in bl
                 for phrase in (
@@ -1078,13 +1263,29 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
                     "category overview",
                     "overview of the category",
                     "about the category",
+                    "kategoria",
+                    "czym jest",
+                    "o kategorii",
+                    "przegląd kategorii",
+                    "w tej kategorii",
+                    "kategorii produktów",
                 )
             )
             if not has_category_section:
                 missing.append("missing section: what this category is (or similar)")
-            if "product" not in bl and "list" not in bl:
+            has_product_list = any(
+                phrase in bl for phrase in ("product", "list", "produkt", "produktów", "lista", "listę", "narzędzi", "rozwiązania")
+            )
+            if not has_product_list:
                 missing.append("missing section: product list (or similar)")
-            if "cost" not in bl or ("comparison" not in bl and "price" not in bl):
+            has_cost = any(
+                phrase in bl for phrase in ("cost", "price", "koszt", "cena", "cen", "ceny", "cenowy")
+            )
+            has_comparison = any(
+                phrase in bl for phrase in ("comparison", "price", "porównanie", "porównania")
+            )
+            # Cost or comparison sufficient for category-products (PL often uses only "ceny" / "koszt")
+            if not has_cost and not has_comparison:
                 missing.append("missing section: cost comparison (or similar)")
         has_faq_section = any(
             phrase in bl
@@ -1095,6 +1296,12 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
                 "q&a",
                 "common questions",
                 "asked questions",
+                "pytania",
+                "odpowiedzi",
+                "często zadawane",
+                "najczęściej zadawane",
+                "pytania i odpowiedzi",
+                "pytań i odpowiedzi",
             )
         )
         if not has_faq_section:
@@ -1105,7 +1312,7 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
         has_engaging = any(
             phrase in tail_plain for phrase in (
                 "let us know", "let us know in the comments", "comments!", "share your", "tell us",
-                "do you use", "daj znać", "sprawdź oferty"
+                "do you use", "daj znać", "sprawdź oferty", "sprawdź ", "zobacz oferty", "zobacz ofert",
             )
         )
         has_cta_link = "<a href" in tail.lower()
@@ -1156,33 +1363,11 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
         body = _strip_html_tags(body)
     body_lower = body.lower()
 
-    # Markery wymagane dla wszystkich typów
-    required_all = [
-        "Decision rules:",
-        "Tradeoffs:",
-    ]
-
-    # Failure modes wymagane dla instruktażowych typów treści
-    if ct_lower in ["how-to", "guide", "comparison"]:
-        required_all.append("Failure modes:")
-
-    # Dodatkowe markery tylko dla 'how-to' i 'guide'
-    if ct_lower in ["how-to", "guide"]:
-        required_all.append("SOP checklist:")
-
-    for marker in required_all:
-        if marker.lower() not in body_lower:
-            missing.append(f"missing marker: '{marker}'")
-
-    # Step-by-step workflow: required for how-to, guide, best, comparison (section must appear and contain structure)
+    # Section presence (template alignment): Step-by-step workflow required for how-to, guide, best, comparison.
+    # Decision rules, Tradeoffs, Failure modes, SOP, Inputs/Outputs, Common pitfalls are enforced via model self-check only.
     if ct_lower in ("how-to", "guide", "best", "comparison"):
         if "step-by-step workflow" not in body_lower and "step by step workflow" not in body_lower:
             missing.append("missing section: 'Step-by-step workflow' (mandatory for how-to, guide, best, and comparison)")
-        # Require Inputs/Outputs and Common pitfalls within the article (structure of Step-by-step workflow)
-        if "input" not in body_lower or "output" not in body_lower:
-            missing.append("Step-by-step workflow must include Inputs/Outputs (or Inputs and Outputs)")
-        if "pitfall" not in body_lower:
-            missing.append("Step-by-step workflow must include Common pitfalls")
 
     # "Try it yourself" validation: required for how-to, guide, best, and comparison
     try_marker = "try it yourself"
@@ -1192,8 +1377,14 @@ def check_output_contract(body: str, content_type: str, strict: bool = False) ->
             "missing required section: 'Try it yourself: Build your own AI prompt' (mandatory for how-to, guide, best, and comparison)"
         )
     if has_try:
-        prompt_1_present = "prompt #1" in body_lower or "prompt 1" in body_lower
-        prompt_2_present = "prompt #2" in body_lower or "prompt 2" in body_lower
+        prompt_1_present = (
+            "prompt #1" in body_lower or "prompt 1" in body_lower
+            or "prompt1_placeholder" in body_lower
+        )
+        prompt_2_present = (
+            "prompt #2" in body_lower or "prompt 2" in body_lower
+            or "prompt2_placeholder" in body_lower
+        )
         if not prompt_1_present:
             missing.append("'Try it yourself' section missing Prompt #1 (meta-prompt)")
         if not prompt_2_present:
@@ -1509,17 +1700,17 @@ def _variant_for_slug(slug: str, key: str, variants: list[str]) -> str:
 def _pick_random_ai_chat_tool() -> tuple[str, str] | None:
     """Return (name, url) for a random tool with category exactly 'ai-chat', or first tool with url if none."""
     all_tools = _load_affiliate_tools()
-    ai_chat = [(n, u) for n, u, _, cat in all_tools if (cat or "").strip() == "ai-chat" and (u or "").strip()]
+    ai_chat = [(n, u) for n, u, _, cat, *_ in all_tools if (cat or "").strip() == "ai-chat" and (u or "").strip()]
     if ai_chat:
         return random.choice(ai_chat)
-    for name, url, _, _ in all_tools:
+    for name, url, *_ in all_tools:
         if (name or "").strip() and (url or "").strip():
             return (name.strip(), url.strip())
     return None
 
 
 def _first_reference_tool_name() -> str:
-    for name, _url, _short, _ in _load_affiliate_tools():
+    for name, _url, _short, *_ in _load_affiliate_tools():
         nm = (name or "").strip()
         if nm:
             return nm
@@ -2004,7 +2195,7 @@ def _normalize_try_it_yourself_html(body: str, *, slug: str, content_type: str =
     _url, short_desc = toolinfo_map.get(safe_tool, ("", ""))
     # For tools with category exactly "ai-chat", show only category (from CATEGORY_TO_TYPE_DISPLAY) in parentheses; else short_desc or type_display.
     tool_category = next(
-        (cat for name, _u, _s, cat in _load_affiliate_tools() if (name or "").strip() == safe_tool),
+        (cat for name, _u, _s, cat, *_ in _load_affiliate_tools() if (name or "").strip() == safe_tool),
         None,
     )
     if (tool_category or "").strip() == "ai-chat":
@@ -2012,7 +2203,7 @@ def _normalize_try_it_yourself_html(body: str, *, slug: str, content_type: str =
     else:
         descriptor_label = (short_desc.strip() if short_desc else type_display)
     tool_url = next(
-        (url for name, url, _, _ in _load_affiliate_tools() if (name or "").strip() == safe_tool),
+        (url for name, url, *_ in _load_affiliate_tools() if (name or "").strip() == safe_tool),
         None,
     )
     if tool_url:
@@ -2069,7 +2260,7 @@ def _normalize_try_it_yourself_md(body: str, *, content_type: str = "", slug: st
     picked = _pick_random_ai_chat_tool()
     safe_tool = (picked[0].strip() if picked else None) or _first_reference_tool_name()
     tool_category = next(
-        (cat for name, _u, _s, cat in _load_affiliate_tools() if (name or "").strip() == safe_tool),
+        (cat for name, _u, _s, cat, *_ in _load_affiliate_tools() if (name or "").strip() == safe_tool),
         None,
     )
     if (tool_category or "").strip() == "ai-chat":
@@ -2229,7 +2420,7 @@ def _normalize_base_url(url: str) -> str:
 def _build_url_to_name_map() -> dict[str, str]:
     """Normalized URL -> name from affiliate_tools.yaml (for matching hrefs in body)."""
     out: dict[str, str] = {}
-    for name, url, _, _ in _load_affiliate_tools():
+    for name, url, *_ in _load_affiliate_tools():
         nm = (name or "").strip()
         if not nm or not url:
             continue
@@ -2262,13 +2453,13 @@ def _extract_tool_names_from_body_html(body: str, url_to_name: dict[str, str]) -
 
 def _build_name_to_url_map() -> dict[str, str]:
     """name -> affiliate_link from affiliate_tools.yaml."""
-    return {name: url for name, url, _, _ in _load_affiliate_tools() if url}
+    return {name: url for name, url, *_ in _load_affiliate_tools() if url}
 
 
 def _build_name_to_toolinfo_map() -> dict[str, tuple[str, str]]:
     """name -> (url, short_description_en) from affiliate_tools.yaml."""
     out: dict[str, tuple[str, str]] = {}
-    for name, url, short_desc, _ in _load_affiliate_tools():
+    for name, url, short_desc, *_ in _load_affiliate_tools():
         nm = (name or "").strip()
         if not nm or not url:
             continue
@@ -2279,6 +2470,22 @@ def _build_name_to_toolinfo_map() -> dict[str, tuple[str, str]]:
 # Fixed disclaimer for "List of platforms and tools" section — all article types; shown even when the list is empty.
 TOOLS_SECTION_DISCLAIMER = "The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind."
 TOOLS_SECTION_DISCLAIMER_HTML = '<p class="text-lg text-gray-700 mb-4">The tools listed are a suggestion for the use case described; it does not mean they are better than other tools of this kind.</p>'
+
+# Polish locale for the same section (used when meta.lang == "pl").
+TOOLS_SECTION_HEADING_PL = "Lista platform i narzędzi wymienionych w artykule"
+TOOLS_SECTION_DISCLAIMER_PL = "Wymienione narzędzia są propozycją dla opisanego zastosowania; nie oznacza to, że są lepsze od innych narzędzi tego typu."
+TOOLS_SECTION_DISCLAIMER_HTML_PL = '<p class="text-lg text-gray-700 mb-4">Wymienione narzędzia są propozycją dla opisanego zastosowania; nie oznacza to, że są lepsze od innych narzędzi tego typu.</p>'
+
+
+def _tools_section_strings(lang: str) -> tuple[str, str, str]:
+    """Return (heading, disclaimer_plain, disclaimer_html) for the tools section. lang: en | pl."""
+    if (lang or "").strip().lower() == "pl":
+        return (TOOLS_SECTION_HEADING_PL, TOOLS_SECTION_DISCLAIMER_PL, TOOLS_SECTION_DISCLAIMER_HTML_PL)
+    return (
+        "List of platforms and tools mentioned in this article",
+        TOOLS_SECTION_DISCLAIMER,
+        TOOLS_SECTION_DISCLAIMER_HTML,
+    )
 
 # Workflow sentence: single literal everywhere (no paraphrasing, no extra intro/outro in the same element).
 WORKFLOW_LITERAL = "Human → Prompt #1 (to AI chat) → AI returns ready-to-use Prompt #2 or questions or instruction → Human (paste Prompt #2 into AI chat or follow the instructions given)"
@@ -2336,23 +2543,25 @@ def _build_tools_mentioned_html(tools: list[str], toolinfo: dict[str, tuple[str,
     return "<ul class=\"list-disc list-inside space-y-2 text-gray-700\">\n" + "\n".join(items) + "\n</ul>"
 
 
-def _upsert_tools_section_html(body: str, tools_ul_html: str) -> str:
-    """Replace existing tools section in HTML or append if missing. Always inject fixed disclaimer (TOOLS_SECTION_DISCLAIMER_HTML) then optional list; shown even when no tools."""
+def _upsert_tools_section_html(body: str, tools_ul_html: str, lang: str = "en") -> str:
+    """Replace existing tools section in HTML or append if missing. Always inject fixed disclaimer then optional list; shown even when no tools. lang: en | pl for heading and disclaimer text."""
+    heading_label, _disc, disclaimer_html = _tools_section_strings(lang)
+    # Match either EN or PL heading so we replace the section regardless of what the AI output
     section_re = re.compile(
-        r"(<h2[^>]*>\s*List of platforms and tools mentioned in this article\s*</h2>)(.*?)(?=<h2[^>]*>|$)",
+        r"(<h2[^>]*>\s*(?:List of platforms and tools mentioned in this article|Lista platform i narzędzi wymienionych w artykule)\s*</h2>)(.*?)(?=<h2[^>]*>|$)",
         re.IGNORECASE | re.DOTALL,
     )
-    # After H2: fixed disclaimer paragraph, then list (if any)
-    after_heading_content = TOOLS_SECTION_DISCLAIMER_HTML + "\n\n"
+    after_heading_content = disclaimer_html + "\n\n"
     if tools_ul_html:
         after_heading_content += tools_ul_html + "\n"
     m = section_re.search(body)
     if m:
-        replacement = m.group(1) + after_heading_content
-        return body[:m.start()] + replacement + body[m.end():]
-    heading = '<h2 class="text-3xl font-bold mt-8 mb-4">List of platforms and tools mentioned in this article</h2>\n'
+        new_heading = f'<h2 class="text-3xl font-bold mt-8 mb-4">{heading_label}</h2>\n'
+        replacement = new_heading + after_heading_content
+        return body[: m.start()] + replacement + body[m.end() :]
+    new_heading = f'<h2 class="text-3xl font-bold mt-8 mb-4">{heading_label}</h2>\n'
     suffix = "" if body.endswith("\n") else "\n"
-    return body + suffix + "\n" + heading + after_heading_content + "\n"
+    return body + suffix + "\n" + new_heading + after_heading_content + "\n"
 
 
 def _has_assigned_tools(meta: dict) -> bool:
@@ -2363,8 +2572,9 @@ def _has_assigned_tools(meta: dict) -> bool:
 
 def _build_product_md_prompt(meta: dict, body: str) -> tuple[str, str]:
     """(instructions, user_message) for product/sales content types when filling markdown (no HTML).
-    Article language: English. Conversational tone; no Decision rules, Tradeoffs, Try it yourself, Template 1/2.
+    Article language from meta.lang (English or Polish). Conversational tone; no Decision rules, Tradeoffs, Try it yourself, Template 1/2.
     Required: contextual H2s, cost comparison, table (where applicable), CTA with two elements."""
+    lang_line, section_lang, _ = _article_lang_instructions(meta)
     ct = (meta.get("content_type") or "").strip().lower()
     title = (meta.get("title") or "").strip()
     keyword = (meta.get("primary_keyword") or "").strip()
@@ -2386,13 +2596,13 @@ def _build_product_md_prompt(meta: dict, body: str) -> tuple[str, str]:
 
     instructions = f"""You are a writer. Replace ONLY bracket placeholders [like this] in the given markdown skeleton with real prose. Return the full markdown body (no frontmatter). Do not change any {{{{MUSTACHE}}}} placeholders (e.g. {{{{TOOLS_MENTIONED}}}}, {{{{CTA_BLOCK}}}}, {{{{INTERNAL_LINKS}}}}). Leave them exactly as-is.
 
-LANGUAGE: Write the entire article in English.
+{lang_line}
 
 AUDIENCE: The reader is someone looking for products or solutions (e.g. bicycle accessories, tools to buy), not someone implementing business processes. Write for a buyer/consumer perspective.
 
 TONE: Conversational, natural. Address the reader as "you". Use short, practical sentences. Do NOT use corporate or B2B playbook style. FORBIDDEN: "Before diving into the details…", "It is crucial to understand…", "Implement automation when…". PREFERRED: "What to look for when choosing…", "If you're looking for…", "It's worth comparing…", "It's worth a look."
 
-SECTION TITLES (H2): Each H2 must be a concrete, reader-friendly title in English that describes the section. Do NOT use generic labels like "Key benefits" or "Comparison criteria" as the exact H2. Use descriptive titles adapted to the topic (e.g. "What to look for when choosing bicycle accessories", "Cost comparison", "Which option fits your budget?").
+SECTION TITLES (H2): Each H2 must be a concrete, reader-friendly title {section_lang} that describes the section. Do NOT use generic labels like "Key benefits" or "Comparison criteria" as the exact H2. Use descriptive titles adapted to the topic (e.g. "What to look for when choosing bicycle accessories", "Cost comparison", "Which option fits your budget?").
 
 FORBIDDEN SECTIONS: Do NOT add: Decision rules, Tradeoffs, Failure modes, SOP checklist, Template 1, Template 2, Try it yourself. This pipeline uses only product/shopping sections.
 
@@ -2545,6 +2755,8 @@ E) Never use the phrase "the best" in any generated article content. Do not use 
 
 F) If you cannot comply with the OUTPUT CONTRACT, regenerate until you can. Do not omit the markers.
 
+SELF-CHECK (before finishing): Verify that your response includes: Decision rules, Tradeoffs, Failure modes, SOP checklist, and within Step-by-step workflow: Inputs/Outputs and Common pitfalls. If any are missing, add them.
+
 Output must feel like an internal playbook: decisions + steps."""
     audience_line = _audience_instruction(audience_type)
     if audience_line:
@@ -2592,15 +2804,31 @@ def fill_one(
         print(f"  Skip {path.name}: read error — {e}")
         return "skip"
     meta, order, body, body_start = _parse_frontmatter(content)
+    # When article is under content/pl (PL content root), force lang=pl so prompts generate Polish
+    is_pl_content = "pl" in path.parts
+    if is_pl_content and (meta.get("lang") or "").strip().lower() != "pl":
+        meta["lang"] = "pl"
     if remap:
         meta["tools"] = ""
     if not use_html and not body.strip():
         print(f"  Skip {path.name}: empty body")
         return "skip"
     if use_html:
-        all_tools = _load_affiliate_tools()
-        affiliate_tools, other_tools = _split_tools_by_affiliate(all_tools)
-        base_instructions, user_message = _build_html_prompt(meta, affiliate_tools, other_tools)
+        run_data = load_run_tools()
+        if run_data:
+            affiliate_tools, other_tools = _run_tools_to_lists(run_data)
+            base_instructions, user_message = _build_html_prompt(meta, affiliate_tools, other_tools)
+            base_instructions = (
+                "Use ONLY the tools/links listed below for this run. Do not add tools from the full catalog.\n\n"
+                + base_instructions
+            )
+            if run_data.get("article_built_around_links"):
+                base_instructions += "\n\nThis article MUST be built around the provided links: structure the content so these tools/links are the main focus."
+        else:
+            all_tools = _load_affiliate_tools()
+            affiliate_tools, other_tools = _split_tools_by_affiliate(all_tools)
+            base_instructions, user_message = _build_html_prompt(meta, affiliate_tools, other_tools)
+            print("  Nie wybrano zestawu linków; używana jest pełna lista z affiliate_tools.yaml.")
     else:
         content_type_meta = (meta.get("content_type") or "").strip().lower()
         if content_type_meta in PRODUCT_CONTENT_TYPES:
@@ -2780,7 +3008,8 @@ def fill_one(
             tools_md = _build_tools_mentioned_md(tool_list, name_to_url)
             new_body = new_body.replace("{{PRIMARY_TOOL}}", pt)
             new_body = new_body.replace("{{SECONDARY_TOOL}}", st)
-            new_body = new_body.replace("{{TOOLS_SECTION_DISCLAIMER}}", TOOLS_SECTION_DISCLAIMER)
+            _disc_plain = _tools_section_strings((meta.get("lang") or "").strip().lower() or "en")[1]
+            new_body = new_body.replace("{{TOOLS_SECTION_DISCLAIMER}}", _disc_plain)
             new_body = new_body.replace("{{TOOLS_MENTIONED}}", tools_md)
     else:
         # Środek G: list = TOOLS_SELECTED (order preserved) + remaining linked names from body (no duplicates). Always upsert section with fixed disclaimer (even when no tools).
@@ -2796,7 +3025,10 @@ def fill_one(
         if tool_list:
             toolinfo = _build_name_to_toolinfo_map()
             tools_html = _build_tools_mentioned_html(tool_list, toolinfo, audience_type=(meta.get("audience_type") or "").strip())
-        new_body = _upsert_tools_section_html(new_body, tools_html)
+        tools_section_lang = (meta.get("lang") or "").strip().lower() or "en"
+        if "pl" in path.parts:
+            tools_section_lang = "pl"
+        new_body = _upsert_tools_section_html(new_body, tools_html, lang=tools_section_lang)
 
     # --- Generate real Prompt #2 via separate API call ---
     if generate_prompt2 and _has_prompt2_placeholder(new_body):
@@ -2870,6 +3102,9 @@ def fill_one(
     if use_html:
         out_path = path.with_suffix(".html")
         _ensure_audience_type_in_meta(meta, path.stem)
+        # Ensure HTML frontmatter has lang=pl when under content/pl (same check as at parse time)
+        if "pl" in path.parts:
+            meta["lang"] = "pl"
         new_content = _frontmatter_comment_string(meta) + "\n" + new_body
         had_existing = out_path.exists()
         if had_existing:
@@ -3089,7 +3324,13 @@ def main() -> None:
         dest="skip_prompt2",
         help="Skip Prompt #2 generation during the main fill pass (useful for two-step workflow).",
     )
+    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl)")
     args = parser.parse_args()
+
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    global ARTICLES_DIR, RUN_TOOLS_PATH
+    ARTICLES_DIR = content_dir / "articles"
+    RUN_TOOLS_PATH = content_dir / "run_tools.yaml"
 
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:

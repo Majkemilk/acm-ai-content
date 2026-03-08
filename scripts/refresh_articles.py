@@ -18,8 +18,10 @@ from pathlib import Path
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _SCRIPTS_DIR.parent
-ARTICLES_DIR = _PROJECT_ROOT / "content" / "articles"
-BACKUPS_DIR = _PROJECT_ROOT / "content" / "backups"
+_content_root = (os.environ.get("CONTENT_ROOT") or "content").strip() or "content"
+_content_root_path = _PROJECT_ROOT / _content_root.replace("/", os.sep)
+ARTICLES_DIR = _content_root_path / "articles"
+BACKUPS_DIR = _content_root_path / "backups"
 ERROR_LOG = _PROJECT_ROOT / "logs" / "errors.log"
 FAILED_LIST_PATH = _PROJECT_ROOT / "logs" / "last_refresh_failed.txt"
 

@@ -6,17 +6,22 @@ articles are assigned by meta.category; otherwise all production articles go to 
 Stdlib only. Outputs HTML with card grids (same structure as homepage).
 """
 
+import argparse
 import html as html_module
+import os
 import re
 from datetime import date, datetime
 from pathlib import Path
 
-from content_index import get_production_articles, get_hubs_list, load_config
+from content_index import (
+    get_production_articles,
+    get_hubs_list_for_site,
+    get_category_slugs_for_site,
+    load_config,
+)
+from content_root import get_content_root_path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ARTICLES_DIR = PROJECT_ROOT / "content" / "articles"
-HUBS_DIR = PROJECT_ROOT / "content" / "hubs"
-CONFIG_PATH = PROJECT_ROOT / "content" / "config.yaml"
 
 ARTICLES_URL_PREFIX = "/articles/"
 ARTICLES_URL_SUFFIX = "/"
@@ -164,7 +169,7 @@ def _articles_for_hub(
     return out
 
 
-def get_hub_intro(hub: dict) -> str:
+def get_hub_intro(hub: dict, hubs_dir: Path) -> str:
     """
     Return intro text for a hub. Precedence:
     1. config hub["description"] if present
@@ -175,7 +180,7 @@ def get_hub_intro(hub: dict) -> str:
     desc = (hub.get("description") or "").strip()
     if desc:
         return desc
-    intro_path = HUBS_DIR / f"{slug}.intro.txt"
+    intro_path = hubs_dir / f"{slug}.intro.txt"
     if intro_path.exists():
         try:
             return intro_path.read_text(encoding="utf-8").strip()
@@ -185,21 +190,34 @@ def get_hub_intro(hub: dict) -> str:
 
 
 def main() -> None:
-    config = load_config(CONFIG_PATH)
-    hubs = get_hubs_list(config)
-    all_articles = get_production_articles(ARTICLES_DIR, CONFIG_PATH)
+    parser = argparse.ArgumentParser(description="Generate hub markdown files from config and articles.")
+    parser.add_argument("--content-root", default=os.environ.get("CONTENT_ROOT", "content"), help="Content root (content or content/pl)")
+    parser.add_argument("--site", default=os.environ.get("SITE", "main"), choices=("main", "pl"), help="Site variant (main or pl)")
+    args = parser.parse_args()
+    site = args.site
+    content_dir = get_content_root_path(PROJECT_ROOT, args.content_root)
+    config_path = content_dir / "config.yaml"
+    articles_dir = content_dir / "articles"
+    hubs_dir = content_dir / "hubs"
+
+    config = load_config(config_path)
+    hubs = get_hubs_list_for_site(config, site)
+    all_articles = get_production_articles(articles_dir, config_path)
+    category_slugs = get_category_slugs_for_site(config, site)
+    if category_slugs is not None:
+        all_articles = [a for a in all_articles if (a[0].get("category") or "").strip() in category_slugs]
     first_hub_category = hubs[0]["category"] if hubs else None
-    HUBS_DIR.mkdir(parents=True, exist_ok=True)
+    hubs_dir.mkdir(parents=True, exist_ok=True)
     for hub in hubs:
         slug = hub["slug"]
         category = hub["category"]
         title = hub["title"] or slug
         articles = _articles_for_hub(all_articles, category, first_hub_category)
-        intro = get_hub_intro(hub)
+        intro = get_hub_intro(hub, hubs_dir)
         html_body = build_hub_content(title, intro, articles)
         frontmatter = f'---\ntitle: "{title}"\n---\n\n'
         content = frontmatter + html_body
-        out_path = HUBS_DIR / f"{slug}.md"
+        out_path = hubs_dir / f"{slug}.md"
         out_path.write_text(content, encoding="utf-8")
         print(f"Hub written: {out_path} ({len(articles)} articles)")
 
