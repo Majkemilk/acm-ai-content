@@ -616,16 +616,130 @@ use_cases:
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-06T102744
-    status: generated
+    status: discarded
   - problem: Beginners need strategies to monitor the effectiveness of their anti-theft hardware against angle grinder attacks.
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-06T102744
-    status: generated
+    status: discarded
   - problem: Professional users face challenges in scaling their anti-theft hardware solutions to ensure reliability across multiple locations against angle grinder attacks.
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-06T102744
+    status: discarded
+  - problem: Beginners need a clear process for implementing a unique bicycle identification system to effectively prevent bike theft.
+    content_type: best-in-category
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T112638
+    status: archived
+  - problem: Beginners require effective strategies to monitor the performance and effectiveness of their unique bicycle identification systems to prevent theft.
+    content_type: product-comparison
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T112638
+    status: archived
+  - problem: Professional users need guidelines on how to scale their unique bicycle identification systems to enhance reliability and governance against bike theft across multiple locations.
+    content_type: best-in-category
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T112638
+    status: archived
+  - problem: Beginners need guidance on how to effectively implement unique bicycle identification systems to prevent bike theft.
+    content_type: best-in-category
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T112957
+    status: archived
+  - problem: Beginner users require strategies to troubleshoot and optimize the performance of their unique bicycle identification systems to enhance theft prevention.
+    content_type: best-in-category
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T112957
+    status: archived
+  - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability in preventing bike theft across multiple locations.
+    content_type: product-comparison
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T112957
+    status: archived
+  - problem: Beginners need clear guidance on how to effectively set up a unique bicycle identification system to prevent bike theft.
+    content_type: how-to
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T131725
+    status: discarded
+  - problem: Beginners require strategies to monitor and troubleshoot unique bicycle identification systems to enhance theft prevention.
+    content_type: guide
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T131725
+    status: discarded
+  - problem: Professional users seek best practices for scaling their unique bicycle identification systems for consistent reliability in larger bike security networks.
+    content_type: best
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T131725
+    status: discarded
+  - problem: Beginners need guidance on how to effectively implement a unique bicycle identification system to prevent theft.
+    content_type: product-comparison
+    category_slug: marketplaces-products
+    audience_type: beginner
+    batch_id: 2026-03-07T132247
+    status: archived
+  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, by zminimalizować ryzyko kradzieży?
+    content_type: product-comparison
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T054509
+    status: discarded
+  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru, aby zapobiegać kradzieżom?
+    content_type: review
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T054509
     status: generated
+  - problem: Jak skalować procesy identyfikacji rowerów, aby zapewnić ich niezawodność w różnych lokalizacjach?
+    content_type: product-comparison
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T054509
+    status: discarded
+  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, aby zminimalizować ryzyko kradzieży?
+    content_type: category-products
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T074220
+    status: generated
+  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru, aby zapobiegać kradzieżom?
+    content_type: review
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T074220
+    status: todo
+  - problem: Jak skalować systemy identyfikacji rowerów, aby zapewnić ich niezawodność w różnych lokalizacjach?
+    content_type: category-products
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T074220
+    status: generated
+  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, aby zminimalizować ryzyko kradzieży?
+    content_type: category-products
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T103602
+    status: todo
+  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru, aby zapobiegać kradzieżom?
+    content_type: category-products
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T103602
+    status: generated
+  - problem: Jak skalować systemy identyfikacji rowerów, aby zapewnić ich niezawodność w różnych lokalizacjach?
+    content_type: category-products
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-03-08T103602
+    status: todo

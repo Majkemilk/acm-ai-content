@@ -1,0 +1,24 @@
+affiliate:
+  - name: "Amzn"
+    url: "https://amzn.to/4bsHdrX"
+  - name: "Amzn"
+    url: "https://amzn.to/4cuhAbp"
+  - name: "Awin"
+    url: "https://www.awin.com"
+  - name: "CJ Affiliate"
+    url: "https://www.cj.com"
+  - name: "FlexOffers"
+    url: "https://www.flexoffers.com"
+  - name: "ShareASale"
+    url: "https://www.shareasale.com"
+  - name: "Impact"
+    url: "https://impact.com"
+other:
+  - name: "UptimeRobot"
+    url: "https://uptimerobot.com/?red=flowta"
+  - name: "Make"
+    url: "https://www.make.com/en/register?pc=flowtaro"
+  - name: "Zapier"
+    url: "https://zapier.com"
+inne:
+article_built_around_links: False

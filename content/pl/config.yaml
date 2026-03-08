@@ -1,34 +1,25 @@
 production_category: "problem-fix-find-pl"
 hub_slug: "problem-fix-find-pl"
-hub_title: "AI Marketing Automation Tools & Workflows"
+hub_title: "Problem Fix & Find"
 
 # Lista hubów (slug, category, title, optional description, lang). Używana przez generate_hubs, render_site, sitemap.
 hubs:
-  - slug: "ai-marketing-automation"
-    category: "ai-marketing-automation"
-    title: "AI Marketing Automation Tools & Workflows"
-  - slug: "marketplaces-products"
-    category: "marketplaces-products"
-    title: "Marketplaces & Popular Physical Products"
-  - slug: "agentic-ai-geo"
-    category: "agentic-ai-geo"
-    title: "Agentic AI / GEO"
   - slug: "problem-fix-find-pl"
     category: "problem-fix-find-pl"
     title: "Problem Fix & Find"
-    lang: "pl"
 
 subdomain_hubs:
   - "problem-fix-find-pl"
 category_mode: "production_only"
 use_case_single_hub: true
 sandbox_categories:
+  - "Systemy i sposoby antykradzieżowe"
 use_case_batch_size: 3
 use_case_audience_pyramid:
   - 3
   - 0
 suggested_problems:
-  - "Kradzieże rowerów"
+  - "Kradzież rower"
 content_types_all:
   - "how-to"
   - "guide"
