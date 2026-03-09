@@ -23,11 +23,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <section class="bg-white pt-6 pb-6">
-    <div class="max-w-4xl mx-auto px-4">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <a href="{{LOGO_HREF}}"><img src="/images/logo.webp" alt="Flowtaro" class="w-56 h-auto block"></a>
-        <div class="flex items-center">{{LANG_SWITCHER}}</div>
+  <section class="bg-white pt-6 pb-6 relative">
+    <div class="max-w-4xl mx-auto px-4 relative">
+      <div class="absolute right-0 top-0">{{LANG_SWITCHER}}</div>
+      <div class="text-center">
+        <a href="{{LOGO_HREF}}"><img src="/images/logo.webp" alt="Flowtaro" class="w-56 h-auto mx-auto block"></a>
       </div>
       <div class="mt-6 text-center">
         <!-- NAV -->
