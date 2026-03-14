@@ -1,0 +1,68 @@
+# Ręczne zbudowanie aplikacji Expo/React Native dla iOS i udostępnienie .ipa jako artifact.
+# Uruchomienie: Actions → Build iOS .ipa → Run workflow.
+#
+# Wymagane secrety (Settings → Secrets and variables → Actions):
+#   EXPO_TOKEN — token EAS (Expo Dashboard → Account → Access tokens).
+#     Używany do pobrania credentials z EAS (np. tymczasowe certyfikaty developerskie).
+#     Bez płatnego Apple Developer: EAS może wygenerować development signing (7 dni).
+#
+# Opcjonalne: APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD — jeśli używasz własnych credentials.
+
+name: Build iOS .ipa
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+
+      - name: Build iOS .ipa (local)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_LOCAL_BUILD_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+          EAS_LOCAL_BUILD_SKIP_CLEANUP: "1"
+        run: |
+          mkdir -p "$EAS_LOCAL_BUILD_ARTIFACTS_DIR"
+          eas build --platform ios --local --non-interactive
+        continue-on-error: false
+
+      - name: Locate and prepare .ipa for artifact
+        id: ipa
+        run: |
+          DIR="${{ github.workspace }}/artifacts"
+          if [ -d "$DIR" ]; then
+            IPA=$(find "$DIR" -name "*.ipa" -type f | head -1)
+          fi
+          if [ -z "${IPA}" ]; then
+            IPA=$(find . -maxdepth 3 -name "*.ipa" -type f | head -1)
+          fi
+          if [ -z "${IPA}" ]; then
+            echo "No .ipa file found."
+            exit 1
+          fi
+          cp "$IPA" "${{ github.workspace }}/app.ipa"
+          echo "path=${{ github.workspace }}/app.ipa" >> "$GITHUB_OUTPUT"
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-ios-ipa
+          path: ${{ github.workspace }}/app.ipa
+          retention-days: 30
