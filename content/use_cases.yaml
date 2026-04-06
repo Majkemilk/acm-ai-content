@@ -1,4 +1,5 @@
 # List of business problems / use cases for content generation
+# default_lang: optional top-level key before use_cases:; "pl" or "en" — applied to queue items when generated (for content/pl use "pl").
 # Each item should have:
 # - problem: string (description of the problem, e.g., "turn podcasts into written content")
 # - content_type: string (one of: how-to, guide, best, comparison, review, sales, product-comparison, best-in-category, category-products)
@@ -29,13 +30,13 @@ use_cases:
     audience_type: intermediate
     batch_id: 2026-02-25T072356
     status: discarded
-  - problem: best practices for scaling AI marketing strategies without hitting rate limits
+  - problem: best practices for scaling AI marketing strategies without hitting rate
     content_type: guide
     category_slug: automation workflows
     audience_type: intermediate
     batch_id: 2026-02-25T072356
     status: discarded
-  - problem: how to implement governance frameworks to ensure reliability under rate limit conditions
+  - problem: how to implement governance frameworks to ensure reliability under rate
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
@@ -53,25 +54,25 @@ use_cases:
     audience_type: intermediate
     batch_id: 2026-02-25T211040
     status: discarded
-  - problem: best strategies for enhancing automation frameworks to maintain lead generation under rate limits
+  - problem: best strategies for enhancing automation frameworks to maintain lead generation
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-25T211040
     status: archived
-  - problem: how to set up a fallback automation for lead capture during rate limit breaches
+  - problem: how to set up a fallback automation for lead capture during rate limit
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-25T222523
     status: discarded
-  - problem: how to monitor lead generation performance when experiencing rate limit breaching
+  - problem: how to monitor lead generation performance when experiencing rate limit
     content_type: guide
     category_slug: automation workflows
     audience_type: professional
     batch_id: 2026-02-25T222646
     status: archived
-  - problem: how to optimize detection and response strategies for lead loss during a rate limit breach
+  - problem: how to optimize detection and response strategies for lead loss during
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
@@ -113,633 +114,687 @@ use_cases:
     audience_type: intermediate
     batch_id: 2026-02-27T071356
     status: archived
-  - problem: implement unique bicycle identification systems in marketing automation tools
+  - problem: implement unique bicycle identification systems in marketing automation
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: beginner
     batch_id: 2026-02-28T151539
     status: discarded
-  - problem: monitor effectiveness of unique bicycle identification in lead generation efforts
+  - problem: monitor effectiveness of unique bicycle identification in lead generation
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-28T151539
     status: discarded
-  - problem: scale unique bicycle identification processes within marketing automation frameworks
+  - problem: scale unique bicycle identification processes within marketing automation
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-28T151539
     status: discarded
-  - problem: optimize client engagement strategies using unique bicycle identification systems
+  - problem: optimize client engagement strategies using unique bicycle identification
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-28T151539
     status: discarded
-  - problem: How to implement a unique bicycle identification system within your marketing automation framework for better tracking.
+  - problem: How to implement a unique bicycle identification system within your marketing
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: beginner
     batch_id: 2026-02-28T162300
     status: discarded
-  - problem: Optimizing the monitoring process for unique bicycle identification to ensure efficient data collection and usage.
+  - problem: Optimizing the monitoring process for unique bicycle identification to
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T162300
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification processes to enhance marketing campaigns and customer engagement.
+  - problem: Best practices for scaling unique bicycle identification processes to enhance
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T162300
     status: discarded
-  - problem: How to troubleshoot common issues with unique bicycle identification systems in marketing automation tools.
+  - problem: How to troubleshoot common issues with unique bicycle identification systems
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T162300
     status: discarded
-  - problem: Guide to ensure governance and reliability in unique bicycle identification implementations within marketing frameworks.
+  - problem: Guide to ensure governance and reliability in unique bicycle identification
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T162300
     status: discarded
-  - problem: How to implement a unique bicycle identification system for effective tracking in marketing automation.
+  - problem: How to implement a unique bicycle identification system for effective tracking
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: beginner
     batch_id: 2026-02-28T163809
     status: discarded
-  - problem: How to monitor the effectiveness of unique bicycle identification in marketing automation tools.
+  - problem: How to monitor the effectiveness of unique bicycle identification in marketing
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T163809
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification systems to ensure consistent performance across marketing campaigns.
+  - problem: Best practices for scaling unique bicycle identification systems to ensure
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T163809
     status: discarded
-  - problem: How to troubleshoot common issues with unique bicycle identification systems in marketing automation workflows.
+  - problem: How to troubleshoot common issues with unique bicycle identification systems
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T163809
     status: discarded
-  - problem: Guide to ensuring reliability in unique bicycle identification processes for optimized marketing efforts.
+  - problem: Guide to ensuring reliability in unique bicycle identification processes
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T163809
     status: discarded
-  - problem: How to implement unique bicycle identification systems within AI marketing automation frameworks for better tracking.
+  - problem: How to implement unique bicycle identification systems within AI marketing
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T180613
     status: discarded
-  - problem: How to optimize monitoring processes for unique bicycle identification data in marketing automation tools.
+  - problem: How to optimize monitoring processes for unique bicycle identification
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T180613
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification systems to enhance marketing strategy reliability.
+  - problem: Best practices for scaling unique bicycle identification systems to enhance
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T180613
     status: discarded
-  - problem: How to troubleshoot common issues that arise with unique bicycle identification in marketing campaigns.
+  - problem: How to troubleshoot common issues that arise with unique bicycle identification
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T180613
     status: discarded
-  - problem: How to develop an optimized workflow for managing unique bicycle identification data in marketing automation.
+  - problem: How to develop an optimized workflow for managing unique bicycle identification
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T180613
     status: discarded
-  - problem: Best strategies for ensuring compliance and governance in unique bicycle identification processes within marketing automation.
+  - problem: Best strategies for ensuring compliance and governance in unique bicycle
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T180613
     status: discarded
-  - problem: How to implement unique bicycle identification systems effectively within your AI marketing automation tools.
+  - problem: How to implement unique bicycle identification systems effectively within
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-28T212334
     status: discarded
-  - problem: How to troubleshoot and optimize unique bicycle identification systems in marketing automation for better performance.
+  - problem: How to troubleshoot and optimize unique bicycle identification systems
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-28T212334
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification processes to ensure reliability in marketing automation frameworks.
+  - problem: Best practices for scaling unique bicycle identification processes to ensure
     content_type: guide
     category_slug: ai-marketing-automation
     audience_type: professional
     batch_id: 2026-02-28T212334
     status: discarded
-  - problem: How to integrate unique bicycle identification within existing AI-driven marketing workflows for maximum efficiency.
+  - problem: How to integrate unique bicycle identification within existing AI-driven
     content_type: guide
     category_slug: marketplaces-products
     audience_type: professional
     batch_id: 2026-02-28T212334
     status: discarded
-  - problem: Guide to monitoring the impact of unique bicycle identification on marketing campaign performance metrics.
+  - problem: Guide to monitoring the impact of unique bicycle identification on marketing
     content_type: guide
     category_slug: marketplaces-products
     audience_type: professional
     batch_id: 2026-02-28T212334
     status: discarded
-  - problem: Best strategies for ensuring reliable governance in unique bicycle identification processes within scaled marketing operations.
+  - problem: Best strategies for ensuring reliable governance in unique bicycle identification
     content_type: guide
     category_slug: marketplaces-products
     audience_type: professional
     batch_id: 2026-02-28T212334
     status: discarded
-  - problem: How to implement a unique bicycle identification system to enhance user trust in marketing automation.
+  - problem: How to implement a unique bicycle identification system to enhance user
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T224334
     status: discarded
-  - problem: How to monitor the effectiveness of a unique bicycle identification system within marketing automation workflows.
+  - problem: How to monitor the effectiveness of a unique bicycle identification system
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T224334
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification systems to ensure reliability in marketing strategies.
+  - problem: Best practices for scaling unique bicycle identification systems to ensure
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T224334
     status: discarded
-  - problem: How to implement granular reporting for unique bicycle identification in your marketing automation tools.
-    content_type: guide
-    category_slug: RFID bike stickers and Bicycle Theft Marking
-    audience_type: professional
-    batch_id: 2026-02-28T224334
-    status: archived
-  - problem: Guide to troubleshooting common integration issues with unique bicycle identification in marketing workflows.
+  - problem: How to implement granular reporting for unique bicycle identification in
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T224334
     status: archived
-  - problem: Best strategies for ensuring compliance and governance in unique bicycle identification practices within marketing frameworks.
+  - problem: Guide to troubleshooting common integration issues with unique bicycle
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T224334
     status: archived
-  - problem: How to implement unique bicycle identification systems for beginners to enhance marketing efforts.
+  - problem: Best strategies for ensuring compliance and governance in unique bicycle
+    content_type: guide
+    category_slug: RFID bike stickers and Bicycle Theft Marking
+    audience_type: professional
+    batch_id: 2026-02-28T224334
+    status: archived
+  - problem: How to implement unique bicycle identification systems for beginners to
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T235001
     status: discarded
-  - problem: How to troubleshoot common issues with unique bicycle identification systems for better user experience.
+  - problem: How to troubleshoot common issues with unique bicycle identification systems
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T235001
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification systems to improve marketing campaign reliability.
+  - problem: Best practices for scaling unique bicycle identification systems to improve
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T235001
     status: discarded
-  - problem: How to set up unique bicycle identification systems for tracking marketing effectiveness across campaigns.
+  - problem: How to set up unique bicycle identification systems for tracking marketing
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T235001
     status: discarded
-  - problem: How to monitor the performance of unique bicycle identification systems in real-time for marketing insights.
+  - problem: How to monitor the performance of unique bicycle identification systems
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T235001
     status: discarded
-  - problem: Best strategies for governing unique bicycle identification processes to ensure consistent marketing outcomes.
+  - problem: Best strategies for governing unique bicycle identification processes to
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-02-28T235001
     status: discarded
-  - problem: How to implement a unique bicycle identification system for beginners in marketing automation tools.
+  - problem: How to implement a unique bicycle identification system for beginners in
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
-  - problem: How to troubleshoot common issues with unique bicycle identification systems in entry-level marketing setups.
+  - problem: How to troubleshoot common issues with unique bicycle identification systems
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification systems to ensure reliability in small marketing campaigns.
+  - problem: Best practices for scaling unique bicycle identification systems to ensure
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
-  - problem: How to implement a unique bicycle identification system effectively within advanced marketing automation workflows.
+  - problem: How to implement a unique bicycle identification system effectively within
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
-  - problem: Guide to optimizing and monitoring unique bicycle identification systems performance in complex marketing strategies.
+  - problem: Guide to optimizing and monitoring unique bicycle identification systems
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
-  - problem: Best strategies for governing unique bicycle identification processes to ensure consistent performance in high-volume marketing.
+  - problem: Best strategies for governing unique bicycle identification processes to
     content_type: guide
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T003530
     status: discarded
-  - problem: How to implement unique bicycle identification systems in beginner-friendly marketing automation tools.
+  - problem: How to implement unique bicycle identification systems in beginner-friendly
     content_type: product-comparison
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T083335
     status: discarded
-  - problem: How to monitor and optimize the effectiveness of unique bicycle identification systems in entry-level marketing automation.
+  - problem: How to monitor and optimize the effectiveness of unique bicycle identification
     content_type: product-comparison
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T083335
     status: discarded
-  - problem: Best practices for scaling unique bicycle identification systems in professional marketing environments for enhanced reliability.
+  - problem: Best practices for scaling unique bicycle identification systems in professional
     content_type: product-comparison
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T083335
     status: discarded
-  - problem: Implementing governance frameworks for effective governance of unique bicycle identification systems in advanced marketing strategies.
+  - problem: Implementing governance frameworks for effective governance of unique bicycle
     content_type: product-comparison
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T083335
     status: discarded
-  - problem: Beginner's guide on how to implement a unique bicycle identification system for marketing automation.
+  - problem: Beginner's guide on how to implement a unique bicycle identification system
     content_type: sales
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T084810
     status: archived
-  - problem: How to monitor and troubleshoot common issues in unique bicycle identification systems within marketing automation tools.
+  - problem: How to monitor and troubleshoot common issues in unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T084810
     status: archived
-  - problem: Best practices for scaling unique bicycle identification systems to ensure reliability and governance in marketing automation.
+  - problem: Best practices for scaling unique bicycle identification systems to ensure
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T084810
     status: archived
-  - problem: Beginners need guidance on how to effectively implement a unique bicycle identification system for their bikes to prevent theft.
+  - problem: Beginners need guidance on how to effectively implement a unique bicycle
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T110236
     status: discarded
-  - problem: Intermediate users face challenges in monitoring the effectiveness of their unique bicycle identification system and require troubleshooting strategies.
+  - problem: Intermediate users face challenges in monitoring the effectiveness of their
     content_type: product-comparison
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T110236
     status: discarded
-  - problem: Professional users struggle with scaling their unique bicycle identification systems for broader marketing strategies and ensuring governance.
+  - problem: Professional users struggle with scaling their unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T110236
     status: discarded
-  - problem: Beginners struggle to implement a unique bicycle identification system to ensure bike security effectively.
+  - problem: Beginners struggle to implement a unique bicycle identification system
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T112342
-    status: discarded
-  - problem: Intermediate users need guidance on monitoring the effectiveness of their unique bicycle identification system to prevent theft.
+    status: generated
+  - problem: Intermediate users need guidance on monitoring the effectiveness of their
     content_type: product-comparison
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T112342
     status: discarded
-  - problem: Professional users face challenges in scaling their unique bicycle identification systems for broader bike security networks.
+  - problem: Professional users face challenges in scaling their unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T112342
-    status: discarded
-  - problem: Beginners struggle to implement a unique bicycle identification system effectively to enhance security.
+    status: generated
+  - problem: Beginners struggle to implement a unique bicycle identification system
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T113634
     status: todo
-  - problem: Intermediate users need effective strategies to monitor the performance of their unique bicycle identification systems to prevent theft.
+  - problem: Intermediate users need effective strategies to monitor the performance
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T113634
-    status: todo
-  - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability across larger operations.
+    status: generated
+  - problem: Professional users face challenges in scaling their unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T113634
     status: todo
-  - problem: Beginners need guidance on how to implement a unique bicycle identification system effectively to prevent theft.
+  - problem: Beginners need guidance on how to implement a unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T114439
     status: archived
-  - problem: Intermediate users need effective strategies to monitor the performance of their unique bicycle identification systems to ensure security.
+  - problem: Intermediate users need effective strategies to monitor the performance
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T114439
     status: archived
-  - problem: Professional users face challenges in scaling their unique bicycle identification systems to enhance reliability in larger bike security networks.
+  - problem: Professional users face challenges in scaling their unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T114439
     status: archived
-  - problem: Beginners need a simple guide on implementing unique bicycle identification systems to enhance bike security.
+  - problem: Beginners need a simple guide on implementing unique bicycle identification
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: archived
-  - problem: Intermediate users require assistance in troubleshooting and optimizing the effectiveness of their unique bicycle identification systems.
+  - problem: Intermediate users require assistance in troubleshooting and optimizing
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: archived
-  - problem: Professional users face challenges in scaling unique bicycle identification systems to ensure consistent reliability across larger bike security networks.
+  - problem: Professional users face challenges in scaling unique bicycle identification
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: discarded
-  - problem: Beginners need to learn how to set up unique bicycle identification systems to prevent theft effectively.
+  - problem: Beginners need to learn how to set up unique bicycle identification systems
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: archived
-  - problem: Intermediate users need a comprehensive strategy for monitoring the effectiveness of their unique bicycle identification systems to enhance security.
+  - problem: Intermediate users need a comprehensive strategy for monitoring the effectiveness
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: discarded
-  - problem: Professional users need guidelines on ensuring governance in their unique bicycle identification systems for enhanced scalability.
+  - problem: Professional users need guidelines on ensuring governance in their unique
     content_type: best-in-category
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: discarded
-  - problem: Intermediate users require effective methods to optimize the performance of their unique bicycle identification systems to maintain security.
+  - problem: Intermediate users require effective methods to optimize the performance
     content_type: category-products
     category_slug: RFID bike stickers and Bicycle Theft Marking
     audience_type: professional
     batch_id: 2026-03-01T154756
     status: discarded
-  - problem: Beginners lack guidance on how to implement a unique bicycle identification system to ensure bike security effectively.
+  - problem: Beginners lack guidance on how to implement a unique bicycle identification
     content_type: best-in-category
     category_slug: Bicycle Theft
     audience_type: professional
     batch_id: 2026-03-01T173101
     status: archived
-  - problem: Intermediate users require effective strategies to monitor the performance of their unique bicycle identification systems to ensure security.
+  - problem: Intermediate users require effective strategies to monitor the performance
     content_type: category-products
     category_slug: Bicycle Theft
     audience_type: professional
     batch_id: 2026-03-01T173101
     status: discarded
-  - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability across larger bike security networks.
+  - problem: Professional users face challenges in scaling their unique bicycle identification
     content_type: best-in-category
     category_slug: Bicycle Theft
     audience_type: professional
     batch_id: 2026-03-01T173101
     status: archived
-  - problem: Beginners need guidance on how to effectively design prompts for AI agents that analyze market trends to improve initial engagement strategies.
+  - problem: Beginners need guidance on how to effectively design prompts for AI agents
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-04T194627
     status: archived
-  - problem: Intermediate users are looking for strategies to monitor and troubleshoot the performance of their AI agents analyzing market data for optimized prompt effectiveness.
+  - problem: Intermediate users are looking for strategies to monitor and troubleshoot
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: intermediate
     batch_id: 2026-03-04T194627
     status: archived
-  - problem: Professional users face challenges in scaling the governance of prompt designs for AI agents to enhance market analysis reliability across multiple regions.
+  - problem: Professional users face challenges in scaling the governance of prompt
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194627
     status: archived
-  - problem: Beginners require a simple guide on implementing a structured approach to prompt design for AI marketing agents to ensure successful market analysis.
+  - problem: Beginners require a simple guide on implementing a structured approach
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194627
     status: archived
-  - problem: Professional users need advanced methodologies for optimizing and scaling prompt governance in AI agents to maintain consistent market analysis performance.
+  - problem: Professional users need advanced methodologies for optimizing and scaling
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194627
     status: archived
-  - problem: Beginners need a clear process for designing effective prompts for AI agents that analyze market data to enhance performance.
+  - problem: Beginners need a clear process for designing effective prompts for AI agents
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-04T194752
     status: archived
-  - problem: Intermediate users require strategies to troubleshoot and optimize prompt designs for better market analysis efficiency in AI agents.
+  - problem: Intermediate users require strategies to troubleshoot and optimize prompt
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: intermediate
     batch_id: 2026-03-04T194752
     status: archived
-  - problem: Professional users seek best practices for scaling the governance of prompt designs in AI agents to ensure reliability in market analysis across multiple regions.
+  - problem: Professional users seek best practices for scaling the governance of prompt
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194752
     status: archived
-  - problem: Beginners need guidance on integrating contextual insights into prompt design for AI agents that examine market trends.
+  - problem: Beginners need guidance on integrating contextual insights into prompt
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194752
     status: archived
-  - problem: Professional users face challenges in ensuring consistent reliability of prompts for AI agents in large-scale market analysis across diverse markets.
+  - problem: Professional users face challenges in ensuring consistent reliability of
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: professional
     batch_id: 2026-03-04T194752
     status: archived
-  - problem: Beginners lack guidance on implementing anti-theft hardware that can withstand angle grinder attacks on bike locks.
+  - problem: Beginners lack guidance on implementing anti-theft hardware that can withstand
     content_type: how-to
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-06T102744
     status: discarded
-  - problem: Beginners need strategies to monitor the effectiveness of their anti-theft hardware against angle grinder attacks.
+  - problem: Beginners need strategies to monitor the effectiveness of their anti-theft
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-06T102744
     status: discarded
-  - problem: Professional users face challenges in scaling their anti-theft hardware solutions to ensure reliability across multiple locations against angle grinder attacks.
+  - problem: Professional users face challenges in scaling their anti-theft hardware
     content_type: guide
     category_slug: agentic-ai-geo
     audience_type: beginner
     batch_id: 2026-03-06T102744
     status: discarded
-  - problem: Beginners need a clear process for implementing a unique bicycle identification system to effectively prevent bike theft.
+  - problem: Beginners need a clear process for implementing a unique bicycle identification
     content_type: best-in-category
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T112638
     status: archived
-  - problem: Beginners require effective strategies to monitor the performance and effectiveness of their unique bicycle identification systems to prevent theft.
+  - problem: Beginners require effective strategies to monitor the performance and effectiveness
     content_type: product-comparison
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T112638
     status: archived
-  - problem: Professional users need guidelines on how to scale their unique bicycle identification systems to enhance reliability and governance against bike theft across multiple locations.
+  - problem: Professional users need guidelines on how to scale their unique bicycle
     content_type: best-in-category
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T112638
     status: archived
-  - problem: Beginners need guidance on how to effectively implement unique bicycle identification systems to prevent bike theft.
+  - problem: Beginners need guidance on how to effectively implement unique bicycle
     content_type: best-in-category
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T112957
     status: archived
-  - problem: Beginner users require strategies to troubleshoot and optimize the performance of their unique bicycle identification systems to enhance theft prevention.
+  - problem: Beginner users require strategies to troubleshoot and optimize the performance
     content_type: best-in-category
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T112957
     status: archived
-  - problem: Professional users face challenges in scaling their unique bicycle identification systems to ensure consistent reliability in preventing bike theft across multiple locations.
+  - problem: Professional users face challenges in scaling their unique bicycle identification
     content_type: product-comparison
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T112957
     status: archived
-  - problem: Beginners need clear guidance on how to effectively set up a unique bicycle identification system to prevent bike theft.
+  - problem: Beginners need clear guidance on how to effectively set up a unique bicycle
     content_type: how-to
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T131725
     status: discarded
-  - problem: Beginners require strategies to monitor and troubleshoot unique bicycle identification systems to enhance theft prevention.
+  - problem: Beginners require strategies to monitor and troubleshoot unique bicycle
     content_type: guide
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T131725
     status: discarded
-  - problem: Professional users seek best practices for scaling their unique bicycle identification systems for consistent reliability in larger bike security networks.
+  - problem: Professional users seek best practices for scaling their unique bicycle
     content_type: best
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T131725
     status: discarded
-  - problem: Beginners need guidance on how to effectively implement a unique bicycle identification system to prevent theft.
+  - problem: Beginners need guidance on how to effectively implement a unique bicycle
     content_type: product-comparison
     category_slug: marketplaces-products
     audience_type: beginner
     batch_id: 2026-03-07T132247
     status: archived
-  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, by zminimalizować ryzyko kradzieży?
+  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, by zminimalizować ryzyko
     content_type: product-comparison
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T054509
     status: discarded
-  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru, aby zapobiegać kradzieżom?
+  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru,
     content_type: review
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T054509
     status: generated
-  - problem: Jak skalować procesy identyfikacji rowerów, aby zapewnić ich niezawodność w różnych lokalizacjach?
+  - problem: Jak skalować procesy identyfikacji rowerów, aby zapewnić ich niezawodność
     content_type: product-comparison
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T054509
     status: discarded
-  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, aby zminimalizować ryzyko kradzieży?
+  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, aby zminimalizować
     content_type: category-products
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T074220
     status: generated
-  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru, aby zapobiegać kradzieżom?
+  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru,
     content_type: review
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T074220
     status: todo
-  - problem: Jak skalować systemy identyfikacji rowerów, aby zapewnić ich niezawodność w różnych lokalizacjach?
+  - problem: Jak skalować systemy identyfikacji rowerów, aby zapewnić ich niezawodność
     content_type: category-products
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T074220
     status: generated
-  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, aby zminimalizować ryzyko kradzieży?
+  - problem: Jak skutecznie wdrożyć system identyfikacji roweru, aby zminimalizować
     content_type: category-products
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T103602
     status: todo
-  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru, aby zapobiegać kradzieżom?
+  - problem: Jak monitorować i optymalizować skuteczność systemu identyfikacji roweru,
     content_type: category-products
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T103602
     status: generated
-  - problem: Jak skalować systemy identyfikacji rowerów, aby zapewnić ich niezawodność w różnych lokalizacjach?
+  - problem: Jak skalować systemy identyfikacji rowerów, aby zapewnić ich niezawodność
     content_type: category-products
     category_slug: problem-fix-find-pl
     audience_type: beginner
     batch_id: 2026-03-08T103602
     status: todo
+  - problem: Jak zautomatyzować publikację postów w social media za pomocą AI i narzędzi
+    content_type: guide
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: "'Porównanie narzędzi AI do generowania treści marketingowych: Jasper, Writesonic,"
+    content_type: comparison
+    category_slug: problem-fix-find-pl
+    audience_type: intermediate
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Jak tworzyć profesjonalne filmy wideo z AI bez kamery? Recenzja Pictory,
+    content_type: review
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Automatyzacja e-mail marketingu z AI — jak zwiększyć otwarcia i konwersje?
+    content_type: how-to
+    category_slug: problem-fix-find-pl
+    audience_type: intermediate
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Najlepsze narzędzia AI do analizy danych marketingowych i raportowania
+    content_type: best
+    category_slug: problem-fix-find-pl
+    audience_type: professional
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Jak skonfigurować chatbot AI na stronę firmy — poradnik od zera z CustomGPT
+    content_type: guide
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Transkrypcja spotkań i notatek z AI — Otter vs Notta vs Descript. Co sprawdzi
+    content_type: comparison
+    category_slug: problem-fix-find-pl
+    audience_type: intermediate
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Jak AI pomaga w planowaniu i optymalizacji kampanii reklamowych Google
+    content_type: how-to
+    category_slug: problem-fix-find-pl
+    audience_type: professional
+    batch_id: 2026-04-06T074416
+    status: generated
+  - problem: Narzędzia AI do projektowania graficznego dla marketerów — Canva AI, marketingowe
+    content_type: best
+    category_slug: problem-fix-find-pl
+    audience_type: beginner
+    batch_id: 2026-04-06T074416
+    status: generated
